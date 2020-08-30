@@ -2,14 +2,44 @@ import numpy as np
 import pdb
 import matplotlib.pyplot as plt
 
-from pydrake.all import eq, MathematicalProgram, Solve, Variable
+from mpl_toolkits.mplot3d import Axes3D
+
+from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 
 
-def f(x, u):
-    f = np.array(x)
-    f[0:3] += u
+def continous_dynamics(x, u):
+    # Constants
+    air_density = 1
+    wing_area = 1
+    parasitic_drag = 1
+    wingspan = 1
+    mass = 1
 
-    return f
+    # Dynamics
+    x_dot = np.empty(6, dtype=Expression)
+
+    circulation = u
+    pos = x[0:3]
+    height = pos[2]
+    vel = x[3:6]
+
+    wind = np.array([get_wind(height), 0, 0])
+    rel_vel = vel - wind
+
+    x_dot[0:3] = vel
+    x_dot[3:6] = (1 / mass) * (
+        air_density * np.cross(circulation, rel_vel)
+        - 0.5 * air_density * wing_area * parasitic_drag
+        # * np.linalg.norm(rel_vel)
+        * rel_vel
+        - (2 * air_density / np.pi)
+        # * (np.linalg.norm(circulation) / wingspan) ** 2
+        * rel_vel
+        # / np.linalg.norm(rel_vel)
+        + mass * np.array([0, 0, -9.81])
+    )
+
+    return x_dot
 
 
 def get_wind(height):
@@ -22,12 +52,20 @@ def get_wind(height):
     return u0 * (height / ref_height) ** alpha
 
 
+def get_wind_field(x, y, z):
+    u = get_wind(z)
+    v = np.zeros(y.shape)
+    w = np.zeros(z.shape)
+
+    return u, v, w
+
+
 def main():
     print("Starting trajopt")
 
     prog = MathematicalProgram()
 
-    N = 1000
+    N = 500
     dt = 0.01
 
     # Create decision variables
@@ -39,11 +77,13 @@ def main():
     x[:, N - 1] = prog.NewContinuousVariables(6, "x" + str(N))
 
     # Add constraints
-    x0 = [0, 0, 0, 0, 0, 0]
+    x0 = [0, 0, 10, 0, 0, 0]
     prog.AddBoundingBoxConstraint(x0, x0, x[:, 0])
     for n in range(N - 1):
         # Dynamics
-        prog.AddConstraint(eq(x[:, n + 1], x[:, n] + dt * f(x[:, n], u[:, n])))
+        prog.AddConstraint(
+            eq(x[:, n + 1], x[:, n] + dt * continous_dynamics(x[:, n], u[:, n]))
+        )
 
         # Force circulation to be normal to relative wind
         height = x[2, n]
@@ -53,8 +93,7 @@ def main():
         rel_vel = vel - wind
         prog.AddConstraint(u[:, n].dot(rel_vel) == 0)
 
-        prog.AddBoundingBoxConstraint([-1, -1, -1], [1, 1, 1], u[:, n])
-    xf = [0, 10, 0, 0, 0, 0]
+    xf = [0, 10, 10, 0, 0, 0]
     prog.AddBoundingBoxConstraint(xf, xf, x[:, N - 1])
 
     print("Initialized opt problem")
@@ -63,70 +102,29 @@ def main():
     x_sol = result.GetSolution(x)
     u_sol = result.GetSolution(u)
     assert result.is_success(), "Optimization failed"
+    print("Found solution")
 
-    print("Solution")
-    #    plt.figure()
-    #    plt.plot(x_sol[0, :], x_sol[1, :])
-    #    plt.xlabel("x")
-    #    plt.ylabel("y")
-    #    plt.show()
-    t = np.linspace(0, dt * N, num=N - 1)
-
-    fig, axs = plt.subplots(3)
-    fig.suptitle("Solution")
-    axs[0].plot(x_sol[0, :], x_sol[1, :])
-    axs[0].set_title("Position")
-    axs[1].plot(t, u_sol[0, :])
-    # axs[1].plot(t, u_sol[1, :])
-    axs[1].set_title("Input x")
-    axs[2].plot(t, u_sol[1, :])
-    axs[2].set_title("Input y")
+    # Plotting
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    x, y, z = np.meshgrid(
+        np.arange(-2, 6, 1), np.arange(-2, 10, 1), np.arange(0, 15, 3)
+    )
+    u, v, w = get_wind_field(x, y, z)
+    ax.quiver(x, y, z, u, v, w, length=0.1)
+    ax.plot(x_sol[0, :], x_sol[1, :], x_sol[2, :], label="Flight path", color="red")
+    ax.legend()
     plt.show()
 
-
-# Drake example
-def example():
-    # Discrete-time approximation of the double integrator.
-    dt = 0.01
-    A = np.eye(2) + dt * np.mat("0 1; 0 0")
-    B = dt * np.mat("0; 1")
-
-    prog = MathematicalProgram()
-
-    N = 284  # Note: I had to do a manual "line search" to find this.
-
-    # Create decision variables
-    u = np.empty((1, N - 1), dtype=Variable)
-    x = np.empty((2, N), dtype=Variable)
-    for n in range(N - 1):
-        u[:, n] = prog.NewContinuousVariables(1, "u" + str(n))
-        x[:, n] = prog.NewContinuousVariables(2, "x" + str(n))
-    x[:, N - 1] = prog.NewContinuousVariables(2, "x" + str(N))
-
-    # Add constraints
-    x0 = [-2, 0]
-    prog.AddBoundingBoxConstraint(x0, x0, x[:, 0])
-    for n in range(N - 1):
-        # Will eventually be prog.AddConstraint(x[:,n+1] == A@x[:,n] + B@u[:,n])
-        # See drake issues 12841 and 8315
-        prog.AddConstraint(eq(x[:, n + 1], A.dot(x[:, n]) + B.dot(u[:, n])))
-        prog.AddBoundingBoxConstraint(-1, 1, u[:, n])
-    xf = [0, 0]
-    prog.AddBoundingBoxConstraint(xf, xf, x[:, N - 1])
-
-    result = Solve(prog)
-
-    x_sol = result.GetSolution(x)
-    u_sol = result.GetSolution(u)
-    assert result.is_success(), "Optimization failed"
-
-    breakpoint()
-    print(x_sol)
-
-    plt.figure()
-    plt.plot(x_sol[0, :], x_sol[1, :])
-    plt.xlabel("q")
-    plt.ylabel("qdot")
+    t = np.linspace(0, dt * N, num=N - 1)
+    fig, axs = plt.subplots(3)
+    fig.suptitle("Input")
+    axs[0].plot(t, u_sol[0, :])
+    axs[0].set_title("Input x")
+    axs[1].plot(t, u_sol[1, :])
+    axs[1].set_title("Input y")
+    axs[2].plot(t, u_sol[2, :])
+    axs[2].set_title("Input z")
     plt.show()
 
 
