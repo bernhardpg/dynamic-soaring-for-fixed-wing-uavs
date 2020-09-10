@@ -10,14 +10,14 @@ import pdb
 
 
 def main():
-    N = 1000
+    N = 2000
     n_x = 6
     n_u = 3
 
     x0 = np.array([0, 0, 10, 100, 0, 50])
 
     max_iter = 10
-    regu_init = 100
+    regu_init = 1000
     x_trj, u_trj, cost_trace, regu_trace, redu_ratio_trace, redu_trace = run_ilqr(
         x0, n_x, n_u, N, max_iter, regu_init
     )
@@ -73,13 +73,24 @@ def main():
     )
     ax.scatter(x0[0], x0[1], x0[2])
     # goal = np.array([15, 0, 10])
-    ax.scatter(30, 0, 10)
+    ax.scatter(0, 20, 10)
     ax.legend()
-    plt.show()
+
+    # Plot input
+    X = x_trj[:-1:10, 0]
+    Y = x_trj[:-1:10, 1]
+    Z = x_trj[:-1:10, 2]
+    U = u_trj[::10, 0]
+    V = u_trj[::10, 1]
+    W = u_trj[::10, 2]
+
+    ax.quiver(X, Y, Z, U, V, W, length=1, linewidth=1, color="green")
+    ax.set_xlim([-10, 40])
+    ax.set_ylim([-10, 40])
+    ax.set_zlim([0, 15])
 
     dt = 0.001
     t = np.linspace(0, dt * N, num=N - 1)
-    breakpoint()
     fig, axs = plt.subplots(3)
     fig.suptitle("Input")
     axs[0].plot(t, u_trj[:, 0])

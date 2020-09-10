@@ -35,7 +35,7 @@ def rollout(x0, u_trj):
 def cost_stage(x, u):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    goal = np.array([30, 0, 10])
+    goal = np.array([0, 20, 10])
     c_pos = (x[0:3] - goal).dot(x[0:3] - goal)
     c_control = (u[0] ** 2 + u[1] ** 2) * 0.1
     return c_pos + c_control
@@ -172,6 +172,8 @@ def run_ilqr(x0, n_x, n_u, N, max_iter=50, regu_init=100):
     # First forward rollout
     u_trj = np.random.randn(N - 1, n_u) * 0.0001
     x_trj = rollout(x0, u_trj)
+
+
     total_cost = cost_trj(x_trj, u_trj)
     regu = regu_init
     max_regu = 10000
