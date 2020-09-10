@@ -3,7 +3,7 @@ from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from ilqr.ilqr import rollout
+from ilqr.ilqr import rollout, cost_stage, cost_trj
 from dynamics.glider import get_wind_field
 
 import pdb
@@ -16,6 +16,18 @@ def main():
     u_trj = np.zeros((N - 1, 3))
     x0 = np.array([0, 0, 10, 100, 0, 50])
     x_trj = rollout(x0, u_trj)
+
+    costs = np.zeros((N-1, 1))
+    for i in range(N - 1):
+        costs[i] = cost_stage(x_trj[i], u_trj[i])
+
+    total_cost = cost_trj(x_trj, u_trj)
+    print(total_cost)
+
+    plt.plot(costs)
+    plt.title("costs")
+    plt.show()
+
 
     # Plotting
     fig = plt.figure()
