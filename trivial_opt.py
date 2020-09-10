@@ -9,11 +9,11 @@ from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 
 def continous_dynamics(x, u):
     # Constants
-    air_density = 1
-    wing_area = 1
+    air_density = 1.255
+    wing_area = 1.5
     parasitic_drag = 1
-    wingspan = 1
-    mass = 1
+    wingspan = 2
+    mass = 2
 
     # Dynamics
     x_dot = np.empty(6, dtype=Expression)
@@ -26,17 +26,20 @@ def continous_dynamics(x, u):
     wind = np.array([get_wind(height), 0, 0])
     rel_vel = vel - wind
 
+    circ_squared_norm = (
+        pow(circulation[0], 2) + pow(circulation[1], 2) + pow(circulation[2], 2)
+    )
+
     x_dot[0:3] = vel
     x_dot[3:6] = (1 / mass) * (
         air_density * np.cross(circulation, rel_vel)
         - 0.5 * air_density * wing_area * parasitic_drag
-        # * np.linalg.norm(rel_vel)
+        * np.sqrt(rel_vel.T.dot(rel_vel) + 0.001)
         * rel_vel
-        - (2 * air_density / np.pi)
-        # * (np.linalg.norm(circulation) / wingspan) ** 2
-        * rel_vel
-        # / np.linalg.norm(rel_vel)
+        - (2 * air_density / np.pi) * (circ_squared_norm / wingspan ** 2) * rel_vel
+        / np.sqrt(rel_vel.T.dot(rel_vel) + 0.001)
         + mass * np.array([0, 0, -9.81])
+        # TODO How to get rid of absolute values? Split them up into their own terms and add constraints on them?
     )
 
     return x_dot
@@ -108,10 +111,10 @@ def main():
     fig = plt.figure()
     ax = fig.gca(projection="3d")
     x, y, z = np.meshgrid(
-        np.arange(-2, 6, 1), np.arange(-2, 10, 1), np.arange(0, 15, 3)
+        np.arange(-2, 10, 1), np.arange(-2, 10, 1), np.arange(0, 15, 3)
     )
     u, v, w = get_wind_field(x, y, z)
-    ax.quiver(x, y, z, u, v, w, length=0.1)
+    ax.quiver(x, y, z, u, v, w, length=0.2)
     ax.plot(x_sol[0, :], x_sol[1, :], x_sol[2, :], label="Flight path", color="red")
     ax.legend()
     plt.show()
