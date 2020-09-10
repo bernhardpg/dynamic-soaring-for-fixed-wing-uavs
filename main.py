@@ -3,7 +3,7 @@ from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from ilqr.ilqr import rollout, cost_stage, cost_trj
+from ilqr.ilqr import *
 from dynamics.glider import get_wind_field
 
 import pdb
@@ -11,13 +11,20 @@ import pdb
 
 def main():
     N = 10000
-    m = 6
+    n_x = 6
+    n_u = 3
 
-    u_trj = np.zeros((N - 1, 3))
+    u_trj = np.zeros((N - 1, n_u))
     x0 = np.array([0, 0, 10, 100, 0, 50])
     x_trj = rollout(x0, u_trj)
 
-    costs = np.zeros((N-1, 1))
+    derivs = derivatives(discrete_dynamics, cost_stage, cost_final, n_x, n_u)
+
+    ###########
+    # Test rollout and costs
+    ###########
+
+    costs = np.zeros((N - 1, 1))
     for i in range(N - 1):
         costs[i] = cost_stage(x_trj[i], u_trj[i])
 
@@ -28,13 +35,17 @@ def main():
     plt.title("costs")
     plt.show()
 
-
+    ###########
     # Plotting
+    ###########
+
     fig = plt.figure()
     ax = fig.gca(projection="3d")
     x, y, z = np.meshgrid(
         # (-min, max, num steps)
-        np.arange(-10, 100, 10), np.arange(-10, 100, 10), np.arange(0, 15, 3)
+        np.arange(-10, 100, 10),
+        np.arange(-10, 100, 10),
+        np.arange(-10, 15, 5),
     )
     u, v, w = get_wind_field(x, y, z)
     ax.quiver(x, y, z, u, v, w, length=1, linewidth=1)
