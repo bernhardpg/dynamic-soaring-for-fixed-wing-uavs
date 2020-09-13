@@ -32,22 +32,38 @@ def rollout(x0, u_trj):
 #######
 
 
+# def cost_stage(x, u):
+#     m = sym if x.dtype == object else np  # Check type for autodiff
+#
+#     c_control = u.dot(u) * 0.1
+#     return c_control
+#
+#
+# # No control penalty on final cost
+# def cost_final(x):
+#     m = sym if x.dtype == object else np  # Check type for autodiff
+#
+#     c_dist_travelled = -(x[0] ** 2 + x[1] ** 2) * 1000
+#     desired_height = 20
+#     c_keep_height = ((desired_height - x[2]) ** 2) * 10000
+#     return c_dist_travelled + c_keep_height
+
+
 def cost_stage(x, u):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    goal = np.array([0, 20, 10])
-    c_pos = (x[0:3] - goal).dot(x[0:3] - goal)
-    c_control = (u[0] ** 2 + u[1] ** 2) * 0.1
-    return c_pos + c_control
+    c_control = u.dot(u) * 0.1
+    goal = np.array([10, 2, 8])
+    c_dist = (x[0:3] - goal).dot(x[0:3] - goal)
+    return c_control + c_dist
 
 
-# No control penalty on final cost
 def cost_final(x):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    goal = np.array([15, 0, 10])
-    c_pos = (x[0:3] - goal).dot(x[0:3] - goal)
-    return c_pos
+    goal = np.array([3, 10, 10])
+    c_dist = (x[0:3] - goal).dot(x[0:3] - goal)
+    return c_dist
 
 
 def cost_trj(x_trj, u_trj):
@@ -170,9 +186,16 @@ def backward_pass(x_trj, u_trj, regu, derivs):
 
 def run_ilqr(x0, n_x, n_u, N, max_iter=50, regu_init=100):
     # First forward rollout
-    u_trj = np.random.randn(N - 1, n_u) * 0.0001
+    u_trj = np.random.randn(N - 1, n_u) * 10
     x_trj = rollout(x0, u_trj)
 
+    # goal = np.array([3, 10, 10])
+    # u_trj = np.random.randn(N - 1, n_u) * 10000
+    # x_trj = np.zeros((N, n_x))
+    # x_trj[0, :] = x0
+    # for n in range(1, N):
+    #     alpha = n / N
+    #     x_trj[n, 0:3] = x0[0:3] * (1 - alpha) + goal * alpha
 
     total_cost = cost_trj(x_trj, u_trj)
     regu = regu_init
