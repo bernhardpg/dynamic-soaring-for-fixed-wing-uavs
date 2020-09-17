@@ -1,8 +1,13 @@
 import numpy as np
+import pydrake.symbolic as sym
+from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 
 
 # Dynamics taken from Slotine: successive shallow arcs
 def continuous_dynamics(state, u):
+    me = sym if state.dtype == object else np  # Check type for autodiff
+    # me = math engine
+
     # Constants
     rho = 1.255  # air_density
     S = 2  # wing_area
@@ -30,24 +35,31 @@ def continuous_dynamics(state, u):
     W_dot = 0  # TODO I think this is correct
 
     V_dot = (1 / m) * (
-        -D - m * g * np.sin(gamma) - m * W_dot * np.cos(gamma) * np.sin(psi)
+        -D - m * g * me.sin(gamma) - m * W_dot * me.cos(gamma) * me.sin(psi)
     )
 
     gamma_dot = (1 / (m * V)) * (
-        L * np.cos(phi)
-        - m * g * np.cos(gamma)
-        - m * W_dot * np.sin(gamma) * np.sin(psi)
+        L * me.cos(phi)
+        - m * g * me.cos(gamma)
+        - m * W_dot * me.sin(gamma) * me.sin(psi)
     )
 
-    psi_dot = (1 / (m * V * np.cos(gamma))) * (
-        L * np.sin(phi) + m * W_dot * np.cos(psi)
+    psi_dot = (1 / (m * V * me.cos(gamma))) * (
+        L * me.sin(phi) + m * W_dot * me.cos(psi)
     )  # NOTE gamma != pi/2
 
-    z_dot = V * np.sin(gamma)
-    x_dot = V * np.cos(gamma) * np.cos(psi)
-    y_dot = V * np.cos(gamma) * np.sin(psi) - W
+    z_dot = V * me.sin(gamma)
+    x_dot = V * me.cos(gamma) * me.cos(psi)
+    y_dot = V * me.cos(gamma) * me.sin(psi) - W
 
-    state_dot = np.array([V_dot, psi_dot, gamma_dot, z_dot, x_dot, y_dot])
+    # Dynamics
+    state_dot = np.empty(6, dtype=Expression)
+    state_dot[0] = V_dot
+    state_dot[1] = psi_dot
+    state_dot[2] = gamma_dot
+    state_dot[3] = z_dot
+    state_dot[4] = x_dot
+    state_dot[5] = y_dot
 
     return state_dot
 

@@ -1,14 +1,19 @@
 import numpy as np
+import pdb
+from ilqr.ilqr import run_ilqr
+
+from plot.plot import plot_trj_3_wind
+import matplotlib.pyplot as plt
+from dynamics.slotine_dynamics import get_wind_field
 
 def test_ilqr():
-
     N = 5000
     n_x = 6
-    n_u = 3
+    n_u = 2
 
-    x0 = np.array([10, 0, 0, 0, 0, 10])
+    x0 = np.array([50, -np.pi / 2, 0, 5, 0, 0])
 
-    max_iter = 15
+    max_iter = 10
     regu_init = 1000
     x_trj, u_trj, cost_trace, regu_trace, redu_ratio_trace, redu_trace = run_ilqr(
         x0, n_x, n_u, N, max_iter, regu_init
@@ -17,6 +22,14 @@ def test_ilqr():
     ###########
     # Plotting
     ###########
+
+    # Slotine dynamics: x = [airspeed, heading, flight_path_angle, z, x, y]
+    z = x_trj[:, 3]
+    x = x_trj[:, 4]
+    y = x_trj[:, 5]
+
+    plot_trj_3_wind(np.vstack((x, y, z)).T, get_wind_field)
+
 
     ####
     # Analysis
@@ -48,6 +61,7 @@ def test_ilqr():
     plt.ylabel("Regularization")
     plt.xlabel("# Iteration")
     plt.tight_layout()
+    plt.show()
 
     ####
     # 3D plot

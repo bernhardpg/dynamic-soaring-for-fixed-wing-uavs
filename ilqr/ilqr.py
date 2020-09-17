@@ -2,10 +2,10 @@ import numpy as np
 from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 import pydrake.symbolic as sym
 
-from dynamics.glider import continuous_dynamics
+from dynamics.slotine_dynamics import continuous_dynamics
 
 
-# Inspired by this
+# Inspired by this homework from Underactuated Robotics by Russ Tedrake
 # https://colab.research.google.com/github/RussTedrake/underactuated/blob/master/exercises/trajopt/ilqr_driving/ilqr_driving.ipynb#scrollTo=4IbLDqg7D
 
 # Discretize using forward Euler
@@ -32,37 +32,19 @@ def rollout(x0, u_trj):
 #######
 
 
-# def cost_stage(x, u):
-#     m = sym if x.dtype == object else np  # Check type for autodiff
-#
-#     c_control = u.dot(u) * 0.1
-#     return c_control
-#
-#
-# # No control penalty on final cost
-# def cost_final(x):
-#     m = sym if x.dtype == object else np  # Check type for autodiff
-#
-#     c_dist_travelled = -(x[0] ** 2 + x[1] ** 2) * 1000
-#     desired_height = 20
-#     c_keep_height = ((desired_height - x[2]) ** 2) * 10000
-#     return c_dist_travelled + c_keep_height
-
-
 def cost_stage(x, u):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    c_control = u.dot(u) * 0.1
-    goal = np.array([10, 2, 8])
-    c_dist = (x[0:3] - goal).dot(x[0:3] - goal)
-    return c_control + c_dist
+    #c_height = (x[3] - 5) ** 2
+    c_control = u[1] ** 2 * 0.1
+    return c_control
 
 
 def cost_final(x):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    goal = np.array([3, 10, 10])
-    c_dist = (x[0:3] - goal).dot(x[0:3] - goal)
+    goal = np.array([5, -15, -5]) #z, x, y
+    c_dist = (x[3:6] - goal).dot(x[3:6] - goal) * 100
     return c_dist
 
 
@@ -126,7 +108,7 @@ class derivatives:
 def Q_terms(l_x, l_u, l_xx, l_ux, l_uu, f_x, f_u, V_x, V_xx):
     Q_x = l_x + f_x.T.dot(V_x)
     Q_u = l_u + f_u.T.dot(V_x)
-    Q_xx = l_xx + f_x.T.dot(V_xx).dot(f_x)
+    Q_xx = l_xx + f_x.T.dot(V_xx).dot(f_x)  # TODO add second order terms?
     Q_ux = l_ux + f_u.T.dot(V_xx).dot(f_x)
     Q_uu = l_uu + f_u.T.dot(V_xx).dot(f_u)
     return Q_x, Q_u, Q_xx, Q_ux, Q_uu
@@ -145,6 +127,7 @@ def V_terms(Q_x, Q_u, Q_xx, Q_ux, Q_uu, K, k):
     return V_x, V_xx
 
 
+# TODO why is this as it is?
 def expected_cost_reduction(Q_u, Q_uu, k):
     return -Q_u.T.dot(k) - 0.5 * k.T.dot(Q_uu.dot(k))
 
@@ -174,28 +157,26 @@ def backward_pass(x_trj, u_trj, regu, derivs):
         Q_x, Q_u, Q_xx, Q_ux, Q_uu = Q_terms(
             l_x, l_u, l_xx, l_ux, l_uu, f_x, f_u, V_x, V_xx
         )
+
         # Add regularization to ensure that Q_uu is invertible and nicely conditioned
         Q_uu_regu = Q_uu + np.eye(Q_uu.shape[0]) * regu
         k, K = gains(Q_uu_regu, Q_u, Q_ux)
         k_trj[n, :] = k
         K_trj[n, :, :] = K
+
         V_x, V_xx = V_terms(Q_x, Q_u, Q_xx, Q_ux, Q_uu, K, k)
+
         expected_cost_redu += expected_cost_reduction(Q_u, Q_uu, k)
+
     return k_trj, K_trj, expected_cost_redu
 
 
 def run_ilqr(x0, n_x, n_u, N, max_iter=50, regu_init=100):
     # First forward rollout
-    u_trj = np.random.randn(N - 1, n_u) * 10
+    u_trj = np.random.randn(N - 1, n_u) * 0.01
+    # We want ~= 1 in lift coeff
+    u_trj[:, 0] += np.ones((N - 1))
     x_trj = rollout(x0, u_trj)
-
-    # goal = np.array([3, 10, 10])
-    # u_trj = np.random.randn(N - 1, n_u) * 10000
-    # x_trj = np.zeros((N, n_x))
-    # x_trj[0, :] = x0
-    # for n in range(1, N):
-    #     alpha = n / N
-    #     x_trj[n, 0:3] = x0[0:3] * (1 - alpha) + goal * alpha
 
     total_cost = cost_trj(x_trj, u_trj)
     regu = regu_init
@@ -214,6 +195,7 @@ def run_ilqr(x0, n_x, n_u, N, max_iter=50, regu_init=100):
 
     # Run main loop
     for it in range(max_iter):
+
         print("Iteration: " + str(it))
         # Backward and forward pass
         k_trj, K_trj, expected_cost_redu = backward_pass(x_trj, u_trj, regu, derivs)
