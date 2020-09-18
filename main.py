@@ -1,10 +1,9 @@
-import numpy as np
-from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression
 from test.test_dynamics import *
-from test.test_ilqr import test_ilqr
+from trajopt.nonlin_trajopt import *
+
 
 def main():
-    test_ilqr()
+    direct_collocation()
     return 0
 
 

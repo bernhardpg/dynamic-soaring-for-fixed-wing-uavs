@@ -7,9 +7,9 @@ def plot_trj_3_wind(x_trj, wind_field_fn):
     ax = fig.gca(projection="3d")
     x, y, z = np.meshgrid(
         # (-min, max, step_length)
-        np.arange(-10, 10, 7),
-        np.arange(-10, 10, 7),
-        np.arange(0, 10, 3),
+        np.arange(-50, 50, 15),
+        np.arange(-50, 50, 15),
+        np.arange(0, 40, 10),
     )
     u, v, w = wind_field_fn(x, y, z)
     ax.quiver(x, y, z, u, v, w, length=1, linewidth=1)
