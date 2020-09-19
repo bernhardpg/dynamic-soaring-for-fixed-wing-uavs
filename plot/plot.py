@@ -37,9 +37,9 @@ def plot_trj_3_wind(x_trj, dir_vector):
     z_min = 0
     z_max = max(x_trj[:, 2])
 
-    dx = np.abs(x_min - x_max) / 5 - 1
-    dy = np.abs(y_min - y_max) / 5 - 1
-    dz = np.abs(z_min - z_max) / 3 - 1
+    dx = np.abs((x_min - x_max) / 5.0) - 1
+    dy = np.abs((y_min - y_max) / 5.0) - 1
+    dz = np.abs((z_min - z_max) / 3.0) - 1
 
     # Plot wind field
     x, y, z = np.meshgrid(
@@ -49,6 +49,7 @@ def plot_trj_3_wind(x_trj, dir_vector):
         np.arange(z_min, z_max, dz),
     )
     u, v, w = get_wind_field(x, y, z)
+
     ax.quiver(
         x,
         y,
@@ -89,6 +90,7 @@ def plot_trj_3_wind(x_trj, dir_vector):
         arrow_length_ratio=0.1,
     )
 
+    ax.set_zlim(0, z_max)
     ax.legend()
     ax.set_xlabel("x")
     ax.set_ylabel("y")

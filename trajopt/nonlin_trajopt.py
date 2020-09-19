@@ -9,20 +9,19 @@ from pydrake.all import (
     Expression,
     SnoptSolver,
     PiecewisePolynomial,
+    Simulator,
+    DiagramBuilder,
+    LogOutput,
 )
 import matplotlib.pyplot as plt
 
 from plot.plot import plot_trj_3_wind, plot_input_slotine_glider
 from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
-
+from dynamics.zhukovskii_glider import ZhukovskiiGlider
 
 
 def direct_collocation():
     print("Running direct collocation")
-
-    from pydrake.systems.analysis import Simulator
-    from pydrake.systems.framework import DiagramBuilder
-    from pydrake.systems.primitives import LogOutput
 
     plant = SlotineGlider()
     context = plant.CreateDefaultContext()
@@ -57,7 +56,7 @@ def direct_collocation():
     dircol.AddConstraintToAllKnotPoints(x[3] >= min_height)
 
     # Add initial state
-    travel_angle = (3 / 2) * np.pi - 0.5
+    travel_angle = (3 / 2) * np.pi + 0.1
     h0 = 10
     dir_vector = np.array([np.cos(travel_angle), np.sin(travel_angle)])
 
@@ -141,15 +140,7 @@ def direct_collocation():
     return 0
 
 
-def simulate_drake_system():
-    print("Running direct collocation")
-
-    from pydrake.systems.analysis import Simulator
-    from pydrake.systems.framework import DiagramBuilder
-    from pydrake.systems.primitives import LogOutput
-
-    plant = SlotineGlider()
-
+def simulate_drake_system(plant):
     # Create a simple block diagram containing our system.
     builder = DiagramBuilder()
     system = builder.AddSystem(plant)
@@ -158,19 +149,17 @@ def simulate_drake_system():
 
     # Set the initial conditions, x(0).
     context = diagram.CreateDefaultContext()
-    context.SetContinuousState([10, 0, 0, 20, 0, 0])
+    context.SetContinuousState([0, 0, 20, 10, 0, 0])
 
     # Create the simulator, and simulate for 10 seconds.
     simulator = Simulator(diagram, context)
-    simulator.AdvanceTo(10)
+    simulator.AdvanceTo(30)
 
     # Plotting
     x_sol = logger.data().T
-    z = x_sol[:, 3]
-    x = x_sol[:, 4]
-    y = x_sol[:, 5]
 
-    plot_trj_3_wind(np.vstack((x, y, z)).T, get_wind_field)
+    plot_trj_3_wind(x_sol[:, 0:3], np.array([0, 0, 0]))
+    plt.show()
 
     return 0
 

@@ -3,7 +3,11 @@ from trajopt.nonlin_trajopt import *
 
 
 def main():
-    direct_collocation()
+    #direct_collocation()
+    plant = ZhukovskiiGlider()
+    simulate_drake_system(plant)
+
+
     return 0
 
 
