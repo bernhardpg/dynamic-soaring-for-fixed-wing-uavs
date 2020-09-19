@@ -12,6 +12,7 @@ from pydrake.all import (
 )
 
 
+
 # See this example for example implementation:
 # https://github.com/RussTedrake/underactuated/blob/master/underactuated/quadrotor2d.py#L44
 
@@ -57,8 +58,8 @@ def SlotineGlider_(T):
 
             height_dot = V * np.sin(gamma)
 
-            W = linear_wind_model(height)
-            W_dot = ddt_linear_wind_model(height, height_dot)
+            W = wind_model(height)
+            W_dot = ddt_wind_model(height, height_dot)
 
             V_dot = (1 / self.m) * (
                 -D
@@ -182,16 +183,26 @@ def ddt_linear_wind_model(z, z_dot):
 
 
 def exp_wind_model(z):  # Taken from slotine
-    W0 = 2  # Free stream wind speed
+    W0 = 16  # Free stream wind speed
     delta = 3  # wind_shear_layer thickness
     W = W0 / (1 + np.exp(-z / delta))
     return W
 
 
+def ddt_exp_wind_model(z, z_dot):
+    W0 = 16  # Free stream wind speed
+    delta = 3  # wind_shear_layer thickness
+    W_dot = (W0 * np.exp(-z / delta) * z_dot) / (delta * (1 + np.exp(-z / delta)) ** 2)
+    return W_dot
+
+
 # Assume wind blows from north to south, i.e. along negative y axis
 def get_wind_field(x, y, z):
     u = np.zeros(x.shape)
-    v = -linear_wind_model(z)
+    v = -wind_model(z)
     w = np.zeros(z.shape)
 
     return u, v, w
+
+wind_model = exp_wind_model
+ddt_wind_model = ddt_exp_wind_model

@@ -8,6 +8,7 @@ from pydrake.all import (
     Variable,
     Expression,
     SnoptSolver,
+    PiecewisePolynomial,
 )
 import matplotlib.pyplot as plt
 
@@ -42,7 +43,8 @@ def direct_collocation():
     # Add input constraints
     u = dircol.input()
     dircol.AddConstraintToAllKnotPoints(0 <= u[0])
-    dircol.AddConstraintToAllKnotPoints(u[0] <= 2)
+    dircol.AddConstraintToAllKnotPoints(-np.pi/2 <= u[1])
+    dircol.AddConstraintToAllKnotPoints(u[1] <= np.pi/2)
 
     # Add state constraints
     x = dircol.state()
@@ -52,39 +54,52 @@ def direct_collocation():
     dircol.AddConstraintToAllKnotPoints(x[3] >= min_height)
 
     # Add initial state
-    V0 = 10
-    travel_angle = np.pi * (3/2)
-    h0 = 20
-
+    V0 = 10 # Guess for velocity
+    travel_angle = np.pi * (3 / 2)
+    h0 = 10
     dir_vector = np.array([np.cos(travel_angle), np.sin(travel_angle)])
 
+    # Start at initial position
     x0 = np.array([V0, travel_angle, 0, h0, 0, 0])
-    dircol.AddBoundingBoxConstraint(x0, x0, dircol.initial_state())
+    dircol.AddBoundingBoxConstraint(x0[3:6], x0[3:6], dircol.initial_state()[3:6])
 
-    # x0_pos = np.array([h0, 0, 0])
-    # # NOTE Much slower once I remove constraints on the first three states
-    # dircol.AddBoundingBoxConstraint(x0_pos, x0_pos, dircol.initial_state()[3:6])
+    # Periodicity constraints
+    dircol.AddLinearConstraint(dircol.final_state()[0] == dircol.initial_state()[0])
+    dircol.AddLinearConstraint(dircol.final_state()[1] == dircol.initial_state()[1])
+    dircol.AddLinearConstraint(dircol.final_state()[2] == dircol.initial_state()[2])
+    dircol.AddLinearConstraint(dircol.final_state()[3] == dircol.initial_state()[3])
+    dircol.AddLinearConstraint(dircol.final_state()[4] == dircol.initial_state()[4])
 
     # Maximize distance travelled in desired direction
     p0 = dircol.initial_state()
     p1 = dircol.final_state()
-
-    Q_dist = 1
+    Q = 1
     dist_travelled = np.array([p1[4] - p0[4], p1[5] - p0[5]])
-    dircol.AddFinalCost(-dir_vector.T.dot(dist_travelled * Q_dist))
-
-    # Minimize lost height
-    Q_height = 1
-    lost_height = Q_height * (p1[3] - p0[3]) ** 2
-    dircol.AddFinalCost(lost_height)
+    dircol.AddFinalCost(-(dir_vector.T.dot(dist_travelled)) * Q)
 
     # Cost on input effort
     R = 0.1
-    dircol.AddRunningCost(R * (u[0] - 1) ** 2 + R * u[1] ** 2)
+    # dircol.AddRunningCost(R * (u[0] - 1) ** 2 + R * u[1] ** 2)
+
+    # Initial guess is a straight line from x0 in direction
+    guessed_total_dist_travelled = 1000
+    xf = np.array(
+        [
+            V0,
+            travel_angle,
+            0,
+            h0,
+            dir_vector[0] * guessed_total_dist_travelled,
+            dir_vector[1] * guessed_total_dist_travelled,
+        ]
+    )
+    initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
+        [0.0, 4.0], np.column_stack((x0, xf))
+    )
+    #dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
 
     result = Solve(dircol)
-    # assert result.is_success()
-    print("Found solution: {0}".format(result.is_success()))
+    assert result.is_success()
 
     # PLOTTING
     N_plot = 100

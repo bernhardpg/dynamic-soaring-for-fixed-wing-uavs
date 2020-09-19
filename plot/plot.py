@@ -54,7 +54,7 @@ def plot_trj_3_wind(x_trj, wind_field_fn, dir_vector):
         u,
         v,
         w,
-        length=1,
+        length=1,#np.sqrt(dx ** 2 + dy ** 2) / 15,
         linewidth=0.7,
         arrow_length_ratio=0.1,
         pivot="middle",
@@ -83,7 +83,8 @@ def plot_trj_3_wind(x_trj, wind_field_fn, dir_vector):
         0,
         color="green",
         label="Desired direction",
-        length=np.sqrt(dx ** 2 + dy ** 2) / 10,
+        length=np.sqrt(dx ** 2 + dy ** 2),
+        arrow_length_ratio=0.1,
     )
 
     ax.legend()
