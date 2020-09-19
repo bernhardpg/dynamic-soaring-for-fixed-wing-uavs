@@ -27,6 +27,7 @@ def direct_collocation():
     context = plant.CreateDefaultContext()
 
     N = 21
+    initial_guess = True
     max_dt = 0.5
     max_tf = N * max_dt
     dircol = DirectCollocation(
@@ -43,8 +44,9 @@ def direct_collocation():
     # Add input constraints
     u = dircol.input()
     dircol.AddConstraintToAllKnotPoints(0 <= u[0])
-    dircol.AddConstraintToAllKnotPoints(-np.pi/2 <= u[1])
-    dircol.AddConstraintToAllKnotPoints(u[1] <= np.pi/2)
+    dircol.AddConstraintToAllKnotPoints(u[0] <= 3)
+    dircol.AddConstraintToAllKnotPoints(-np.pi / 2 <= u[1])
+    dircol.AddConstraintToAllKnotPoints(u[1] <= np.pi / 2)
 
     # Add state constraints
     x = dircol.state()
@@ -54,50 +56,65 @@ def direct_collocation():
     dircol.AddConstraintToAllKnotPoints(x[3] >= min_height)
 
     # Add initial state
-    V0 = 10 # Guess for velocity
-    travel_angle = np.pi * (3 / 2)
+    travel_angle = (3 / 2) * np.pi - 0.5
     h0 = 10
     dir_vector = np.array([np.cos(travel_angle), np.sin(travel_angle)])
 
     # Start at initial position
-    x0 = np.array([V0, travel_angle, 0, h0, 0, 0])
-    dircol.AddBoundingBoxConstraint(x0[3:6], x0[3:6], dircol.initial_state()[3:6])
+    x0_pos = np.array([h0, 0, 0])
+    dircol.AddBoundingBoxConstraint(x0_pos, x0_pos, dircol.initial_state()[3:6])
 
     # Periodicity constraints
     dircol.AddLinearConstraint(dircol.final_state()[0] == dircol.initial_state()[0])
     dircol.AddLinearConstraint(dircol.final_state()[1] == dircol.initial_state()[1])
     dircol.AddLinearConstraint(dircol.final_state()[2] == dircol.initial_state()[2])
     dircol.AddLinearConstraint(dircol.final_state()[3] == dircol.initial_state()[3])
-    dircol.AddLinearConstraint(dircol.final_state()[4] == dircol.initial_state()[4])
+
+    # Always end in right direction
+    # NOTE this assumes that we always are starting in origin
+    if travel_angle % ((3 / 2) * np.pi) == 0:
+        dircol.AddConstraint(dircol.final_state()[4] == dircol.initial_state()[4])
+    elif travel_angle % np.pi == 0:
+        dircol.AddConstraint(dircol.final_state()[5] == dircol.initial_state()[5])
+    else:
+        dircol.AddConstraint(
+            dircol.final_state()[5] == dircol.final_state()[4] * np.tan(travel_angle)
+        )
 
     # Maximize distance travelled in desired direction
     p0 = dircol.initial_state()
     p1 = dircol.final_state()
     Q = 1
-    dist_travelled = np.array([p1[4] - p0[4], p1[5] - p0[5]])
+    dist_travelled = np.array([p1[4], p1[5]])  # NOTE assume starting in origin
     dircol.AddFinalCost(-(dir_vector.T.dot(dist_travelled)) * Q)
 
-    # Cost on input effort
-    R = 0.1
-    # dircol.AddRunningCost(R * (u[0] - 1) ** 2 + R * u[1] ** 2)
+    if True:
+        # Cost on input effort
+        R = 0.1
+        dircol.AddRunningCost(R * (u[0]) ** 2 + R * u[1] ** 2)
 
     # Initial guess is a straight line from x0 in direction
-    guessed_total_dist_travelled = 1000
-    xf = np.array(
-        [
-            V0,
-            travel_angle,
-            0,
-            h0,
-            dir_vector[0] * guessed_total_dist_travelled,
-            dir_vector[1] * guessed_total_dist_travelled,
-        ]
-    )
-    initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
-        [0.0, 4.0], np.column_stack((x0, xf))
-    )
-    #dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
+    if initial_guess:
+        V0_guess = 10  # Guess for initial velocity
+        x0_guess = np.array([V0_guess, travel_angle, 0, h0, 0, 0])
 
+        guessed_total_dist_travelled = 200
+        xf_guess = np.array(
+            [
+                V0_guess,
+                travel_angle,
+                0,
+                h0,
+                dir_vector[0] * guessed_total_dist_travelled,
+                dir_vector[1] * guessed_total_dist_travelled,
+            ]
+        )
+        initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
+            [0.0, 4.0], np.column_stack((x0_guess, xf_guess))
+        )
+        dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
+
+    # Solve direct collocation
     result = Solve(dircol)
     assert result.is_success()
 

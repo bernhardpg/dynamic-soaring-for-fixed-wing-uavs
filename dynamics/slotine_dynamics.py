@@ -102,6 +102,7 @@ def SlotineGlider_(T):
 SlotineGlider = SlotineGlider_[None]
 
 
+# TODO remove this
 # Dynamics taken from Slotine: successive shallow arcs
 def continuous_dynamics(state, u):
     me = sym if state.dtype == object else np  # check type for autodiff
@@ -166,32 +167,31 @@ def continuous_dynamics(state, u):
 
 
 def linear_wind_model(z):  # Taken from Deittert et al.
-    V_r = 16  # m/s
+    W0 = 16  # m/s
     p = 0.143
-    h_r = 20  # ref height, can be set arbritrary
-    W = V_r * (z / h_r) ** p  # wind strength
+    h_r = 5 # ref height, can be set arbritrary
+    W = W0 * (z / h_r) ** p  # wind strength
 
     return W
 
-
 def ddt_linear_wind_model(z, z_dot):
-    V_r = 16  # m/s
+    W0 = 16  # m/s
     p = 0.143
-    h_r = 20  # ref height, can be set arbritrary
-    W_dot = ((p * V_r) / z) * (z / h_r) ** p * z_dot
+    h_r = 5 # ref height, can be set arbritrary
+    W_dot = ((p * W0) / z) * (z / h_r) ** p * z_dot
     return W_dot
 
 
 def exp_wind_model(z):  # Taken from slotine
     W0 = 16  # Free stream wind speed
-    delta = 3  # wind_shear_layer thickness
+    delta = 5  # wind_shear_layer thickness
     W = W0 / (1 + np.exp(-z / delta))
     return W
 
 
 def ddt_exp_wind_model(z, z_dot):
     W0 = 16  # Free stream wind speed
-    delta = 3  # wind_shear_layer thickness
+    delta = 5  # wind_shear_layer thickness
     W_dot = (W0 * np.exp(-z / delta) * z_dot) / (delta * (1 + np.exp(-z / delta)) ** 2)
     return W_dot
 
