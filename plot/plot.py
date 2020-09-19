@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
+
 
 def plot_input_slotine_glider(t, u_trj):
     plt.subplots(figsize=(5, 3))
@@ -20,7 +22,7 @@ def plot_input_slotine_glider(t, u_trj):
     return
 
 
-def plot_trj_3_wind(x_trj, wind_field_fn, dir_vector):
+def plot_trj_3_wind(x_trj, dir_vector):
     # To make the plot function general:
     #   x_trj.shape = (N, 3)
     #   x_trj = [x, y, z]
@@ -46,7 +48,7 @@ def plot_trj_3_wind(x_trj, wind_field_fn, dir_vector):
         np.arange(y_min, y_max, dy),
         np.arange(z_min, z_max, dz),
     )
-    u, v, w = wind_field_fn(x, y, z)
+    u, v, w = get_wind_field(x, y, z)
     ax.quiver(
         x,
         y,
@@ -54,7 +56,7 @@ def plot_trj_3_wind(x_trj, wind_field_fn, dir_vector):
         u,
         v,
         w,
-        length=1,#np.sqrt(dx ** 2 + dy ** 2) / 15,
+        length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
         linewidth=0.7,
         arrow_length_ratio=0.1,
         pivot="middle",

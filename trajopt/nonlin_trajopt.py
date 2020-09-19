@@ -13,7 +13,8 @@ from pydrake.all import (
 import matplotlib.pyplot as plt
 
 from plot.plot import plot_trj_3_wind, plot_input_slotine_glider
-from dynamics.slotine_dynamics import continuous_dynamics, get_wind_field, SlotineGlider
+from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
+
 
 
 def direct_collocation():
@@ -128,7 +129,7 @@ def direct_collocation():
     z = x_knots[3, :]
     x = x_knots[4, :]
     y = x_knots[5, :]
-    plot_trj_3_wind(np.vstack((x, y, z)).T, get_wind_field, dir_vector)
+    plot_trj_3_wind(np.vstack((x, y, z)).T, dir_vector)
 
     # Plot input
     u_trajectory = dircol.ReconstructInputTrajectory(result)
