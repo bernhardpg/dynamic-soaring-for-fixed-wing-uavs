@@ -23,7 +23,7 @@ def SlotineGlider_(T):
             LeafSystem_[T].__init__(self, converter)
 
             # two inputs (thrust)
-            # self.DeclareVectorInputPort("u", BasicVector_[T](2))
+            self.DeclareVectorInputPort("u", BasicVector_[T](2))
             # six outputs (full state)
             self.DeclareVectorOutputPort("x", BasicVector_[T](6), self.CopyStateOut)
             # three positions, three velocities
@@ -44,8 +44,7 @@ def SlotineGlider_(T):
 
         def DoCalcTimeDerivatives(self, context, derivatives):
             x = context.get_continuous_state_vector().CopyToVector()
-            # u = self.EvalVectorInput(context, 0).CopyToVector()
-            u = [1, 0]
+            u = self.EvalVectorInput(context, 0).CopyToVector()
 
             # glider_speed, heading, flight_path_angle, z, x, y
             V, psi, gamma, height, pos_x, pos_y = x

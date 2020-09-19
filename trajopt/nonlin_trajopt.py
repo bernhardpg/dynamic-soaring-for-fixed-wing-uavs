@@ -3,6 +3,7 @@ import pdb
 from pydrake.all import (
     eq,
     MathematicalProgram,
+    DirectCollocation,
     Solve,
     Variable,
     Expression,
@@ -10,9 +11,9 @@ from pydrake.all import (
 )
 import matplotlib.pyplot as plt
 
-
-from plot.plot import plot_trj_3_wind
+from plot.plot import plot_trj_3_wind, plot_input_slotine_glider
 from dynamics.slotine_dynamics import continuous_dynamics, get_wind_field, SlotineGlider
+
 
 def direct_collocation():
     print("Running direct collocation")
@@ -22,6 +23,100 @@ def direct_collocation():
     from pydrake.systems.primitives import LogOutput
 
     plant = SlotineGlider()
+    context = plant.CreateDefaultContext()
+
+    N = 21
+    max_dt = 0.5
+    max_tf = N * max_dt
+    dircol = DirectCollocation(
+        plant,
+        context,
+        num_time_samples=N,
+        minimum_timestep=0.05,
+        maximum_timestep=max_dt,
+    )
+
+    # Constrain all timesteps, $h[k]$, to be equal, so the trajectory breaks are evenly distributed.
+    dircol.AddEqualTimeIntervalsConstraints()
+
+    # Add input constraints
+    u = dircol.input()
+    dircol.AddConstraintToAllKnotPoints(0 <= u[0])
+    dircol.AddConstraintToAllKnotPoints(u[0] <= 2)
+
+    # Add state constraints
+    x = dircol.state()
+    min_speed = 5
+    dircol.AddConstraintToAllKnotPoints(x[0] >= min_speed)
+    min_height = 0.5
+    dircol.AddConstraintToAllKnotPoints(x[3] >= min_height)
+
+    # Add initial state
+    V0 = 10
+    travel_angle = np.pi * (3/2)
+    h0 = 20
+
+    dir_vector = np.array([np.cos(travel_angle), np.sin(travel_angle)])
+
+    x0 = np.array([V0, travel_angle, 0, h0, 0, 0])
+    dircol.AddBoundingBoxConstraint(x0, x0, dircol.initial_state())
+
+    # x0_pos = np.array([h0, 0, 0])
+    # # NOTE Much slower once I remove constraints on the first three states
+    # dircol.AddBoundingBoxConstraint(x0_pos, x0_pos, dircol.initial_state()[3:6])
+
+    # Maximize distance travelled in desired direction
+    p0 = dircol.initial_state()
+    p1 = dircol.final_state()
+
+    Q_dist = 1
+    dist_travelled = np.array([p1[4] - p0[4], p1[5] - p0[5]])
+    dircol.AddFinalCost(-dir_vector.T.dot(dist_travelled * Q_dist))
+
+    # Minimize lost height
+    Q_height = 1
+    lost_height = Q_height * (p1[3] - p0[3]) ** 2
+    dircol.AddFinalCost(lost_height)
+
+    # Cost on input effort
+    R = 0.1
+    dircol.AddRunningCost(R * (u[0] - 1) ** 2 + R * u[1] ** 2)
+
+    result = Solve(dircol)
+    # assert result.is_success()
+    print("Found solution: {0}".format(result.is_success()))
+
+    # PLOTTING
+    N_plot = 100
+
+    # Plot trajectory
+    x_trajectory = dircol.ReconstructStateTrajectory(result)
+    times = np.linspace(x_trajectory.start_time(), x_trajectory.end_time(), N_plot)
+    x_knots = np.hstack([x_trajectory.value(t) for t in times])
+    z = x_knots[3, :]
+    x = x_knots[4, :]
+    y = x_knots[5, :]
+    plot_trj_3_wind(np.vstack((x, y, z)).T, get_wind_field, dir_vector)
+
+    # Plot input
+    u_trajectory = dircol.ReconstructInputTrajectory(result)
+    u_knots = np.hstack([u_trajectory.value(t) for t in times])
+
+    plot_input_slotine_glider(times, u_knots.T)
+
+    plt.show()
+    return 0
+
+
+def simulate_drake_system():
+    print("Running direct collocation")
+
+    from pydrake.systems.analysis import Simulator
+    from pydrake.systems.framework import DiagramBuilder
+    from pydrake.systems.primitives import LogOutput
+
+    plant = SlotineGlider()
+
     # Create a simple block diagram containing our system.
     builder = DiagramBuilder()
     system = builder.AddSystem(plant)
@@ -36,8 +131,8 @@ def direct_collocation():
     simulator = Simulator(diagram, context)
     simulator.AdvanceTo(10)
 
+    # Plotting
     x_sol = logger.data().T
-
     z = x_sol[:, 3]
     x = x_sol[:, 4]
     y = x_sol[:, 5]
@@ -45,6 +140,7 @@ def direct_collocation():
     plot_trj_3_wind(np.vstack((x, y, z)).T, get_wind_field)
 
     return 0
+
 
 def direct_transcription():
     prog = MathematicalProgram()
@@ -128,7 +224,7 @@ def direct_transcription():
     result = solver.Solve(prog)
 
     # be sure that the solution is optimal
-    #assert result.is_success()
+    # assert result.is_success()
 
     # retrieve optimal solution
     thrust_opt = result.GetSolution(x)
