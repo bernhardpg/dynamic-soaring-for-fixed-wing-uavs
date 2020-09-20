@@ -12,7 +12,7 @@ from pydrake.all import (
 
 from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_vector
 
-
+# From Mortens notes
 @TemplateSystem.define("ZhukovskiiGlider_")
 def ZhukovskiiGlider_(T):
     class Impl(LeafSystem_[T]):
@@ -20,7 +20,7 @@ def ZhukovskiiGlider_(T):
             LeafSystem_[T].__init__(self, converter)
 
             # two inputs (thrust)
-            # self.DeclareVectorInputPort("u", BasicVector_[T](3))
+            self.DeclareVectorInputPort("u", BasicVector_[T](3))
             # six outputs (full state)
             self.DeclareVectorOutputPort("x", BasicVector_[T](6), self.CopyStateOut)
             # three positions, three velocities
@@ -44,21 +44,31 @@ def ZhukovskiiGlider_(T):
             Impl._construct(self, converter=converter)
 
         def DoCalcTimeDerivatives(self, context, derivatives):
+            # x, y, z, xdot, ydot, zdot
             x = context.get_continuous_state_vector().CopyToVector()
-            # u = self.EvalVectorInput(context, 0).CopyToVector()
+            u = self.EvalVectorInput(context, 0).CopyToVector()
 
-            c = np.array([0, 4, 0])
+            c = u
             pos = x[0:3]
             vel = x[3:6]
 
             wind = get_wind_vector(pos[2])
             vel_rel = vel - wind
 
-            d = ((self.m * self.g) / (self.rho * self.Gamma * self.V_l)) * l(
-                np.linalg.norm(vel_rel) / self.V_l,
-                (self.rho * self.V_l * np.linalg.norm(c))
-                / (self.m * self.g),
-            )
+            # NOTE Original expression which is numerically bad
+            # d = ((self.m * self.g) / (self.rho * self.Gamma * self.V_l)) * l(
+            #    np.linalg.norm(vel_rel) / self.V_l,
+            #    (self.rho * self.V_l * np.linalg.norm(c)) / (self.m * self.g),
+            # )
+
+            # NOTE necessary rewrite to deal with gradients of vector norms being horrible
+            epsilon = 0.001
+            l_term = (
+                (vel_rel.T.dot(vel_rel)) / (self.V_l ** 2)
+                + (self.rho ** 2 * self.V_l ** 2 * c.T.dot(c)) / (self.m * self.g) ** 2
+            ) / (2 * (np.sqrt(vel_rel.T.dot(vel_rel) + epsilon) / self.V_l))
+
+            d = ((self.m * self.g) / (self.rho * self.Gamma * self.V_l)) * l_term
 
             vel_dot = (1 / self.m) * (
                 self.m * self.g_vec
@@ -77,7 +87,6 @@ def ZhukovskiiGlider_(T):
     return Impl
 
 
-# From Mortens notes
 def l(w, c):
     return (w ** 2 + c ** 2) / (2 * w)
 

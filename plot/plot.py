@@ -57,7 +57,7 @@ def plot_trj_3_wind(x_trj, dir_vector):
         u,
         v,
         w,
-        length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
+        length=1,# np.sqrt(dx ** 2 + dy ** 2) / 15,
         linewidth=0.7,
         arrow_length_ratio=0.1,
         pivot="middle",

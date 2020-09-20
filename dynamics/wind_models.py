@@ -47,8 +47,5 @@ def get_wind_vector(z):
     return W_vec
 
 
-#wind_model = exp_wind_model
-#ddt_wind_model = ddt_exp_wind_model
-
-wind_model = lambda x: 0
-ddt_wind_model = lambda x, y: 0
+wind_model = exp_wind_model
+ddt_wind_model = ddt_exp_wind_model
