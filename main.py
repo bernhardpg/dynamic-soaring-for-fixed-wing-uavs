@@ -7,7 +7,7 @@ def main():
     #direct_collocation()
     #plant = ZhukovskiiGliderDimless()
     #simulate_drake_system(plant)
-    direct_collocation_zhukovskii_glider()
+    direct_collocation()
 
 
     return 0
