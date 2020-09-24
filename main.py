@@ -1,10 +1,11 @@
 from test.test_dynamics import *
 from trajopt.nonlin_trajopt import *
+from dynamics.zhukovskii_glider import ZhukovskiiGliderDimless
 
 
 def main():
     #direct_collocation()
-    #plant = ZhukovskiiGlider()
+    #plant = ZhukovskiiGliderDimless()
     #simulate_drake_system(plant)
     direct_collocation_zhukovskii_glider()
 

@@ -17,16 +17,29 @@ import matplotlib.pyplot as plt
 
 from plot.plot import plot_trj_3_wind, plot_input_slotine_glider
 from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
-from dynamics.zhukovskii_glider import ZhukovskiiGlider
+from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
+
+
+# TODO
+# 1. Use time scaled dynamics
+# 2. Redefine heading from wind angle
+# 2. Use Mortens wind model
+# 3. Make opt problem work always
+# 4.a plot trajectory between
+# 5. Plot input
+# 6. Constrain input if poor
+# 7. Get period
+# 8. Get avg velocity in direction
+# 9. Discretize and get polar plot
 
 
 def direct_collocation_zhukovskii_glider():
     print("Running direct collocation with Zhukovskii Glider")
 
-    plant = ZhukovskiiGlider()
+    plant = ZhukovskiiGliderDimless()
     context = plant.CreateDefaultContext()
 
-    travel_angle = (1 / 2) * np.pi + 0.2
+    travel_angle = np.pi * 3 / 2 - 0.2
     initial_guess = False  # NOTE Some straight line initial guesses actually confuse the solver MORE, especially when going upwind
 
     N = 21
@@ -169,7 +182,7 @@ def direct_collocation():
     dircol.AddConstraintToAllKnotPoints(x[3] >= min_height)
 
     # Add initial state
-    travel_angle = (3 / 2) * np.pi + 0.1
+    travel_angle = (1 / 2) * np.pi + 0.1
     h0 = 10
     dir_vector = np.array([np.cos(travel_angle), np.sin(travel_angle)])
 

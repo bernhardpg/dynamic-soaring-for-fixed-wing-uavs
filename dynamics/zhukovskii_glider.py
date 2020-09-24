@@ -10,9 +10,79 @@ from pydrake.all import (
     LeafSystem_,
 )
 
-from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_vector
+from dynamics.wind_models import (
+    wind_model,
+    ddt_wind_model,
+    get_wind_vector,
+    get_dimless_wind_vector,
+)
 
 # From Mortens notes
+@TemplateSystem.define("ZhukovskiiGliderDimless_")
+def ZhukovskiiGliderDimless_(T):
+    class Impl(LeafSystem_[T]):
+        def _construct(self, converter=None):
+            LeafSystem_[T].__init__(self, converter)
+
+            # Three inputs
+            self.DeclareVectorInputPort("u", BasicVector_[T](3))
+            # Six outputs (full state)
+            self.DeclareVectorOutputPort("x", BasicVector_[T](6), self.CopyStateOut)
+            # Three positions, three velocities
+            self.DeclareContinuousState(3, 3, 0)
+            # State = [x, y, z, xdot, ydot, zdot]
+
+            # Constants
+            self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
+            self.Gamma = 40  # Optimal lift to drag ratio
+            self.efficiency = 1 / self.Gamma  # Small efficiency number
+            self.V_l = 20
+            self.G = 9.81  # Gravitational constant
+            self.L = self.V_l ** 2 / self.G  # Characteristic length
+            self.T = self.V_l / self.G  # Characteristic time
+
+        def _construct_copy(self, other, converter=None):
+            Impl._construct(self, converter=converter)
+
+        def DoCalcTimeDerivatives(self, context, derivatives):
+            # NOTE all variabled dimless here
+            # x, y, z, xdot, ydot, zdot
+            x = context.get_continuous_state_vector().CopyToVector()
+            u = self.EvalVectorInput(context, 0).CopyToVector()
+
+            c = u
+            pos = x[0:3]
+            vel = x[3:6]
+
+            dimless_wind = get_dimless_wind_vector(pos[2], self.L, self.V_l)
+            vel_rel = vel - dimless_wind
+
+            # NOTE necessary to add a small epsilon to deal
+            # with gradients of vector norms being horrible
+            epsilon = 0.001
+            l_term = (vel_rel.T.dot(vel_rel) + c.T.dot(c)) / (
+                2 * np.sqrt(vel_rel.T.dot(vel_rel) + epsilon)
+            )
+
+            vel_dot = -self.e_z - (
+                self.efficiency * l_term * np.eye(3) + skew_matrix(c)
+            ).dot(vel_rel)
+
+            derivatives.get_mutable_vector().SetFromVector(
+                np.concatenate((vel, vel_dot))
+            )
+
+        # y = x
+        def CopyStateOut(self, context, output):
+            x = context.get_continuous_state_vector().CopyToVector()
+            output.SetFromVector(x)
+
+    return Impl
+
+
+ZhukovskiiGliderDimless = ZhukovskiiGliderDimless_[None]
+
+
 @TemplateSystem.define("ZhukovskiiGlider_")
 def ZhukovskiiGlider_(T):
     class Impl(LeafSystem_[T]):
@@ -87,6 +157,9 @@ def ZhukovskiiGlider_(T):
     return Impl
 
 
+ZhukovskiiGlider = ZhukovskiiGlider_[None]
+
+
 def l(w, c):
     return (w ** 2 + c ** 2) / (2 * w)
 
@@ -94,9 +167,6 @@ def l(w, c):
 def skew_matrix(v):
     S = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
     return S
-
-
-ZhukovskiiGlider = ZhukovskiiGlider_[None]
 
 
 # TODO old?

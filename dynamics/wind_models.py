@@ -49,3 +49,7 @@ def get_wind_vector(z):
 
 wind_model = exp_wind_model
 ddt_wind_model = ddt_exp_wind_model
+
+
+def get_dimless_wind_vector(z, L, V_l):
+    return get_wind_vector(L * z) / V_l
