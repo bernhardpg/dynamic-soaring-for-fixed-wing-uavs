@@ -44,7 +44,7 @@ def plot_circulation(t, u_trj):
     return
 
 
-def plot_trj_3_wind(x_trj, dir_vector):
+def plot_trj_3_wind(x_trj, dir_vector=np.array([0, 0, 0])):
     # To make the plot function general:
     #   x_trj.shape = (N, 3)
     #   x_trj = [x, y, z]
@@ -86,7 +86,7 @@ def plot_trj_3_wind(x_trj, dir_vector):
     )
 
     # Plot trajectory
-    ax.plot(
+    traj_plot = ax.plot(
         x_trj[:, 0],
         x_trj[:, 1],
         x_trj[:, 2],
@@ -119,4 +119,4 @@ def plot_trj_3_wind(x_trj, dir_vector):
     ax.set_zlabel("z")
     ax.set_title("Trajectory")
 
-    return
+    return traj_plot
