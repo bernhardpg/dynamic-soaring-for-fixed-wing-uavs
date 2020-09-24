@@ -15,7 +15,7 @@ from pydrake.all import (
 )
 import matplotlib.pyplot as plt
 
-from plot.plot import plot_trj_3_wind, plot_input_slotine_glider
+from plot.plot import plot_trj_3_wind, plot_input_slotine_glider, plot_circulation
 from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
 from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
 
@@ -35,11 +35,16 @@ from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
 
 def direct_collocation():
     # Simulation parameters
-    LDR = 40  # Lift-to-drag ratio
+    M = 4.5  # kg Mass
+    rho = 1.255  # g/m**3 Air density
+
+    Lambda = 40  # Lift-to-drag ratio
+    efficiency = 1 / Lambda  # Small efficiency parameter
     V_l = 20  # m/s Optimal glide speed
     G = 9.81  # m/s**2 Graviational constant
     L = V_l ** 2 / G  # Characteristic length
     T = V_l / G  # Characteristic time
+    C = (M * G) / (rho * V_l)  # Norm of circulation vector in steady flight
 
     travel_angle = np.pi * 3 / 2 - 0.2  # TODO change to wind relative angle
 
@@ -52,8 +57,8 @@ def direct_collocation():
     print("Running direct collocation with:")
     print("Dimensionless Zhukovskii Glider")
     print(
-        "LDR: {0}\nV_l: {1} (m/s)\nL: {2} (m)\nT: {3} (s)\npsi: {4} (rad)".format(
-            LDR, V_l, L, T, travel_angle
+        "Lambda: {0}\nV_l: {1} (m/s)\nL: {2} (m)\nT: {3} (s)\npsi: {4} (rad)".format(
+            Lambda, V_l, L, T, travel_angle
         )
     )
 
@@ -114,7 +119,7 @@ def direct_collocation():
     Q = 1
     xy_pos_final = dircol.final_state()[0:2]
     # TODO why is cost not working??
-    # dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
+    #dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
 
     if True:
         # Cost on input effort
@@ -151,14 +156,20 @@ def direct_collocation():
     N_plot = 100
 
     # Plot trajectory
-    x_trajectory = dircol.ReconstructStateTrajectory(result)
-    times = np.linspace(x_trajectory.start_time(), x_trajectory.end_time(), N_plot)
-    x_knots = np.hstack([x_trajectory.value(t) for t in times]).T
+    x_traj_dimless = dircol.ReconstructStateTrajectory(result)
+    times_dimless = np.linspace(
+        x_traj_dimless.start_time(), x_traj_dimless.end_time(), N_plot
+    )
+    x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T
+    x_knots = x_knots_dimless * L
+    times = times_dimless * T
     plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
 
     # Plot input
-    u_trajectory = dircol.ReconstructInputTrajectory(result)
-    u_knots = np.hstack([u_trajectory.value(t) for t in times])
+    u_traj_dimless = dircol.ReconstructInputTrajectory(result)
+    u_knots_dimless = np.hstack([u_traj_dimless.value(t) for t in times_dimless]).T
+    u_knots = u_knots_dimless * C
+    plot_circulation(times, u_knots)
 
     plt.show()
     return 0
@@ -167,7 +178,7 @@ def direct_collocation():
 def direct_collocation_zhukovskii_glider():
     print("Running direct collocation with Zhukovskii Glider")
 
-    plant = ZhukovskiiGliderDimless()
+    plant = ZhukovskiiGlider()
     context = plant.CreateDefaultContext()
 
     travel_angle = np.pi * 3 / 2 - 0.2
@@ -270,8 +281,8 @@ def direct_collocation_zhukovskii_glider():
     plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
 
     # Plot input
-    u_trajectory = dircol.ReconstructInputTrajectory(result)
-    u_knots = np.hstack([u_trajectory.value(t) for t in times])
+    u_traj = dircol.ReconstructInputTrajectory(result)
+    u_knots = np.hstack([u_traj.value(t) for t in times])
 
     plt.show()
     return 0

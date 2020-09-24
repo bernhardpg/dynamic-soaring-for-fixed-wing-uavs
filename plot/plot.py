@@ -7,9 +7,9 @@ from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
 def plot_input_slotine_glider(t, u_trj):
     plt.subplots(figsize=(5, 3))
+    plt.title("Input")
 
     plt.subplot(2, 1, 1)
-    plt.title("Input")
     plt.plot(t, u_trj[:, 0])
     plt.xlabel("time (seconds)")
     plt.ylabel("Lift coefficient")
@@ -18,6 +18,28 @@ def plot_input_slotine_glider(t, u_trj):
     plt.plot(t, u_trj[:, 1])
     plt.xlabel("time (seconds)")
     plt.ylabel("Roll (radians)")
+
+    return
+
+
+def plot_circulation(t, u_trj):
+    plt.subplots(figsize=(5, 3))
+    plt.title("Circulation")
+
+    plt.subplot(3, 1, 1)
+    plt.plot(t, u_trj[:, 0])
+    plt.xlabel("time (seconds)")
+    plt.ylabel("x-component")
+
+    plt.subplot(3, 1, 2)
+    plt.plot(t, u_trj[:, 1])
+    plt.xlabel("time (seconds)")
+    plt.ylabel("y-component")
+
+    plt.subplot(3, 1, 3)
+    plt.plot(t, u_trj[:, 2])
+    plt.xlabel("time (seconds)")
+    plt.ylabel("z-component")
 
     return
 
@@ -57,7 +79,7 @@ def plot_trj_3_wind(x_trj, dir_vector):
         u,
         v,
         w,
-        length=1,# np.sqrt(dx ** 2 + dy ** 2) / 15,
+        length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
         linewidth=0.7,
         arrow_length_ratio=0.1,
         pivot="middle",
