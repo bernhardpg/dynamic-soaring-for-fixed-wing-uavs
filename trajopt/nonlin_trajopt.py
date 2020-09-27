@@ -84,7 +84,7 @@ def direct_collocation(
     min_travelled_distance = 5  # m
 
     # Initial guess
-    V0_guess = V_l * 1.0  # TODO tune this
+    V0_guess = V_l * 0.5  # TODO tune this
     end_time_guess = max_tf
     total_dist_travelled_guess = V0_guess * end_time_guess
 
@@ -228,7 +228,7 @@ def direct_collocation(
         print("Found a solution!")
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
 
-        N_plot = 180
+        N_plot = 200
 
         # Plot trajectory
         times_dimless = np.linspace(
@@ -369,7 +369,7 @@ def direct_collocation_slotine_glider():
     print("Found a solution!")
 
     # PLOTTING
-    N_plot = 100
+    N_plot = 200
 
     # Plot trajectory
     x_trajectory = dircol.ReconstructStateTrajectory(result)

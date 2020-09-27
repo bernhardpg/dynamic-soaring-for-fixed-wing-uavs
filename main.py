@@ -5,8 +5,9 @@ from plot.plot import *
 def main():
     zhukovskii_glider = ZhukovskiiGlider()
 
-    N_angles = 1
+    N_angles = 10
     travel_angles = np.linspace(0, 2 * np.pi, N_angles)
+    #travel_angles = np.array([np.pi/2 + 0.3])
 
     avg_velocities = dict()
     trajectories = dict()
@@ -20,11 +21,11 @@ def main():
 
     # polar_plot_avg_velocities(avg_velocities)
 
-    if False:
+    if True:
         print("### Running twice with proximate solution as initial guess")
         double_travel_angles = np.concatenate((travel_angles, travel_angles))
         prev_solution = None
-        for psi in travel_angles:
+        for psi in double_travel_angles:
             avg_speed, traj, curr_solution = direct_collocation(
                 zhukovskii_glider, psi, initial_guess=prev_solution
             )
@@ -35,12 +36,12 @@ def main():
 
             prev_solution = curr_solution
 
-        # polar_plot_avg_velocities(avg_velocities)
 
     print("### Finished!")
     # plot_trajectories(trajectories)
-    plt.show()
-    animate_trajectory(zhukovskii_glider, trajectories[0.0])
+    polar_plot_avg_velocities(avg_velocities)
+    for travel_angle in travel_angles:
+        animate_trajectory_gif(zhukovskii_glider, trajectories[travel_angle], travel_angle)
 
     return 0
 

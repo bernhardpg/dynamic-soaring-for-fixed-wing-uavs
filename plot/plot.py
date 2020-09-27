@@ -1,12 +1,228 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 
 from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
 
+def animate_trajectory_gif(
+    zhukovskii_glider, traj, travel_angle
+):  # TODO add travel angle
+    fig = plt.figure(figsize=(13, 10))
+    ax = fig.gca(projection="3d")
+
+    times, x_trj, u_trj = traj
+    N = x_trj.shape[0]
+    dt = times[1] - times[0]
+    T = 1 / dt
+
+    x0 = x_trj[0, :]
+
+    x_min = min(x_trj[:, 0])
+    x_max = max(x_trj[:, 0])
+    y_min = min(x_trj[:, 1])
+    y_max = max(x_trj[:, 1])
+    z_min = 0
+    z_max = max(x_trj[:, 2])
+
+    # Spacing for wind field
+    dx = np.abs(x_min - x_max)
+    dy = np.abs(y_min - y_max)
+    dz = np.abs(z_min - z_max)
+    max_axis = max([dx, dy, dz])
+
+    x, y, z = np.meshgrid(
+        # (-min, max, step_length)
+        np.arange(x_min, x_min + max_axis, max_axis / 5 - 1),
+        np.arange(y_min, y_min + max_axis, max_axis / 5 - 1),
+        np.arange(z_min, z_min + max_axis, max_axis / 5 - 1),
+    )
+    u, v, w = get_wind_field(x, y, z)
+
+    # Define three points on glider, defined in body frame
+    scale = 8
+    com_to_wing_vec = np.array([0, zhukovskii_glider.b / 2, 0]) * scale
+    com_to_front_vec = np.array([zhukovskii_glider.glider_length, 0, 0]) * scale
+
+    pos = ax.scatter([], [], [])
+    w1 = ax.quiver([], [], [], [], [], [])
+    w2 = ax.quiver([], [], [], [], [], [])
+    w3 = ax.quiver([], [], [], [], [], [])
+
+    def init():
+        ax.set_zlim(0, max_axis)
+        ax.set_xlim(x_min, x_min + max_axis)
+        ax.set_ylim(y_min, y_min + max_axis)
+        ax.plot(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2], linewidth=0.7)  # Plot trajectory
+        ax.scatter(x0[0], x0[1], x0[2])  # Plot initial position
+
+        # plot wind field
+        ax.quiver(
+            x,
+            y,
+            z,
+            u,
+            v,
+            w,
+            length=1,
+            linewidth=0.5,
+            arrow_length_ratio=0.2,
+            pivot="middle",
+            color="blue",
+        )
+
+        # Plot direction vector
+        dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
+        ax.quiver(
+            x0[0],
+            x0[1],
+            x0[2],
+            dir_vector[0],
+            dir_vector[1],
+            0,
+            color="green",
+            label="Desired direction",
+            length=10,
+            arrow_length_ratio=0.1,
+        )
+
+        return ([pos, w1, w2, w3],)
+
+    def update(frame):
+        plt.cla()
+        init()
+        time, x, u = frame
+
+        com = x[0:3]  # Center of mass
+        c = u[:]
+        pos = ax.scatter(
+            com[0], com[1], com[2], color="red", s=0.5
+        )  # plot current position
+
+        vel_rel = zhukovskii_glider.get_vel_rel(x[:])
+        alpha = zhukovskii_glider.get_angle_of_attack(x[:], u[:])
+
+        j_body = c / np.linalg.norm(c)  # j unit vector in body frame
+
+        i_stability = vel_rel / np.linalg.norm(vel_rel)  # i unit vec in stability frame
+        i_body = np.array(
+            [
+                [np.cos(alpha), 0, np.sin(alpha)],
+                [0, 1, 0],
+                [-np.sin(alpha), 0, np.cos(alpha)],
+            ]
+        ).dot(
+            i_stability
+        )  # Rotate i_stab by alpha around y axis to get i_body
+        # TODO which way rotate by alpha here??
+        k_body = np.cross(j_body, i_body)
+
+        R_ned_to_body = np.stack((i_body, j_body, k_body), axis=1)
+        curr_com_to_wing_vec = R_ned_to_body.dot(com_to_wing_vec)
+        curr_com_to_front_vec = R_ned_to_body.dot(com_to_front_vec)
+
+        # Draw glider
+        # wing line
+        w1 = ax.quiver(
+            com[0] - curr_com_to_wing_vec[0],
+            com[1] - curr_com_to_wing_vec[1],
+            com[2] - curr_com_to_wing_vec[2],
+            curr_com_to_wing_vec[0] * 2,
+            curr_com_to_wing_vec[1] * 2,
+            curr_com_to_wing_vec[2] * 2,
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+        # left wing to front
+        w2 = ax.quiver(
+            com[0] - curr_com_to_wing_vec[0],
+            com[1] - curr_com_to_wing_vec[1],
+            com[2] - curr_com_to_wing_vec[2],
+            curr_com_to_wing_vec[0] + curr_com_to_front_vec[0],
+            curr_com_to_wing_vec[1] + curr_com_to_front_vec[1],
+            curr_com_to_wing_vec[2] + curr_com_to_front_vec[2],
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+        # left wing to front
+        w3 = ax.quiver(
+            com[0] + curr_com_to_wing_vec[0],
+            com[1] + curr_com_to_wing_vec[1],
+            com[2] + curr_com_to_wing_vec[2],
+            -curr_com_to_wing_vec[0] + curr_com_to_front_vec[0],
+            -curr_com_to_wing_vec[1] + curr_com_to_front_vec[1],
+            -curr_com_to_wing_vec[2] + curr_com_to_front_vec[2],
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+
+        # Plot x axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            i_body[0],
+            i_body[1],
+            i_body[2],
+            linewidth=2,
+            color="red",
+            length=scale * 3,
+        )
+        # Plot y axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            j_body[0],
+            j_body[1],
+            j_body[2],
+            linewidth=2,
+            color="yellow",
+            length=scale * 3,
+        )
+        # Plot z axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            -k_body[0],
+            -k_body[1],
+            -k_body[2],
+            linewidth=2,
+            color="green",
+            length=scale * 3,
+        )
+
+        return ((pos, w1, w2, w3),)
+
+    ani = FuncAnimation(
+        fig, update, frames=list(zip(times, x_trj, u_trj)), init_func=init, blit=False
+    )
+    # TODO figure out a way to set blit to true
+
+    # Set up formatting for the movie files
+    filepath = "./animations/"
+    filename = "glider_psi_{0}_degs.mp4".format(int(travel_angle * (180 / np.pi)))
+    print("Saving animation as: {0}".format(filename))
+    Writer = animation.writers["ffmpeg"]
+    writer = Writer(fps=int(1 / dt), metadata=dict(artist="Me"), bitrate=1800)
+    ani.save(filepath + filename, writer=writer)
+    print("Saved animation")
+
+    return
+
+
+# TODO save to gif
+# TODO move COM to middle of glider
+
+
 def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
-    fig = plt.figure(figsize=(13,10))
+    fig = plt.figure(figsize=(13, 10))
     ax = fig.gca(projection="3d")
 
     times, x_trj, u_trj = traj
@@ -35,7 +251,7 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
     x0 = x_trj[0, :]
 
     # Define three points on glider, defined in body frame
-    scale = 5
+    scale = 10
     com_to_wing_vec = np.array([0, zhukovskii_glider.b / 2, 0]) * scale
     com_to_front_vec = np.array([zhukovskii_glider.glider_length, 0, 0]) * scale
 
@@ -54,8 +270,8 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
             v,
             w,
             length=1,
-            linewidth=0.4,
-            arrow_length_ratio=0.1,
+            linewidth=0.5,
+            arrow_length_ratio=0.2,
             pivot="middle",
             color="blue",
         )
@@ -76,7 +292,7 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
                 [0, 1, 0],
                 [-np.sin(alpha), 0, np.cos(alpha)],
             ]
-        ).T.dot(
+        ).dot(
             i_stability
         )  # Rotate i_stab by alpha around y axis to get i_body
         # TODO which way rotate by alpha here??
@@ -133,7 +349,7 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
             i_body[2],
             linewidth=2,
             color="red",
-            length=scale*3,
+            length=scale * 3,
         )
         # Plot z axis
         ax.quiver(
@@ -145,7 +361,7 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
             -k_body[2],
             linewidth=2,
             color="green",
-            length=scale*3,
+            length=scale * 3,
         )
 
         ax.set_title("Flight trajectory")
@@ -287,6 +503,7 @@ def polar_plot_avg_velocities(avg_velocities):
     ax = fig.add_subplot(111, projection="polar")
     ax.plot(x, y)
     ax.set_title("Achievable speeds")
+    fig.savefig("./animations/polar_plot.png")
 
     return
 
