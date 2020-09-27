@@ -20,22 +20,25 @@ from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
 from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
 
 
+# TODO DONE
+# * Use time scaled dynamics
+# * Redefine heading from wind angle
+# * Make opt problem work always
+# * Get period
+# * Plot input
+# * make sure right direction
+# * Get avg velocity in direction
+# * Discretize and get polar plot
+
+
 # TODO
-# 1. Use time scaled dynamics
-# 2. Redefine heading from wind angle
-
-# 3. Make opt problem work always
-
-
-# TODO Find good max/min values for speed and height.
-# TODO make sure right direction
-# TODO penalize cost in the right way
-# 5. Plot input
-# 2. Use Mortens wind model
-# 6. Constrain input if poor
-# 7. Get period
-# 8. Get avg velocity in direction
-# 9. Discretize and get polar plot
+# * Find good max/min values for speed and height.
+# * Penalize too big cost changes
+# * Use Mortens wind model
+# * Constrain input difference
+# * Better initial guess, use previous angle
+# * Rename wind models
+# * Constrain AoA within +- 5 degrees
 
 
 def state_callback(t, x):
@@ -48,7 +51,7 @@ def state_callback(t, x):
     return
 
 
-def direct_collocation():
+def direct_collocation(travel_angle):
     # Simulation parameters
     M = 4.5  # kg Mass
     rho = 1.255  # g/m**3 Air density
@@ -65,11 +68,8 @@ def direct_collocation():
     N = 21
     max_dt = 0.5
     max_tf = N * max_dt
-    travel_angle = 0 / 2 * np.pi  # rad
 
-    initial_guess = True 
-    # NOTE Some straight line initial guesses actually
-    # confuse the solver MORE, especially when going upwind
+    initial_guess = True
 
     # Optimization constraints
     min_height = 0.5  # m
@@ -156,7 +156,8 @@ def direct_collocation():
 
     if True:
         # Cost on input effort
-        R = 20
+        R = 5
+        # TODO replace 0.125
         dircol.AddRunningCost(R * (u[0] ** 2 + (u[1] - 0.125) ** 2 + u[2] ** 2))
 
     # Maximize distance travelled in desired direction
@@ -165,7 +166,8 @@ def direct_collocation():
     dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
 
     # Always travel in direction of desired direction
-    dircol.AddConstraintToAllKnotPoints(dir_vector.T.dot(xy_pos_final) >= 0)
+    # TODO define min travelled distance?
+    dircol.AddConstraintToAllKnotPoints(dir_vector.T.dot(xy_pos_final) >= 5 / L)
 
     # Initial guess is a straight line from x0 in travel direction
     if initial_guess:
@@ -203,8 +205,11 @@ def direct_collocation():
 
     # Solve direct collocation
     result = Solve(dircol)
-    assert result.is_success()
-    print("Found a solution!")
+    #assert result.is_success()
+    if result.is_success():
+        print("Found a solution!")
+    else:
+        print("Failure: Did NOT find a solution")
 
     # PLOTTING
     N_plot = 100
@@ -217,24 +222,27 @@ def direct_collocation():
     x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T
     x_knots = x_knots_dimless * L
     times = times_dimless * T
-    plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
+    #plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
 
     # Plot input
     u_traj_dimless = dircol.ReconstructInputTrajectory(result)
     u_knots_dimless = np.hstack([u_traj_dimless.value(t) for t in times_dimless]).T
     u_knots = u_knots_dimless * C
-    plot_circulation(times, u_knots)
+    #plot_circulation(times, u_knots)
 
     solution_period = x_traj_dimless.end_time() * T
     solution_cost = result.get_optimal_cost()
+    solution_distance = dir_vector.T.dot(x_knots[-1, 0:2])
+    solution_avg_speed = 0 # TODO return 0 if no solution
+    solution_avg_speed = solution_distance / solution_period
     print(
-        "Solution period: {0}\nSolution cost: {1}".format(
-            solution_period, solution_cost
+        "Solution period: {0} (s)\nSolution cost: {1}\nSolution distance: {2} (m) \nSolution avg. speed: {3} (m/s)".format(
+            solution_period, solution_cost, solution_distance, solution_avg_speed
         )
     )
 
-    plt.show()
-    return 0
+    #plt.show()
+    return solution_avg_speed
 
 
 # NOTE direction vector is old

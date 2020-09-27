@@ -2,7 +2,7 @@ import numpy as np
 
 
 # Wind models
-def linear_wind_model(z):  # Taken from Deittert et al.
+def exp_wind_model(z):  # Taken from Deittert et al.
     W0 = 16  # m/s
     p = 0.143
     h_r = 5  # ref height, can be set arbritrary
@@ -11,7 +11,7 @@ def linear_wind_model(z):  # Taken from Deittert et al.
     return W
 
 
-def ddt_linear_wind_model(z, z_dot):
+def ddt_exp_wind_model(z, z_dot):
     W0 = 16  # m/s
     p = 0.143
     h_r = 5  # ref height, can be set arbritrary
@@ -19,14 +19,14 @@ def ddt_linear_wind_model(z, z_dot):
     return W_dot
 
 
-def exp_wind_model(z):  # Taken from slotine
+def log_wind_model(z):  # Taken from slotine
     W0 = 16  # Free stream wind speed
     delta = 5  # wind_shear_layer thickness
     W = W0 / (1 + np.exp(-z / delta))
     return W
 
 
-def ddt_exp_wind_model(z, z_dot):
+def ddt_log_wind_model(z, z_dot):
     W0 = 16  # Free stream wind speed
     delta = 5  # wind_shear_layer thickness
     W_dot = (W0 * np.exp(-z / delta) * z_dot) / (delta * (1 + np.exp(-z / delta)) ** 2)
@@ -47,8 +47,8 @@ def get_wind_vector(z):
     return W_vec
 
 
-wind_model = exp_wind_model
-ddt_wind_model = ddt_exp_wind_model
+wind_model = log_wind_model
+ddt_wind_model = ddt_log_wind_model
 
 
 def get_dimless_wind_vector(z, L, V_l):
