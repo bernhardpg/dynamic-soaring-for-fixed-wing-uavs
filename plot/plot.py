@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
 
-def animate_trajectory(traj):  # TODO add travel angle
+def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
     fig = plt.figure()
     ax = fig.gca(projection="3d")
 
@@ -13,29 +13,91 @@ def animate_trajectory(traj):  # TODO add travel angle
     N = x_trj.shape[0]
     dt = times[1] - times[0]
 
-    x0 = x_trj[0, :]
+    x_min = min(x_trj[:, 0])
+    x_max = max(x_trj[:, 0])
+    y_min = min(x_trj[:, 1])
+    y_max = max(x_trj[:, 1])
+    z_min = 0
+    z_max = max(x_trj[:, 2]) * 5
 
-    wingspan = 3 # m
+    # Spacing for wind field
+    dx = np.abs((x_min - x_max) / 5) - 1
+    dy = np.abs((y_min - y_max) / 5) - 1
+    dz = np.abs((z_min - z_max) / 3) - 1
+    x, y, z = np.meshgrid(
+        # (-min, max, step_length)
+        np.arange(x_min, x_max, dx),
+        np.arange(y_min, y_max, dy),
+        np.arange(z_min, z_max, dz),
+    )
+    u, v, w = get_wind_field(x, y, z)
+
+    x0 = x_trj[0, :]
 
     for n in range(N):
         plt.cla()
-        ax.plot(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2])  # Plot trajectory
+        ax.plot(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2], linewidth=0.7)  # Plot trajectory
         ax.scatter(x0[0], x0[1], x0[2])  # Plot initial position
+        axis3d_equal(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2], ax)
 
-        ax.scatter(
-            x_trj[n, 0], x_trj[n, 1], x_trj[n, 2], color="red"
-        )  # Current position
-        if False:
-            ax.quiver(
-                x_trj[n, 0],
-                x_trj[n, 1],
-                x_trj[n, 2],
-                u_trj[n, 0],
-                u_trj[n, 1],
-                u_trj[n, 2],
-                color="green",
-                length=1.0,
-            )  # Circulation vector
+        # plot wind field
+        ax.quiver(
+            x,
+            y,
+            z,
+            u,
+            v,
+            w,
+            length=1,
+            linewidth=0.4,
+            arrow_length_ratio=0.1,
+            pivot="middle",
+            color="blue"
+        )
+
+        com = x_trj[n, 0:3]  # Center of mass
+        c = u_trj[n, :]
+        ax.scatter(com[0], com[1], com[2], color="red", s=0.5)  # plot current position
+
+        vel_rel = zhukovskii_glider.get_vel_rel(x_trj[n, :])
+        alpha = zhukovskii_glider.get_angle_of_attack(x_trj[n, :], u_trj[n, :])
+
+        j_body = c / np.linalg.norm(c)  # j unit vector in body frame
+
+        i_stability = vel_rel / np.linalg.norm(vel_rel)  # i unit vec in stability frame
+        i_body = np.array(
+            [
+                [np.cos(alpha), 0, np.sin(alpha)],
+                [0, 1, 0],
+                [-np.sin(alpha), 0, np.cos(alpha)],
+            ]
+        ).dot(
+            i_stability
+        )  # Rotate i_stab by alpha around y axis to get i_body
+
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            i_body[0],
+            i_body[1],
+            i_body[2],
+            color="red",
+            linewidth=0.9,
+            length=10,
+        )  # Body x-axis
+
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            j_body[0],
+            j_body[1],
+            j_body[2],
+            color="red",
+            linewidth=0.9,
+            length=10,
+        )  # Body x-axis
 
         ax.set_title("Flight trajectory")
 
@@ -44,7 +106,26 @@ def animate_trajectory(traj):  # TODO add travel angle
     return
 
 
+# Borrowed from here: https://github.com/AtsushiSakai/PythonRobotics/blob/135e33af88128c68c0420282775bbfeacc327f77/AerialNavigation/rocket_powered_landing/rocket_powered_landing.py
+def axis3d_equal(X, Y, Z, ax):
 
+    max_range = np.array(
+        [X.max() - X.min(), Y.max() - Y.min(), Z.max() - Z.min()]
+    ).max()
+    Xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].flatten() + 0.5 * (
+        X.max() + X.min()
+    )
+    Yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].flatten() + 0.5 * (
+        Y.max() + Y.min()
+    )
+    Zb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].flatten() + 0.5 * (
+        Z.max() + Z.min()
+    )
+    # Comment or uncomment following both lines to test the fake bounding box:
+    for xb, yb, zb in zip(Xb, Yb, Zb):
+        ax.plot([xb], [yb], [zb], "w")
+
+    return
 
 
 def plot_trajectories(trajectories):

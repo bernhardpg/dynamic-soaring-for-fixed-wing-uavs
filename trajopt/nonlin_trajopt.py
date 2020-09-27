@@ -52,14 +52,13 @@ def state_callback(t, x):
 
 
 def direct_collocation(
+    zhukovskii_glider,
     travel_angle,
     initial_guess=None,
     plot_solution=False,
     print_glider_details=False,
     plot_initial_guess=False,
 ):
-
-    zhukovskii_glider = ZhukovskiiGlider()
 
     M, rho, AR, Lambda, efficiency, V_l, G, L, T, C = zhukovskii_glider.get_params()
     if print_glider_details:

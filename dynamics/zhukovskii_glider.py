@@ -20,12 +20,14 @@ from dynamics.wind_models import (
 
 class ZhukovskiiGlider:
     def __init__(self):
-        self.M = 4.5  # kg Mass
         self.rho = 1.255  # g/m**3 Air density
 
         self.b = 3  # m Wing span
         self.A = 0.5  # m**2 Wing area
+        self.glider_length = 2  # m NOTE only used for visualization
         self.AR = self.b ** 2 / self.A  # Aspect ratio, b**2 / wing_area
+        self.M = 4.5  # kg Mass
+
         self.Lambda = 40  # Lift-to-drag ratio
         self.efficiency = 1 / self.Lambda  # Small efficiency parameter
         self.V_l = 15  # m/s Optimal glide speed
@@ -58,9 +60,24 @@ class ZhukovskiiGlider:
     def get_drake_plant(self):
         return self.drake_plant
 
-    def calc_roll(circulation):
+    def get_roll(self, u):
 
         return
+
+    def get_angle_of_attack(self, x, u):
+        c = u
+        v_r = self.get_vel_rel(x)
+
+        alpha = np.arcsin(
+            (1 + (2 / self.AR) / (np.pi * self.A))
+            * (np.linalg.norm(c) / np.linalg.norm(v_r))
+        )
+        return alpha
+
+    def get_vel_rel(self, x):
+        pos = x[0:3]
+        vel = x[3:6]
+        return vel - get_wind_vector(pos[2])
 
 
 # From Mortens notes
