@@ -228,7 +228,7 @@ def direct_collocation(
         print("Found a solution!")
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
 
-        N_plot = 150
+        N_plot = 180
 
         # Plot trajectory
         times_dimless = np.linspace(

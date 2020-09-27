@@ -6,7 +6,7 @@ from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
 
 def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
-    fig = plt.figure()
+    fig = plt.figure(figsize=(13,10))
     ax = fig.gca(projection="3d")
 
     times, x_trj, u_trj = traj
@@ -34,6 +34,11 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
 
     x0 = x_trj[0, :]
 
+    # Define three points on glider, defined in body frame
+    scale = 5
+    com_to_wing_vec = np.array([0, zhukovskii_glider.b / 2, 0]) * scale
+    com_to_front_vec = np.array([zhukovskii_glider.glider_length, 0, 0]) * scale
+
     for n in range(N):
         plt.cla()
         ax.plot(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2], linewidth=0.7)  # Plot trajectory
@@ -52,7 +57,7 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
             linewidth=0.4,
             arrow_length_ratio=0.1,
             pivot="middle",
-            color="blue"
+            color="blue",
         )
 
         com = x_trj[n, 0:3]  # Center of mass
@@ -71,10 +76,54 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
                 [0, 1, 0],
                 [-np.sin(alpha), 0, np.cos(alpha)],
             ]
-        ).dot(
+        ).T.dot(
             i_stability
         )  # Rotate i_stab by alpha around y axis to get i_body
+        # TODO which way rotate by alpha here??
+        k_body = np.cross(j_body, i_body)
 
+        R_ned_to_body = np.stack((i_body, j_body, k_body), axis=1)
+        curr_com_to_wing_vec = R_ned_to_body.dot(com_to_wing_vec)
+        curr_com_to_front_vec = R_ned_to_body.dot(com_to_front_vec)
+
+        # Draw glider
+        # wing line
+        ax.quiver(
+            com[0] - curr_com_to_wing_vec[0],
+            com[1] - curr_com_to_wing_vec[1],
+            com[2] - curr_com_to_wing_vec[2],
+            curr_com_to_wing_vec[0] * 2,
+            curr_com_to_wing_vec[1] * 2,
+            curr_com_to_wing_vec[2] * 2,
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+        # left wing to front
+        ax.quiver(
+            com[0] - curr_com_to_wing_vec[0],
+            com[1] - curr_com_to_wing_vec[1],
+            com[2] - curr_com_to_wing_vec[2],
+            curr_com_to_wing_vec[0] + curr_com_to_front_vec[0],
+            curr_com_to_wing_vec[1] + curr_com_to_front_vec[1],
+            curr_com_to_wing_vec[2] + curr_com_to_front_vec[2],
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+        # left wing to front
+        ax.quiver(
+            com[0] + curr_com_to_wing_vec[0],
+            com[1] + curr_com_to_wing_vec[1],
+            com[2] + curr_com_to_wing_vec[2],
+            -curr_com_to_wing_vec[0] + curr_com_to_front_vec[0],
+            -curr_com_to_wing_vec[1] + curr_com_to_front_vec[1],
+            -curr_com_to_wing_vec[2] + curr_com_to_front_vec[2],
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
+        # Plot x axis
         ax.quiver(
             com[0],
             com[1],
@@ -82,22 +131,22 @@ def animate_trajectory(zhukovskii_glider, traj):  # TODO add travel angle
             i_body[0],
             i_body[1],
             i_body[2],
+            linewidth=2,
             color="red",
-            linewidth=0.9,
-            length=10,
-        )  # Body x-axis
-
+            length=scale*3,
+        )
+        # Plot z axis
         ax.quiver(
             com[0],
             com[1],
             com[2],
-            j_body[0],
-            j_body[1],
-            j_body[2],
-            color="red",
-            linewidth=0.9,
-            length=10,
-        )  # Body x-axis
+            -k_body[0],
+            -k_body[1],
+            -k_body[2],
+            linewidth=2,
+            color="green",
+            length=scale*3,
+        )
 
         ax.set_title("Flight trajectory")
 
