@@ -4,6 +4,22 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
+def plot_trajectories(trajectories):
+    x_traj, u_traj = zip(*trajectories)
+    breakpoint()
+
+    return
+
+
+def polar_plot_avg_velocities(avg_velocities):
+    lists = sorted(avg_velocities.items())
+    x, y = zip(*lists)
+    ax = plt.subplot(111, projection="polar")
+    ax.plot(x, y)
+    ax.set_title("Achievable speeds")
+
+    return
+
 
 def plot_input_slotine_glider(t, u_trj):
     plt.subplots(figsize=(5, 3))

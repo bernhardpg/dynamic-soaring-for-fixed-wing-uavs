@@ -53,23 +53,14 @@ def state_callback(t, x):
 
 def direct_collocation(
     travel_angle,
+    sim_params,
     initial_guess=None,
     plot_solution=False,
     print_glider_details=False,
     plot_initial_guess=False,
 ):
-    # Simulation parameters
-    M = 4.5  # kg Mass
-    rho = 1.255  # g/m**3 Air density
 
-    Lambda = 40  # Lift-to-drag ratio
-    efficiency = 1 / Lambda  # Small efficiency parameter
-    V_l = 15  # m/s Optimal glide speed
-    G = 9.81  # m/s**2 Graviational constant
-    L = V_l ** 2 / G  # Characteristic length
-    T = V_l / G  # Characteristic time
-    C = (M * G) / (rho * V_l)  # Norm of circulation vector in steady flight
-
+    M, rho, Lambda, efficiency, V_l, G, L, T, C = sim_params
     if print_glider_details:
         print("Running direct collocation with:")
         print("Dimensionless Zhukovskii Glider")
@@ -94,7 +85,7 @@ def direct_collocation(
 
     # Initial guess
     V0_guess = V_l * 1.0  # TODO tune this
-    end_time_guess = max_tf  # TODO sync with DirCol params
+    end_time_guess = max_tf
     total_dist_travelled_guess = V0_guess * end_time_guess
 
     # Make all values dimless
@@ -230,6 +221,7 @@ def direct_collocation(
     # SOLVE TRAJOPT PROBLEM
     #######
 
+    print("*** Solving DirCol for travel_angle: {0}".format(travel_angle))
     result = Solve(dircol)
     # assert result.is_success()
 
@@ -271,7 +263,7 @@ def direct_collocation(
             )
         )
 
-        return solution_avg_speed, x_traj_dimless
+        return solution_avg_speed, (x_traj_dimless, u_traj_dimless)
 
     else:  # No solution
         print("ERROR: Did not find a solution")

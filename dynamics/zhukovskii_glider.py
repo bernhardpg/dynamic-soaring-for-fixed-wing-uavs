@@ -17,6 +17,21 @@ from dynamics.wind_models import (
     get_dimless_wind_vector,
 )
 
+def get_sim_params():
+    M = 4.5  # kg Mass
+    rho = 1.255  # g/m**3 Air density
+
+    Lambda = 40  # Lift-to-drag ratio
+    efficiency = 1 / Lambda  # Small efficiency parameter
+    V_l = 15  # m/s Optimal glide speed
+    G = 9.81  # m/s**2 Graviational constant
+    L = V_l ** 2 / G  # Characteristic length
+    T = V_l / G  # Characteristic time
+    C = (M * G) / (rho * V_l)  # Norm of circulation vector in steady flight
+
+    sim_params = (M, rho, Lambda, efficiency, V_l, G, L, T, C)
+    return sim_params
+
 # From Mortens notes
 @TemplateSystem.define("ZhukovskiiGliderDimless_")
 def ZhukovskiiGliderDimless_(T):
