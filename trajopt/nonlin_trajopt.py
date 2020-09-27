@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 from plot.plot import plot_trj_3_wind, plot_input_slotine_glider, plot_circulation
 from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
-from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
+from dynamics.zhukovskii_glider import ZhukovskiiGlider
 
 
 # TODO DONE
@@ -29,6 +29,8 @@ from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
 # * make sure right direction
 # * Get avg velocity in direction
 # * Discretize and get polar plot
+# * Better initial guess, use previous angle
+# * Rename wind models
 
 
 # TODO
@@ -36,8 +38,6 @@ from dynamics.zhukovskii_glider import ZhukovskiiGlider, ZhukovskiiGliderDimless
 # * Penalize too big cost changes
 # * Use Mortens wind model
 # * Constrain input difference
-# * Better initial guess, use previous angle
-# * Rename wind models
 # * Constrain AoA within +- 5 degrees
 
 
@@ -53,14 +53,15 @@ def state_callback(t, x):
 
 def direct_collocation(
     travel_angle,
-    sim_params,
     initial_guess=None,
     plot_solution=False,
     print_glider_details=False,
     plot_initial_guess=False,
 ):
 
-    M, rho, Lambda, efficiency, V_l, G, L, T, C = sim_params
+    zhukovskii_glider = ZhukovskiiGlider()
+
+    M, rho, AR, Lambda, efficiency, V_l, G, L, T, C = zhukovskii_glider.get_params()
     if print_glider_details:
         print("Running direct collocation with:")
         print("Dimensionless Zhukovskii Glider")
@@ -103,7 +104,7 @@ def direct_collocation(
     # DEFINE TRAJOPT PROBLEM
     ######
 
-    plant = ZhukovskiiGliderDimless()
+    plant = zhukovskii_glider.get_drake_plant()
     context = plant.CreateDefaultContext()
 
     dircol = DirectCollocation(
@@ -170,9 +171,8 @@ def direct_collocation(
     dircol.AddRunningCost(R * (u[0] ** 2 + (u[1] - 0.125) ** 2 + u[2] ** 2))
 
     # Maximize distance travelled in desired direction
-    Q = 1
+    Q = 2
     dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
-
 
     ######
     # PROVIDE INITIAL GUESS
@@ -229,7 +229,7 @@ def direct_collocation(
         print("Found a solution!")
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
 
-        N_plot = 100
+        N_plot = 150
 
         # Plot trajectory
         times_dimless = np.linspace(
@@ -244,7 +244,7 @@ def direct_collocation(
         u_knots_dimless = np.hstack([u_traj_dimless.value(t) for t in times_dimless]).T
         u_knots = u_knots_dimless * C
 
-        if plot_solution:
+        if plot_solution:  # TODO remove
 
             plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
             plot_circulation(times, u_knots)
@@ -263,7 +263,7 @@ def direct_collocation(
             )
         )
 
-        return solution_avg_speed, (x_traj_dimless, u_traj_dimless)
+        return solution_avg_speed, (times, x_knots, u_knots), x_traj_dimless
 
     else:  # No solution
         print("ERROR: Did not find a solution")

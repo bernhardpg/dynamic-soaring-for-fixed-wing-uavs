@@ -4,17 +4,157 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
 
-def plot_trajectories(trajectories):
-    x_traj, u_traj = zip(*trajectories)
-    breakpoint()
+
+def animate_trajectory(traj):  # TODO add travel angle
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+
+    times, x_trj, u_trj = traj
+    N = x_trj.shape[0]
+    dt = times[1] - times[0]
+
+    x0 = x_trj[0, :]
+
+    wingspan = 3 # m
+
+    for n in range(N):
+        plt.cla()
+        ax.plot(x_trj[:, 0], x_trj[:, 1], x_trj[:, 2])  # Plot trajectory
+        ax.scatter(x0[0], x0[1], x0[2])  # Plot initial position
+
+        ax.scatter(
+            x_trj[n, 0], x_trj[n, 1], x_trj[n, 2], color="red"
+        )  # Current position
+        if False:
+            ax.quiver(
+                x_trj[n, 0],
+                x_trj[n, 1],
+                x_trj[n, 2],
+                u_trj[n, 0],
+                u_trj[n, 1],
+                u_trj[n, 2],
+                color="green",
+                length=1.0,
+            )  # Circulation vector
+
+        ax.set_title("Flight trajectory")
+
+        plt.pause(dt)
 
     return
+
+
+
+
+
+def plot_trajectories(trajectories):
+    N = len(trajectories.items())
+    fig = plt.figure(figsize=(3, int(N * 3 / 2)))
+
+    i = 1
+    for travel_angle, traj in trajectories.items():
+        times, x_trj, u_trj = traj
+        ax_x = fig.add_subplot(N, 2, 2 * i - 1, projection="3d")
+        plot_x_trj(x_trj, travel_angle, ax_x)
+
+        ax_u = fig.add_subplot(N, 2, 2 * i)
+        plot_u_trj(times, u_trj, ax_u)
+
+        i = i + 1
+
+    return
+
+
+def plot_u_trj(t, u_trj, ax):
+    ax.set_title("input (circulation)")
+
+    ax.plot(t, u_trj[:, 0], label="x-axis")
+    ax.plot(t, u_trj[:, 1], label="y-axis")
+    ax.plot(t, u_trj[:, 2], label="z-axis")
+    ax.set_ylim(-7, 7)
+    ax.legend()
+    return
+
+
+def plot_x_trj(x_trj, travel_angle, ax):
+    x0 = x_trj[0, :]
+
+    x_min = min(x_trj[:, 0])
+    x_max = max(x_trj[:, 0])
+    y_min = min(x_trj[:, 1])
+    y_max = max(x_trj[:, 1])
+    z_min = 0
+    z_max = max(x_trj[:, 2])
+
+    dx = np.abs((x_min - x_max) / 2) - 1
+    dy = np.abs((y_min - y_max) / 2.0) - 1
+    dz = np.abs((z_min - z_max) / 2.0) - 1
+
+    # Plot wind field
+    x, y, z = np.meshgrid(
+        # (-min, max, step_length)
+        np.arange(x_min, x_max, dx),
+        np.arange(y_min, y_max, dy),
+        np.arange(z_min, z_max, dz),
+    )
+    u, v, w = get_wind_field(x, y, z)
+
+    ax.quiver(
+        x,
+        y,
+        z,
+        u,
+        v,
+        w,
+        length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
+        linewidth=0.7,
+        arrow_length_ratio=0.1,
+        pivot="middle",
+    )
+
+    # Plot trajectory
+    traj_plot = ax.plot(
+        x_trj[:, 0],
+        x_trj[:, 1],
+        x_trj[:, 2],
+        label="Flight path",
+        color="red",
+        linewidth=1,
+    )
+
+    # Plot start position
+    ax.scatter(x0[0], x0[1], x0[2])
+
+    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
+    # Plot direction vector
+    ax.quiver(
+        x0[0],
+        x0[1],
+        x0[2],
+        dir_vector[0],
+        dir_vector[1],
+        0,
+        color="green",
+        label="Desired direction",
+        length=np.sqrt(dx ** 2 + dy ** 2),
+        arrow_length_ratio=0.1,
+    )
+
+    ax.set_zlim(0, z_max)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    ax.set_title("{0}".format(travel_angle))
+
+    return traj_plot
 
 
 def polar_plot_avg_velocities(avg_velocities):
     lists = sorted(avg_velocities.items())
     x, y = zip(*lists)
-    ax = plt.subplot(111, projection="polar")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="polar")
     ax.plot(x, y)
     ax.set_title("Achievable speeds")
 

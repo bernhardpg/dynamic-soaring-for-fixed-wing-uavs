@@ -17,26 +17,57 @@ from dynamics.wind_models import (
     get_dimless_wind_vector,
 )
 
-def get_sim_params():
-    M = 4.5  # kg Mass
-    rho = 1.255  # g/m**3 Air density
 
-    Lambda = 40  # Lift-to-drag ratio
-    efficiency = 1 / Lambda  # Small efficiency parameter
-    V_l = 15  # m/s Optimal glide speed
-    G = 9.81  # m/s**2 Graviational constant
-    L = V_l ** 2 / G  # Characteristic length
-    T = V_l / G  # Characteristic time
-    C = (M * G) / (rho * V_l)  # Norm of circulation vector in steady flight
+class ZhukovskiiGlider:
+    def __init__(self):
+        self.M = 4.5  # kg Mass
+        self.rho = 1.255  # g/m**3 Air density
 
-    sim_params = (M, rho, Lambda, efficiency, V_l, G, L, T, C)
-    return sim_params
+        self.b = 3  # m Wing span
+        self.A = 0.5  # m**2 Wing area
+        self.AR = self.b ** 2 / self.A  # Aspect ratio, b**2 / wing_area
+        self.Lambda = 40  # Lift-to-drag ratio
+        self.efficiency = 1 / self.Lambda  # Small efficiency parameter
+        self.V_l = 15  # m/s Optimal glide speed
+        self.G = 9.81  # m/s**2 Graviational constant
+        self.L = self.V_l ** 2 / self.G  # Characteristic length
+        self.T = self.V_l / self.G  # Characteristic time
+        self.C = (self.M * self.G) / (
+            self.rho * self.V_l
+        )  # Norm of circulation vector in steady flight
+
+        self.drake_plant = DrakeZhukovskiiGliderDimless(self.Lambda, self.V_l, self.G)
+
+        return
+
+    def get_params(self):
+        params = (
+            self.M,
+            self.rho,
+            self.AR,
+            self.Lambda,
+            self.efficiency,
+            self.V_l,
+            self.G,
+            self.L,
+            self.T,
+            self.C,
+        )
+        return params
+
+    def get_drake_plant(self):
+        return self.drake_plant
+
+    def calc_roll(circulation):
+
+        return
+
 
 # From Mortens notes
-@TemplateSystem.define("ZhukovskiiGliderDimless_")
-def ZhukovskiiGliderDimless_(T):
+@TemplateSystem.define("DrakeZhukovskiiGliderDimless_")
+def DrakeZhukovskiiGliderDimless_(T):
     class Impl(LeafSystem_[T]):
-        def _construct(self, converter=None):
+        def _construct(self, Lambda, V_l, G, converter=None):
             LeafSystem_[T].__init__(self, converter)
 
             # Three inputs
@@ -49,15 +80,15 @@ def ZhukovskiiGliderDimless_(T):
 
             # Constants
             self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
-            self.Gamma = 40  # Optimal lift to drag ratio
-            self.efficiency = 1 / self.Gamma  # Small efficiency number
-            self.V_l = 20
-            self.G = 9.81  # Gravitational constant
+            self.Lambda = Lambda  # Optimal lift to drag ratio
+            self.efficiency = 1 / self.Lambda  # Small efficiency number
+            self.V_l = V_l
+            self.G = G  # Gravitational constant
             self.L = self.V_l ** 2 / self.G  # Characteristic length
             self.T = self.V_l / self.G  # Characteristic time
 
         def _construct_copy(self, other, converter=None):
-            Impl._construct(self, converter=converter)
+            Impl._construct(self, other.Lambda, other.V_l, other.G, converter=converter)
 
         def DoCalcTimeDerivatives(self, context, derivatives):
             # NOTE all variabled dimless here
@@ -95,11 +126,11 @@ def ZhukovskiiGliderDimless_(T):
     return Impl
 
 
-ZhukovskiiGliderDimless = ZhukovskiiGliderDimless_[None]
+DrakeZhukovskiiGliderDimless = DrakeZhukovskiiGliderDimless_[None]
 
 
-@TemplateSystem.define("ZhukovskiiGlider_")
-def ZhukovskiiGlider_(T):
+@TemplateSystem.define("DrakeZhukovskiiGlider_")
+def DrakeZhukovskiiGlider_(T):
     class Impl(LeafSystem_[T]):
         def _construct(self, converter=None):
             LeafSystem_[T].__init__(self, converter)
@@ -122,7 +153,7 @@ def ZhukovskiiGlider_(T):
             self.m = 4.5  # kg
             self.g = 9.81  # gravity
             self.g_vec = np.array([0, 0, -self.g])
-            self.Gamma = 45  # Optimal lift to drag ratio
+            self.Lambda = 45  # Optimal lift to drag ratio
             self.V_l = 20  # Level flight speed that achieves LDR
 
         def _construct_copy(self, other, converter=None):
@@ -141,7 +172,7 @@ def ZhukovskiiGlider_(T):
             vel_rel = vel - wind
 
             # NOTE Original expression which is numerically bad
-            # d = ((self.m * self.g) / (self.rho * self.Gamma * self.V_l)) * l(
+            # d = ((self.m * self.g) / (self.rho * self.Lambda * self.V_l)) * l(
             #    np.linalg.norm(vel_rel) / self.V_l,
             #    (self.rho * self.V_l * np.linalg.norm(c)) / (self.m * self.g),
             # )
@@ -153,7 +184,7 @@ def ZhukovskiiGlider_(T):
                 + (self.rho ** 2 * self.V_l ** 2 * c.T.dot(c)) / (self.m * self.g) ** 2
             ) / (2 * (np.sqrt(vel_rel.T.dot(vel_rel) + epsilon) / self.V_l))
 
-            d = ((self.m * self.g) / (self.rho * self.Gamma * self.V_l)) * l_term
+            d = ((self.m * self.g) / (self.rho * self.Lambda * self.V_l)) * l_term
 
             vel_dot = (1 / self.m) * (
                 self.m * self.g_vec
@@ -172,7 +203,7 @@ def ZhukovskiiGlider_(T):
     return Impl
 
 
-ZhukovskiiGlider = ZhukovskiiGlider_[None]
+DrakeZhukovskiiGlider = DrakeZhukovskiiGlider_[None]
 
 
 # TODO currently unused
