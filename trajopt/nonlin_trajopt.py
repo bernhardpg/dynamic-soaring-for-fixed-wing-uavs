@@ -93,7 +93,7 @@ def direct_collocation(
     min_travelled_distance = 5  # m
 
     # Initial guess
-    V0_guess = V_l * 0.5  # TODO tune this
+    V0_guess = V_l * 1.0  # TODO tune this
     end_time_guess = max_tf  # TODO sync with DirCol params
     total_dist_travelled_guess = V0_guess * end_time_guess
 
@@ -266,7 +266,7 @@ def direct_collocation(
         solution_avg_speed = solution_distance / solution_period
 
         print(
-            "Solution period: {0} (s)\nSolution cost: {1}\nSolution distance: {2} (m) \nSolution avg. speed: {3} (m/s)".format(
+            "\tSolution period: {0} (s)\n\tSolution cost: {1}\n\tSolution distance: {2} (m) \n\tSolution avg. speed: {3} (m/s)".format(
                 solution_period, solution_cost, solution_distance, solution_avg_speed
             )
         )
