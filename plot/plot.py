@@ -88,7 +88,12 @@ def animate_trajectory_gif(
             arrow_length_ratio=0.1,
         )
 
-        return ([pos, w1, w2, w3],)
+        return (
+            pos,
+            w1,
+            w2,
+            w3,
+        )
 
     def update(frame):
         plt.cla()
@@ -198,10 +203,15 @@ def animate_trajectory_gif(
             length=scale * 3,
         )
 
-        return ((pos, w1, w2, w3),)
+        return (
+            pos,
+            w1,
+            w2,
+            w3,
+        )
 
     ani = FuncAnimation(
-        fig, update, frames=list(zip(times, x_trj, u_trj)), init_func=init, blit=False
+        fig, update, frames=list(zip(times, x_trj, u_trj)), init_func=init, blit=True
     )
     # TODO figure out a way to set blit to true
 
@@ -213,11 +223,11 @@ def animate_trajectory_gif(
     writer = Writer(fps=int(1 / dt), metadata=dict(artist="Me"), bitrate=1800)
     ani.save(filepath + filename, writer=writer)
     print("Saved animation")
+    plt.close()
 
     return
 
 
-# TODO save to gif
 # TODO move COM to middle of glider
 
 

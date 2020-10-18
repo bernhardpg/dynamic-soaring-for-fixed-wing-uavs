@@ -266,7 +266,7 @@ def direct_collocation(
 
     else:  # No solution
         print("ERROR: Did not find a solution")
-        return -1, None
+        return -1, None, None
 
 
 def direct_collocation_slotine_glider():

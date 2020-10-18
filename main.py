@@ -1,11 +1,18 @@
 from trajopt.nonlin_trajopt import *
+from trajopt.dircol_fourier import *
 from plot.plot import *
 
-
 def main():
+    #zhukovskii_glider_w_dircol()
+    prog = DirColFourierProblem()
+
+
+    return 0
+
+def zhukovskii_glider_w_dircol():
     zhukovskii_glider = ZhukovskiiGlider()
 
-    N_angles = 10
+    N_angles = 100
     travel_angles = np.linspace(0, 2 * np.pi, N_angles)
     #travel_angles = np.array([np.pi/2 + 0.3])
 
@@ -25,6 +32,7 @@ def main():
         print("### Running twice with proximate solution as initial guess")
         double_travel_angles = np.concatenate((travel_angles, travel_angles))
         prev_solution = None
+
         for psi in double_travel_angles:
             avg_speed, traj, curr_solution = direct_collocation(
                 zhukovskii_glider, psi, initial_guess=prev_solution
@@ -35,6 +43,21 @@ def main():
                 trajectories[psi] = traj
 
             prev_solution = curr_solution
+
+        print("### Running twice with proximate solution as initial guess (other way)")
+
+        for psi in np.flip(double_travel_angles):
+            avg_speed, traj, curr_solution = direct_collocation(
+                zhukovskii_glider, psi, initial_guess=prev_solution
+            )
+
+            if avg_speed > avg_velocities[psi]:
+                avg_velocities[psi] = avg_speed
+                trajectories[psi] = traj
+
+            prev_solution = curr_solution
+
+
 
 
     print("### Finished!")
