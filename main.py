@@ -4,7 +4,8 @@ from plot.plot import *
 
 def main():
     #zhukovskii_glider_w_dircol()
-    prog = DirColFourierProblem()
+    zhukovskii_glider = ZhukovskiiGlider()
+    prog = DirColFourierProblem(zhukovskii_glider.continuous_dynamics_dimless)
 
 
     return 0

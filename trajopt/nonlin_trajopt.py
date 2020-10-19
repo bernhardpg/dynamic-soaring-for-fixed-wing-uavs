@@ -152,7 +152,7 @@ def direct_collocation(
         )
 
     # Min velocity
-    dircol.AddConstraintToAllKnotPoints(min_speed ** 2 <= x[4] ** 2 + x[5] ** 2)
+    dircol.AddConstraintToAllKnotPoints(min_speed ** 2 <= x[4] ** 2 + x[5] ** 2) # TODO test adding z-component here as well
     dircol.AddConstraintToAllKnotPoints(x[4] ** 2 + x[5] ** 2 <= max_speed ** 2)
 
     # Always travel in direction of desired direction

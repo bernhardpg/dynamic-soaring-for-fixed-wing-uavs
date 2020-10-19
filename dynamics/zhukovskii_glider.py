@@ -22,6 +22,7 @@ class ZhukovskiiGlider:
     def __init__(self):
         self.rho = 1.255  # g/m**3 Air density
 
+        self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
         self.b = 3  # m Wing span
         self.A = 0.5  # m**2 Wing area
         self.glider_length = 2  # m NOTE only used for visualization
@@ -78,6 +79,31 @@ class ZhukovskiiGlider:
         pos = x[0:3]
         vel = x[3:6]
         return vel - get_wind_vector(pos[2])
+
+    def continuous_dynamics_dimless(self, x, u):
+        # x = [x, y, z, xdot, ydot, zdot]
+        # u = circulation vector
+        c = u
+        pos = x[0:3]
+        vel = x[3:6]
+
+        dimless_wind = get_dimless_wind_vector(pos[2], self.L, self.V_l)
+        vel_rel = vel - dimless_wind
+
+        # NOTE necessary to add a small epsilon to deal
+        # with gradients of vector norms being horrible
+        epsilon = 0.001
+        l_term = (vel_rel.T.dot(vel_rel) + c.T.dot(c)) / (
+            2 * np.sqrt(vel_rel.T.dot(vel_rel) + epsilon)
+        )
+
+        vel_dot = -self.e_z - (
+            self.efficiency * l_term * np.eye(3) + skew_matrix(c)
+        ).dot(vel_rel)
+
+        x_dot = np.concatenate((vel, vel_dot))
+
+        return x_dot
 
 
 # From Mortens notes
