@@ -69,16 +69,67 @@ class DirColFourierProblem:
             ub = np.array([2 * np.pi, 2 * np.pi, 2 * np.pi])
             self.prog.AddBoundingBoxConstraint(lb, ub, etas)
 
+        # Add constraints on final time and avg vel
         self.prog.AddBoundingBoxConstraint(0.5, 200, self.t_f)  # TODO better limit?
         self.prog.AddBoundingBoxConstraint(0.5, 150, self.avg_vel)
+
+        # TODO add constraints on state
 
         # Add objective function
         self.prog.AddCost(-self.avg_vel)
 
-        result = Solve(self.prog)
-        assert result.is_success()
+        self.result = Solve(self.prog)
+        assert self.result.is_success()
 
         return
+
+    def get_solution(self):
+        coeffs_opt = self.result.GetSolution(self.coeffs)
+        phase_delays_opt = self.result.GetSolution(self.phase_delays)
+        t_f_opt = self.result.GetSolution(self.t_f)
+        avg_vel_opt = self.result.GetSolution(self.avg_vel)
+
+        sim_N = 100
+        dt = t_f_opt / sim_N
+        times = np.arange(0, t_f_opt, dt)
+        pos_traj = np.zeros((3, sim_N))
+        for i in range(sim_N):
+            t = times[i]
+            pos = self.evaluate_pos_traj(
+                coeffs_opt, phase_delays_opt, t_f_opt, avg_vel_opt, t
+            )
+            pos_traj[:, i] = pos
+
+        # TODO move plotting out
+        plot_trj_3_wind(pos_traj.T, np.array([np.sin(self.psi), np.cos(self.psi), 0]))
+        plt.show()
+        breakpoint()
+        # TODO make this work
+
+
+        return
+
+    def evaluate_pos_traj(self, coeffs, phase_delays, t_f, avg_vel, t):
+        pos_traj = np.copy(coeffs[:, 0])
+        for m in range(1, self.M):
+            sine_terms = np.array(
+                [
+                    np.sin((2 * np.pi * m * t) / t_f + phase_delays[0, m]),
+                    np.sin((2 * np.pi * m * t) / t_f + phase_delays[1, m]),
+                    np.sin((2 * np.pi * m * t) / t_f + phase_delays[2, m]),
+                ]
+            )
+            pos_traj += coeffs[:, m] * sine_terms
+
+        direction_term = np.array(
+            [
+                avg_vel * np.sin(self.psi) * t,
+                avg_vel * np.cos(self.psi) * t,
+                0,
+            ]
+        )
+        pos_traj += direction_term
+        return pos_traj
 
     def get_pos_fourier(self, collocation_time):
         pos_traj = np.copy(self.coeffs[:, 0])

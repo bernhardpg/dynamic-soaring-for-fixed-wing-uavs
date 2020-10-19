@@ -6,8 +6,7 @@ def main():
     #zhukovskii_glider_w_dircol()
     zhukovskii_glider = ZhukovskiiGlider()
     prog = DirColFourierProblem(zhukovskii_glider.continuous_dynamics_dimless)
-
-
+    prog.get_solution()
     return 0
 
 def zhukovskii_glider_w_dircol():
