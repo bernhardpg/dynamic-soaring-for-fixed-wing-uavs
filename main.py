@@ -4,29 +4,39 @@ from plot.plot import *
 
 
 def main():
-    # zhukovskii_glider_w_dircol()
+    do_dircol()
+    return 0
+
+
+def do_collocation_w_fourier():
     zhukovskii_glider = ZhukovskiiGlider()
     prog = FourierCollocationProblem(
         zhukovskii_glider.continuous_dynamics_dimless,
         zhukovskii_glider.get_constraints_dimless(),
     )
     prog.get_solution()
-    return 0
+    return
 
 
-def zhukovskii_glider_w_dircol():
+def do_dircol():
     zhukovskii_glider = ZhukovskiiGlider()
 
-    N_angles = 100
-    travel_angles = np.linspace(0, 2 * np.pi, N_angles)
-    # travel_angles = np.array([np.pi/2 + 0.3])
+    # Program parameters
+    SAVE_ANIMATION = False
+    N_ANGLES = 100
+    START_ANGLE = 0
 
+    # Save trajectories and values
     avg_velocities = dict()
     trajectories = dict()
+
+    # First run with straight line as initial guess
+    travel_angles = np.linspace(START_ANGLE, START_ANGLE + 2 * np.pi, N_ANGLES)
+
     print("### Running with straight line as initial guess")
     for psi in travel_angles:
         avg_speed, traj, curr_solution = direct_collocation(
-            zhukovskii_glider, psi, plot_solution=False
+            zhukovskii_glider, psi, PLOT_SOLUTION=False
         )
         trajectories[psi] = traj
         avg_velocities[psi] = avg_speed
@@ -65,10 +75,11 @@ def zhukovskii_glider_w_dircol():
     print("### Finished!")
     # plot_trajectories(trajectories)
     polar_plot_avg_velocities(avg_velocities)
-    for travel_angle in travel_angles:
-        animate_trajectory_gif(
-            zhukovskii_glider, trajectories[travel_angle], travel_angle
-        )
+    if SAVE_ANIMATION:
+        for travel_angle in travel_angles:
+            animate_trajectory_gif(
+                zhukovskii_glider, trajectories[travel_angle], travel_angle
+            )
 
     return 0
 

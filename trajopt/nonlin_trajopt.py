@@ -41,27 +41,27 @@ from dynamics.zhukovskii_glider import ZhukovskiiGlider
 # * Constrain AoA within +- 5 degrees
 
 
-def state_callback(t, x):
-    x_knots = x.T
-    plot_trj_3_wind(x_knots[:, 0:3])
-
-    plt.draw()
-    plt.pause(0.000001)
-    plt.close()
-    return
-
-
 def direct_collocation(
     zhukovskii_glider,
     travel_angle,
     initial_guess=None,
-    plot_solution=False,
-    print_glider_details=False,
-    plot_initial_guess=False,
+    PLOT_SOLUTION=False,
+    PRINT_GLIDER_DETAILS=False,
+    PLOT_INITIAL_GUESS=False,
 ):
 
+    # Get model parameters
     M, rho, AR, Lambda, efficiency, V_l, G, L, T, C = zhukovskii_glider.get_params()
-    if print_glider_details:
+    (
+        min_height,
+        max_height,
+        min_vel,
+        max_vel,
+        h0,
+        min_travelled_distance,
+    ) = zhukovskii_glider.get_constraints()
+
+    if PRINT_GLIDER_DETAILS:
         print("Running direct collocation with:")
         print("Dimensionless Zhukovskii Glider")
         print(
@@ -71,22 +71,14 @@ def direct_collocation(
         )
 
     # Optimization params
-    N = 21
+    N = 21  # Collocation points
+    min_dt = 0.05
     max_dt = 0.5
-    max_tf = N * max_dt
-
-    # Optimization constraints
-    min_height = 0.5  # m
-    max_height = 100  # m
-    min_speed = 5  # m/s
-    max_speed = 60  # m/s
-    h0 = 20  # m
-    min_travelled_distance = 5  # m
 
     # Initial guess
-    V0_guess = V_l * 0.5  # TODO tune this
-    end_time_guess = max_tf
-    total_dist_travelled_guess = V0_guess * end_time_guess
+    avg_vel_guess = V_l * 0.5  # TODO tune this
+    end_time_guess = N * max_dt
+    total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
     min_height /= L
@@ -94,9 +86,9 @@ def direct_collocation(
     min_travelled_distance /= L
     h0 /= L
     total_dist_travelled_guess /= L
-    min_speed /= V_l
-    max_speed /= V_l
-    V0_guess /= V_l
+    min_vel /= V_l
+    max_vel /= V_l
+    avg_vel_guess /= V_l
     end_time_guess /= T
 
     ######
@@ -110,26 +102,38 @@ def direct_collocation(
         plant,
         context,
         num_time_samples=N,
-        minimum_timestep=0.05,
+        minimum_timestep=min_dt,
         maximum_timestep=max_dt,
+        # TODO add/find solution treshold
     )
-
-    # CONSTRAINTS
-
-    # Constrain all timesteps, $h[k]$, to be equal, so the trajectory breaks are evenly distributed.
+    # Constrain all timesteps, h[k], to be equal,
+    # so the trajectory breaks are evenly distributed.
     dircol.AddEqualTimeIntervalsConstraints()
+
+    ######
+    # ADD CONSTRAINTS
+    ######
+
+    ## Add input constraints
+    u = dircol.input()
+    # TODO ?
+
+    ## Add state constraints
+    x = dircol.state()
+
+    # Height constraints
+    dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
+    dircol.AddConstraintToAllKnotPoints(x[2] <= max_height)
+
+    # Velocity constraints
+    dircol.AddConstraintToAllKnotPoints(min_vel ** 2 <= x[3:6].T.dot(x[3:6]))
+    dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])
     dircol.AddBoundingBoxConstraint(x0_pos, x0_pos, dircol.initial_state()[0:3])
 
-    # Add input constraints
-    u = dircol.input()
-
-    # Add state constraints
-    x = dircol.state()
-    dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
-    dircol.AddConstraintToAllKnotPoints(x[2] <= max_height)
+    ## Periodicity constraints
 
     # Periodic height
     dircol.AddLinearConstraint(dircol.final_state()[2] == dircol.initial_state()[2])
@@ -139,7 +143,7 @@ def direct_collocation(
     dircol.AddLinearConstraint(dircol.final_state()[4] == dircol.initial_state()[4])
     dircol.AddLinearConstraint(dircol.final_state()[5] == dircol.initial_state()[5])
 
-    # Travel direction constraint
+    # Final position constraint in terms of travel angle
     if travel_angle % np.pi == 0:
         # Travel along y-axis, constrain x values to be equal
         dircol.AddConstraint(dircol.final_state()[0] == dircol.initial_state()[0])
@@ -151,18 +155,14 @@ def direct_collocation(
             dircol.final_state()[0] == dircol.final_state()[1] * np.tan(travel_angle)
         )
 
-    # Min velocity
-    dircol.AddConstraintToAllKnotPoints(min_speed ** 2 <= x[4] ** 2 + x[5] ** 2) # TODO test adding z-component here as well
-    dircol.AddConstraintToAllKnotPoints(x[4] ** 2 + x[5] ** 2 <= max_speed ** 2)
-
-    # Always travel in direction of desired direction
+    # Make sure covered distance along travel angle is positive
     xy_pos_final = dircol.final_state()[0:2]
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
     dircol.AddConstraintToAllKnotPoints(
         dir_vector.T.dot(xy_pos_final) >= min_travelled_distance
     )
 
-    # OBJECTIVE FUNCTION
+    ## Objective function
 
     # Cost on input effort
     R = 5
@@ -177,11 +177,11 @@ def direct_collocation(
     # PROVIDE INITIAL GUESS
     ######
 
+    # If no initial guess provided, use a straight line
     if initial_guess == None:
-        # Initial guess is a straight line from x0 in travel direction
         print("Running with straight line as initial guess")
         x0_guess = np.array(
-            [0, 0, h0, V0_guess * dir_vector[0], V0_guess * dir_vector[1], 0]
+            [0, 0, h0, avg_vel_guess * dir_vector[0], avg_vel_guess * dir_vector[1], 0]
         )
 
         xf_guess = np.array(
@@ -189,22 +189,23 @@ def direct_collocation(
                 dir_vector[0] * total_dist_travelled_guess,
                 dir_vector[1] * total_dist_travelled_guess,
                 h0,
-                V0_guess * dir_vector[0],
-                V0_guess * dir_vector[1],
+                avg_vel_guess * dir_vector[0],
+                avg_vel_guess * dir_vector[1],
                 0,
             ]
         )
+        # Linear interpolation
         initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
             [0.0, end_time_guess], np.column_stack((x0_guess, xf_guess))
         )
         dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
 
-    else:  # Use provided initial_guess
+    # Use provided initial_guess
+    else:
         print("Running with provided initial guess")
-        initial_x_trajectory = initial_guess
-        dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
+        dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_guess)
 
-    if plot_initial_guess:
+    if PLOT_INITIAL_GUESS:
         times = np.linspace(
             initial_x_trajectory.start_time(), initial_x_trajectory.end_time(), N
         )
@@ -212,9 +213,6 @@ def direct_collocation(
         traj_plt = plot_trj_3_wind(x0_knots[:, 0:3], dir_vector)
         plt.show()
 
-    # Add callback
-    # plt.ion()
-    # dircol.AddStateTrajectoryCallback(callback=state_callback)
 
     #######
     # SOLVE TRAJOPT PROBLEM
@@ -224,16 +222,17 @@ def direct_collocation(
     result = Solve(dircol)
     # assert result.is_success()
 
-    if result.is_success():  # Found solution
+    if result.is_success():
         print("Found a solution!")
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
 
         N_plot = 200
 
-        # Plot trajectory
+        # Reconstruct trajectory
         times_dimless = np.linspace(
             x_traj_dimless.start_time(), x_traj_dimless.end_time(), N_plot
         )
+
         x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T
         x_knots = x_knots_dimless * L
         times = times_dimless * T
@@ -243,7 +242,7 @@ def direct_collocation(
         u_knots_dimless = np.hstack([u_traj_dimless.value(t) for t in times_dimless]).T
         u_knots = u_knots_dimless * C
 
-        if plot_solution:  # TODO remove
+        if PLOT_SOLUTION:  # TODO remove
 
             plot_trj_3_wind(x_knots[:, 0:3], dir_vector)
             plot_circulation(times, u_knots)
@@ -254,15 +253,15 @@ def direct_collocation(
         solution_period = x_traj_dimless.end_time() * T
         solution_cost = result.get_optimal_cost()
         solution_distance = dir_vector.T.dot(x_knots[-1, 0:2])
-        solution_avg_speed = solution_distance / solution_period
+        solution_avg_vel = solution_distance / solution_period
 
         print(
-            "\tSolution period: {0} (s)\n\tSolution cost: {1}\n\tSolution distance: {2} (m) \n\tSolution avg. speed: {3} (m/s)".format(
-                solution_period, solution_cost, solution_distance, solution_avg_speed
+            "\tSolution period: {0} (s)\n\tSolution cost: {1}\n\tSolution distance: {2} (m) \n\tSolution avg. vel: {3} (m/s)".format(
+                solution_period, solution_cost, solution_distance, solution_avg_vel
             )
         )
 
-        return solution_avg_speed, (times, x_knots, u_knots), x_traj_dimless
+        return solution_avg_vel, (times, x_knots, u_knots), x_traj_dimless
 
     else:  # No solution
         print("ERROR: Did not find a solution")
@@ -344,13 +343,13 @@ def direct_collocation_slotine_glider():
 
     # Initial guess is a straight line from x0 in direction
     if initial_guess:
-        V0_guess = 10  # Guess for initial velocity
-        x0_guess = np.array([V0_guess, travel_angle, 0, h0, 0, 0])
+        avg_vel_guess = 10  # Guess for initial velocity
+        x0_guess = np.array([avg_vel_guess, travel_angle, 0, h0, 0, 0])
 
         guessed_total_dist_travelled = 200
         xf_guess = np.array(
             [
-                V0_guess,
+                avg_vel_guess,
                 travel_angle,
                 0,
                 h0,
