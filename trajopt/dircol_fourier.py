@@ -1,5 +1,5 @@
+import time
 import numpy as np
-import pdb
 from pydrake.all import (
     eq,
     MathematicalProgram,
@@ -13,12 +13,6 @@ from pydrake.all import (
     LogOutput,
 )
 import pydrake.symbolic as sym
-import matplotlib.pyplot as plt
-
-from plot.plot import plot_trj_3_wind, plot_input_slotine_glider, plot_circulation
-from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
-from dynamics.zhukovskii_glider import ZhukovskiiGlider
-import time
 
 class FourierCollocationProblem:
     def __init__(self, system_dynamics, constraints):
