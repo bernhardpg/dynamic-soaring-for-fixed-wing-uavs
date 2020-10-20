@@ -39,9 +39,6 @@ from dynamics.zhukovskii_glider import ZhukovskiiGlider
 # * Constrain input difference
 # * Constrain AoA within +- 5 degrees
 
-
-
-
 def direct_collocation_slotine_glider():
     print("Running direct collocation")
 

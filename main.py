@@ -1,11 +1,11 @@
 from trajopt.nonlin_trajopt import *
-from trajopt.dircol_fourier import *
+from trajopt.fourier_collocation import *
 from plot.plot import *
-from trajopt.dircol import *
+from trajopt.direct_collocation import *
 
 
 def main():
-    do_single_dircol(0.7 * np.pi)
+    do_single_dircol(1 * np.pi)
     # do_dircol()
     return 0
 
@@ -32,12 +32,20 @@ def do_single_dircol(psi):
 
     if PLOT_SOLUTION:
         plot_glider_pos(x_knots[:, 0:3], psi)
-        plot_circulation(times, u_knots)
+        plot_glider_input(times, u_knots)
         plt.show()
+
+        if False:
+            # TODO continue on this later: ensure that c_l and AoA is realistic!
+            # TODO continue on this after asking morten
+            c_l_knots = np.zeros((200,))
+            for k in range(len(times)):
+                c_l = zhukovskii_glider.get_lift_coeff(x_knots[k, :], u_knots[k, :])
+                c_l_knots[k] = c_l * (180 / np.pi)
     return
 
 
-def do_dircol():
+def do_sweep_dircol():
     zhukovskii_glider = ZhukovskiiGlider()
 
     # Program parameters

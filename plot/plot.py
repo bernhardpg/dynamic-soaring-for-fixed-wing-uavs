@@ -26,24 +26,33 @@ def plot_trajectories(trajectories):
     return
 
 
-def plot_circulation(t, u_trj):
-    plt.subplots(figsize=(5, 3))
+def plot_glider_input(t, u_trj):
+    using_brake = u_trj.shape[1] > 3
+    if using_brake:
+        add_plot = 1
 
-    plt.subplot(3, 1, 1)
+    plt.subplots(figsize=(5, 3))
+    plt.subplot(3 + add_plot, 1, 1)
     plt.plot(t, u_trj[:, 0])
     plt.xlabel("time [s]")
     plt.ylabel("x")
     plt.title("Circulation")
 
-    plt.subplot(3, 1, 2)
+    plt.subplot(3 + add_plot, 1, 2)
     plt.plot(t, u_trj[:, 1])
     plt.xlabel("time [s]")
     plt.ylabel("y")
 
-    plt.subplot(3, 1, 3)
+    plt.subplot(3 + add_plot, 1, 3)
     plt.plot(t, u_trj[:, 2])
     plt.xlabel("time [s]")
     plt.ylabel("z")
+
+    if using_brake:
+        plt.subplot(3 + add_plot, 1, 4)
+        plt.plot(t, u_trj[:, 3])
+        plt.xlabel("time [s]")
+        plt.ylabel("brake")
 
     return
 

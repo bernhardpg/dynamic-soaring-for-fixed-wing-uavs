@@ -273,6 +273,6 @@ class FourierCollocationProblem:
         x = np.concatenate((pos, vel))
         x_dot = np.concatenate((vel, vel_dot))
 
-        
+        # TODO need to somehow implement input to make this work
 
         return x_dot - self.system_dynamics(x, u)

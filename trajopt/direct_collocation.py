@@ -73,7 +73,8 @@ def direct_collocation(
     # DEFINE TRAJOPT PROBLEM
     ######
 
-    plant = zhukovskii_glider.get_drake_plant()
+    plant = zhukovskii_glider.get_drake_plant(diff_flat=True)
+
     context = plant.CreateDefaultContext()
 
     dircol = DirectCollocation(
@@ -92,12 +93,18 @@ def direct_collocation(
     # ADD CONSTRAINTS
     ######
 
-    ## Add input constraints
+    ## Add input constraint
     u = dircol.input()
-    # TODO ?
+    enable_brake_param = u.shape[0] > 3
+
+    if enable_brake_param:
+        dircol.AddConstraintToAllKnotPoints(0 <= u[3])
+
+    # TODO Add more input constraints?
 
     ## Add state constraints
     x = dircol.state()
+    # TODO add bank angle constraint
 
     # Height constraints
     dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
@@ -145,7 +152,9 @@ def direct_collocation(
     # Cost on input effort
     R = 5
     # TODO replace 0.125
-    dircol.AddRunningCost(R * (u[0] ** 2 + (u[1] - 0.125) ** 2 + u[2] ** 2))
+    dircol.AddRunningCost(R * (u[0] ** 2 + (u[1] - 1) ** 2 + u[2] ** 2))
+    if enable_brake_param:
+        dircol.AddRunningCost(R * u[3] ** 2)
 
     # Maximize distance travelled in desired direction
     Q = 2
