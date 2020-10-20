@@ -2,19 +2,24 @@ from trajopt.nonlin_trajopt import *
 from trajopt.dircol_fourier import *
 from plot.plot import *
 
+
 def main():
-    #zhukovskii_glider_w_dircol()
+    # zhukovskii_glider_w_dircol()
     zhukovskii_glider = ZhukovskiiGlider()
-    prog = DirColFourierProblem(zhukovskii_glider.continuous_dynamics_dimless)
+    prog = FourierCollocationProblem(
+        zhukovskii_glider.continuous_dynamics_dimless,
+        zhukovskii_glider.get_constraints_dimless(),
+    )
     prog.get_solution()
     return 0
+
 
 def zhukovskii_glider_w_dircol():
     zhukovskii_glider = ZhukovskiiGlider()
 
     N_angles = 100
     travel_angles = np.linspace(0, 2 * np.pi, N_angles)
-    #travel_angles = np.array([np.pi/2 + 0.3])
+    # travel_angles = np.array([np.pi/2 + 0.3])
 
     avg_velocities = dict()
     trajectories = dict()
@@ -57,14 +62,13 @@ def zhukovskii_glider_w_dircol():
 
             prev_solution = curr_solution
 
-
-
-
     print("### Finished!")
     # plot_trajectories(trajectories)
     polar_plot_avg_velocities(avg_velocities)
     for travel_angle in travel_angles:
-        animate_trajectory_gif(zhukovskii_glider, trajectories[travel_angle], travel_angle)
+        animate_trajectory_gif(
+            zhukovskii_glider, trajectories[travel_angle], travel_angle
+        )
 
     return 0
 

@@ -31,7 +31,7 @@ class ZhukovskiiGlider:
 
         self.Lambda = 40  # Lift-to-drag ratio
         self.efficiency = 1 / self.Lambda  # Small efficiency parameter
-        self.V_l = 15  # m/s Optimal glide speed
+        self.V_l = 15  # m/s Optimal glide vel
         self.G = 9.81  # m/s**2 Graviational constant
         self.L = self.V_l ** 2 / self.G  # Characteristic length
         self.T = self.V_l / self.G  # Characteristic time
@@ -39,8 +39,20 @@ class ZhukovskiiGlider:
             self.rho * self.V_l
         )  # Norm of circulation vector in steady flight
 
-        self.drake_plant = DrakeZhukovskiiGliderDimless(self.Lambda, self.V_l, self.G)
+        # Optimization constraints
+        self.min_height = 0.5  # m
+        self.max_height = 100  # m
+        self.min_vel = 5  # m/s
+        self.max_vel = 60  # m/s
+        self.h0 = 20  # m
+        self.min_travelled_distance = 5  # m
+        self.t_f_min = 0.5  # s
+        self.t_f_max = 200  # s
+        self.avg_vel_min = 2  # s
+        self.avg_vel_max = 100  # s
 
+        # TODO pass constraints to drake plant
+        self.drake_plant = DrakeZhukovskiiGliderDimless(self.Lambda, self.V_l, self.G)
         return
 
     def get_params(self):
@@ -57,6 +69,33 @@ class ZhukovskiiGlider:
             self.C,
         )
         return params
+
+    def get_constraints(self):
+        constraints = (
+            self.min_height,
+            self.max_height,
+            self.min_vel,
+            self.max_vel,
+            self.h0,
+            self.min_travelled_distance,
+        )
+        return constraints
+
+    def get_constraints_dimless(self):
+        constraints_dimless = (
+            self.min_height / self.L,
+            self.max_height / self.L,
+            self.min_vel / self.V_l,
+            self.max_vel / self.V_l,
+            self.h0 / self.L,
+            self.min_travelled_distance / self.L,
+            self.t_f_min / self.T,
+            self.t_f_max / self.T,
+            self.avg_vel_min / self.V_l,
+            self.avg_vel_max / self.V_l,
+        )
+
+        return constraints_dimless
 
     def get_drake_plant(self):
         return self.drake_plant
@@ -197,7 +236,7 @@ def DrakeZhukovskiiGlider_(T):
             self.g = 9.81  # gravity
             self.g_vec = np.array([0, 0, -self.g])
             self.Lambda = 45  # Optimal lift to drag ratio
-            self.V_l = 20  # Level flight speed that achieves LDR
+            self.V_l = 20  # Level flight vel that achieves LDR
 
         def _construct_copy(self, other, converter=None):
             Impl._construct(self, converter=converter)
