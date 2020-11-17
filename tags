@@ -50,7 +50,7 @@ _construct_copy	dynamics/zhukovskii_glider.py	/^        def _construct_copy(self
 animation	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 avg_vel_guess	trajopt/direct_collocation.py	/^    avg_vel_guess = V_l * 0.5  # TODO tune this$/;"	v
 backward_pass	ilqr/ilqr.py	/^def backward_pass(x_trj, u_trj, regu, derivs):$/;"	f
-calc_glider_values	main.py	/^def calc_glider_values():$/;"	f
+calc_lift_coeff	dynamics/zhukovskii_glider.py	/^    def calc_lift_coeff(self, x, c, A):$/;"	m	class:ZhukovskiiGlider
 calc_opt_glide_angle	dynamics/zhukovskii_glider.py	/^    def calc_opt_glide_angle(self, AR, c_Dp):$/;"	m	class:ZhukovskiiGlider
 calc_opt_glide_ratio	dynamics/zhukovskii_glider.py	/^    def calc_opt_glide_ratio(self, AR, c_Dp):$/;"	m	class:ZhukovskiiGlider
 calc_opt_glide_speed	dynamics/zhukovskii_glider.py	/^    def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):$/;"	m	class:ZhukovskiiGlider
@@ -82,7 +82,6 @@ direct_collocation_slotine_glider	trajopt/nonlin_trajopt.py	/^def direct_colloca
 direct_transcription	trajopt/nonlin_trajopt.py	/^def direct_transcription():$/;"	f
 discrete_dynamics	ilqr/ilqr.py	/^def discrete_dynamics(x, u):$/;"	f
 do_collocation_w_fourier	main.py	/^def do_collocation_w_fourier():$/;"	f
-do_single_dircol	main.py	/^def do_single_dircol(psi):$/;"	f
 do_sweep_dircol	main.py	/^def do_sweep_dircol():$/;"	f
 dt	examples/trajopt_example.py	/^dt = 0.01;$/;"	v
 enable_brake_param	trajopt/direct_collocation.py	/^    enable_brake_param = u.shape[0] > 3$/;"	v
@@ -144,7 +143,7 @@ num_time_samples	trajopt/direct_collocation.py	/^        num_time_samples=N,$/;"
 pdb	test/test_ilqr.py	/^import pdb$/;"	i
 pdb	trajopt/nonlin_trajopt.py	/^import pdb$/;"	i
 plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)$/;"	v
-plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj):$/;"	f
+plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj, c_l_trj):$/;"	f
 plot_glider_pos	plot/plot.py	/^def plot_glider_pos(x_trj, travel_angle):$/;"	f
 plot_trajectories	plot/plot.py	/^def plot_trajectories(trajectories):$/;"	f
 plot_trj_3_wind	test/test_dynamics.py	/^from plot.plot import plot_trj_3_wind$/;"	i

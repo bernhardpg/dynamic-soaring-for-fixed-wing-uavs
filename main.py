@@ -22,6 +22,8 @@ def single_dircol_w_real_values():
     AR = b ** 2 / A
 
     zhukovskii_glider = ZhukovskiiGlider()
+
+    # Print performance params
     Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
     Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
     V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
@@ -38,9 +40,15 @@ def single_dircol_w_real_values():
 
     times, x_knots, u_knots = traj
 
+    # Calculate corresponding lift coeff
+    c_l_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        c_l = zhukovskii_glider.calc_lift_coeff(x_knots[k, :], u_knots[k, :], A)
+        c_l_knots[k] = c_l
+
     if PLOT_SOLUTION:
         plot_glider_pos(x_knots[:, 0:3], psi)
-        plot_glider_input(times, u_knots)
+        plot_glider_input(times, u_knots, c_l_knots)
         plt.show()
 
     return

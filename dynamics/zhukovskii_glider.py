@@ -128,6 +128,14 @@ class ZhukovskiiGlider:
             return DrakeSysWrapper(4, self.continuous_dynamics_diff_flat_dimless)
         return DrakeSysWrapper(3, self.continuous_dynamics_dimless)
 
+    def calc_lift_coeff(self, x, c, A):
+        v_r = self.get_vel_rel(x)
+        c_norm = np.linalg.norm(c)
+        v_r_norm = np.linalg.norm(v_r)
+
+        c_l = c_norm / (0.5 * A * v_r_norm)
+        return c_l
+
     # TODO something is strange with this
     def get_angle_of_attack(self, x, u):
         c = u

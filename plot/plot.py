@@ -26,32 +26,40 @@ def plot_trajectories(trajectories):
     return
 
 
-def plot_glider_input(t, u_trj):
+def plot_glider_input(t, u_trj, c_l_trj):
     using_brake = u_trj.shape[1] > 3
     if using_brake:
         add_plot = 1
     else:
-        add_plot = 1
+        add_plot = 0
 
-    plt.subplots(figsize=(5, 3))
-    plt.subplot(3 + add_plot, 1, 1)
+    # Circulation
+    plt.subplots(figsize=(5, 4))
+    plt.subplot(4 + add_plot, 1, 1)
     plt.plot(t, u_trj[:, 0])
     plt.xlabel("time [s]")
     plt.ylabel("x")
     plt.title("Circulation")
 
-    plt.subplot(3 + add_plot, 1, 2)
+    plt.subplot(4 + add_plot, 1, 2)
     plt.plot(t, u_trj[:, 1])
     plt.xlabel("time [s]")
     plt.ylabel("y")
 
-    plt.subplot(3 + add_plot, 1, 3)
+    plt.subplot(4 + add_plot, 1, 3)
     plt.plot(t, u_trj[:, 2])
     plt.xlabel("time [s]")
     plt.ylabel("z")
 
+    # Calculate corresponding lift coeff
+    plt.subplot(4 + add_plot, 1, 4)
+    plt.plot(t, c_l_trj)
+    plt.xlabel("time [s]")
+    plt.ylabel("c_L")
+
+    # Brake param
     if using_brake:
-        plt.subplot(3 + add_plot, 1, 4)
+        plt.subplot(4 + add_plot, 1, 4)
         plt.plot(t, u_trj[:, 3])
         plt.xlabel("time [s]")
         plt.ylabel("brake")
@@ -178,7 +186,7 @@ def save_trajectory_gif(zhukovskii_glider, traj, travel_angle):
     fig = plt.figure(figsize=(13, 10))
     ax = fig.gca(projection="3d")
 
-    times, x_trj, u_trj = traj
+    t, x_trj, u_trj = traj
     N = x_trj.shape[0]
     dt = times[1] - times[0]
     T = 1 / dt
