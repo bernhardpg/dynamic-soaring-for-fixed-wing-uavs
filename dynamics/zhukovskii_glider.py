@@ -19,26 +19,10 @@ from dynamics.wind_models import (
 
 
 class ZhukovskiiGlider:
-    def __init__(self):
-        self.rho = 1.255  # g/m**3 Air density
-
+    def __init__(self, b=3.306, A=0.65, m=8.5, c_Dp=0.033, rho=1.255, g=9.81):
+        # Set model params
+        self.set_params(b, A, m, c_Dp, rho, g)
         self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
-        self.b = 3  # m Wing span
-        self.A = 0.5  # m**2 Wing area
-        self.glider_length = 2  # m NOTE only used for visualization
-        self.AR = self.b ** 2 / self.A  # Aspect ratio, b**2 / wing_area
-        self.M = 4.5  # kg Mass
-
-        # TODO the efficiency etc must be related to the area etc in some way
-        self.Lambda = 40  # Lift-to-drag ratio
-        self.efficiency = 1 / self.Lambda  # Small efficiency parameter
-        self.V_l = 15  # m/s Optimal glide vel
-        self.G = 9.81  # m/s**2 Graviational constant
-        self.L = self.V_l ** 2 / self.G  # Characteristic length
-        self.T = self.V_l / self.G  # Characteristic time
-        self.C = (self.M * self.G) / (
-            self.rho * self.V_l
-        )  # Norm of circulation vector in steady flight
 
         # Optimization constraints
         self.min_height = 0.5  # m
@@ -58,20 +42,63 @@ class ZhukovskiiGlider:
         )
         return
 
-    def get_params(self):
-        params = (
-            self.M,
-            self.rho,
-            self.AR,
-            self.Lambda,
-            self.efficiency,
+    def set_params(self, b, A, m, c_Dp, rho, g):
+        self.b = b
+        self.A = A
+        self.m = m
+        self.c_Dp = c_Dp
+        self.rho = rho
+        self.g = g
+
+        self.AR = self.b ** 2 / self.A  # Aspect ratio, b**2 / wing_area
+
+        # Performance params
+        self.Lam = self.calc_opt_glide_ratio(self.AR, self.c_Dp)  # Optimal glide ratio
+        self.Th = self.calc_opt_glide_angle(self.AR, self.c_Dp)  # Optimal glide angle
+        self.V_opt = self.calc_opt_glide_speed(
+            self.AR, self.c_Dp, self.m, self.A, self.b, self.rho, self.g
+        )  # Optimal glide speed
+        self.V_l = self.calc_opt_level_glide_speed(
+            self.AR, self.c_Dp, self.m, self.A, self.b, self.rho, self.g
+        )  # Optimal level glide speed
+
+        # Characteristic values
+        self.L = self.V_l ** 2 / self.g  # Characteristic length
+        self.T = self.V_l / self.g  # Characteristic time
+        self.C = (self.m * self.g) / (
+            self.rho * self.V_l
+        )  # Norm of circulation vector in steady flight
+        return
+
+    def calc_opt_glide_ratio(self, AR, c_Dp):
+        glide_ratio = 0.5 * np.sqrt(np.pi * AR / c_Dp)
+        return glide_ratio
+
+    def calc_opt_glide_angle(self, AR, c_Dp):
+        opt_glide_ratio = self.calc_opt_glide_ratio(AR, c_Dp)
+        opt_glide_angle = np.arctan(1 / opt_glide_ratio)
+        return opt_glide_angle
+
+    def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
+        opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
+        opt_glide_speed = np.sqrt(
+            2 * m * g * np.cos(opt_glide_angle) / (np.sqrt(np.pi * c_Dp * A) * rho * b)
+        )
+        return opt_glide_speed
+
+    def calc_opt_level_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
+        opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
+        opt_glide_speed = self.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
+        opt_level_glide_speed = opt_glide_speed / np.sqrt(np.cos(opt_glide_angle))
+        return opt_level_glide_speed
+
+    def get_char_values(self):
+        return (
             self.V_l,
-            self.G,
             self.L,
             self.T,
             self.C,
         )
-        return params
 
     def get_constraints(self):
         constraints = (
@@ -104,22 +131,6 @@ class ZhukovskiiGlider:
         if diff_flat:
             return self.drake_plant_diff_flat
         return self.drake_plant
-
-    def calc_opt_glide_ratio(self, AR, c_Dp):
-        glide_ratio = 0.5 * np.sqrt(np.pi * AR / c_Dp)
-        return glide_ratio
-
-    def calc_opt_glide_angle(self, AR, c_Dp):
-        opt_glide_ratio = self.calc_opt_glide_ratio(AR, c_Dp)
-        opt_glide_angle = np.arctan(1 / opt_glide_ratio)
-        return opt_glide_angle
-
-    def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
-        opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
-        opt_glide_speed = np.sqrt(
-            2 * m * g * np.cos(opt_glide_angle) / (np.sqrt(np.pi * c_Dp * A) * rho * b)
-        )
-        return opt_glide_speed
 
     def calc_lift_coeff(self, x, u):
         c = u

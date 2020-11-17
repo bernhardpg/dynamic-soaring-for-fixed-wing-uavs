@@ -4,26 +4,14 @@ from plot.plot import *
 from trajopt.direct_collocation import *
 
 
-
 def main():
-    calc_glider_values()
-    # do_single_dircol(psi=1 * np.pi)
+    #single_dircol_w_real_values()
+    do_single_dircol(psi=1 * np.pi)
     # do_dircol()
     return 0
 
-
-def do_collocation_w_fourier():
-    zhukovskii_glider = ZhukovskiiGlider()
-    prog = FourierCollocationProblem(
-        zhukovskii_glider.continuous_dynamics_dimless,
-        zhukovskii_glider.get_constraints_dimless(),
-    )
-    prog.get_solution()
-    return
-
-
 def calc_glider_values():
-    zhukovskii_glider = ZhukovskiiGlider()
+    # Physical parameters
     m = 8.5
     c_Dp = 0.033
     A = 0.65
@@ -32,6 +20,7 @@ def calc_glider_values():
     g = 9.81
     AR = b ** 2 / A
 
+    zhukovskii_glider = ZhukovskiiGlider()
     Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
     Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
     V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
@@ -39,6 +28,32 @@ def calc_glider_values():
     print("Lam: {0}\nTh: {1}\nV_opt: {2}".format(Lam, Th, V_opt))
     return
 
+
+def single_dircol_w_real_values():
+    # Physical parameters
+    m = 8.5
+    c_Dp = 0.033
+    A = 0.65
+    b = 3.306
+    rho = 1.255  # g/m**3 Air density
+    g = 9.81
+    AR = b ** 2 / A
+
+    zhukovskii_glider = ZhukovskiiGlider()
+    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
+    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
+    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
+
+    print("Running dircol with:")
+    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}".format(Lam, Th, V_opt))
+
+    psi = np.pi
+
+    avg_speed, traj, curr_solution = direct_collocation(
+        zhukovskii_glider, psi, PLOT_SOLUTION=False
+    )
+
+    return
 
 
 def do_single_dircol(psi):
@@ -129,6 +144,16 @@ def do_sweep_dircol():
             )
 
     return 0
+
+
+def do_collocation_w_fourier():
+    zhukovskii_glider = ZhukovskiiGlider()
+    prog = FourierCollocationProblem(
+        zhukovskii_glider.continuous_dynamics_dimless,
+        zhukovskii_glider.get_constraints_dimless(),
+    )
+    prog.get_solution()
+    return
 
 
 if __name__ == "__main__":

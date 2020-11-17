@@ -27,7 +27,7 @@ def direct_collocation(
     start_time = time.time()
 
     # Get model parameters
-    M, rho, AR, Lambda, efficiency, V_l, G, L, T, C = zhukovskii_glider.get_params()
+    V_l, L, T, C = zhukovskii_glider.get_char_values()
     (
         min_height,
         max_height,
@@ -36,6 +36,8 @@ def direct_collocation(
         h0,
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
+
+    breakpoint()
 
     print("*** Running DirCol for travel_angle: {0}".format(travel_angle))
 
