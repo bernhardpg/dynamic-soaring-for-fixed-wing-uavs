@@ -4,8 +4,10 @@ from plot.plot import *
 from trajopt.direct_collocation import *
 
 
+
 def main():
-    do_single_dircol(1 * np.pi)
+    calc_glider_values()
+    # do_single_dircol(psi=1 * np.pi)
     # do_dircol()
     return 0
 
@@ -20,10 +22,28 @@ def do_collocation_w_fourier():
     return
 
 
+def calc_glider_values():
+    zhukovskii_glider = ZhukovskiiGlider()
+    m = 8.5
+    c_Dp = 0.033
+    A = 0.65
+    b = 3.306
+    rho = 1.255  # g/m**3 Air density
+    g = 9.81
+    AR = b ** 2 / A
+
+    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
+    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
+    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
+
+    print("Lam: {0}\nTh: {1}\nV_opt: {2}".format(Lam, Th, V_opt))
+    return
+
+
+
 def do_single_dircol(psi):
     PLOT_SOLUTION = True
     zhukovskii_glider = ZhukovskiiGlider()
-
     avg_speed, traj, curr_solution = direct_collocation(
         zhukovskii_glider, psi, PLOT_SOLUTION=False
     )

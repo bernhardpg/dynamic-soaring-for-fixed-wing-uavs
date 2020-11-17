@@ -105,14 +105,30 @@ class ZhukovskiiGlider:
             return self.drake_plant_diff_flat
         return self.drake_plant
 
-    def get_lift_coeff(self, x, u):
+    def calc_opt_glide_ratio(self, AR, c_Dp):
+        glide_ratio = 0.5 * np.sqrt(np.pi * AR / c_Dp)
+        return glide_ratio
+
+    def calc_opt_glide_angle(self, AR, c_Dp):
+        opt_glide_ratio = self.calc_opt_glide_ratio(AR, c_Dp)
+        opt_glide_angle = np.arctan(1 / opt_glide_ratio)
+        return opt_glide_angle
+
+    def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
+        opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
+        opt_glide_speed = np.sqrt(
+            2 * m * g * np.cos(opt_glide_angle) / (np.sqrt(np.pi * c_Dp * A) * rho * b)
+        )
+        return opt_glide_speed
+
+    def calc_lift_coeff(self, x, u):
         c = u
         vel_rel = self.get_vel_rel(x)
         c_l = np.linalg.norm(c) / ((1 / 2) * self.A * np.linalg.norm(vel_rel))
 
         return c_l
 
-    def get_roll(self, u):
+    def calc_roll(self, u):
 
         return
 
@@ -186,6 +202,7 @@ class ZhukovskiiGlider:
         x_dot = np.concatenate((vel, vel_dot))
 
         return x_dot
+
 
 @TemplateSystem.define("DrakeZhukovskiiGlider_")
 def DrakeZhukovskiiGlider_(T):
