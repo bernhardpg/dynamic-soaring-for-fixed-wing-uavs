@@ -28,6 +28,7 @@ def direct_collocation(
 
     # Get model parameters
     V_l, L, T, C = zhukovskii_glider.get_char_values()
+    # TODO neater way of passing params
     (
         min_height,
         max_height,
@@ -36,8 +37,6 @@ def direct_collocation(
         h0,
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
-
-    breakpoint()
 
     print("*** Running DirCol for travel_angle: {0}".format(travel_angle))
 
@@ -75,10 +74,8 @@ def direct_collocation(
     # DEFINE TRAJOPT PROBLEM
     ######
 
-    plant = zhukovskii_glider.get_drake_plant(diff_flat=True)
-
+    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)
     context = plant.CreateDefaultContext()
-
     dircol = DirectCollocation(
         plant,
         context,

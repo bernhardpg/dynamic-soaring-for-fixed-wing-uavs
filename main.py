@@ -5,31 +5,13 @@ from trajopt.direct_collocation import *
 
 
 def main():
-    #single_dircol_w_real_values()
-    do_single_dircol(psi=1 * np.pi)
+    single_dircol_w_real_values()
     # do_dircol()
     return 0
 
-def calc_glider_values():
-    # Physical parameters
-    m = 8.5
-    c_Dp = 0.033
-    A = 0.65
-    b = 3.306
-    rho = 1.255  # g/m**3 Air density
-    g = 9.81
-    AR = b ** 2 / A
-
-    zhukovskii_glider = ZhukovskiiGlider()
-    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
-    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
-    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
-
-    print("Lam: {0}\nTh: {1}\nV_opt: {2}".format(Lam, Th, V_opt))
-    return
-
 
 def single_dircol_w_real_values():
+    PLOT_SOLUTION = True
     # Physical parameters
     m = 8.5
     c_Dp = 0.033
@@ -43,22 +25,13 @@ def single_dircol_w_real_values():
     Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
     Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
     V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
+    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
 
     print("Running dircol with:")
-    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}".format(Lam, Th, V_opt))
+    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
     psi = np.pi
 
-    avg_speed, traj, curr_solution = direct_collocation(
-        zhukovskii_glider, psi, PLOT_SOLUTION=False
-    )
-
-    return
-
-
-def do_single_dircol(psi):
-    PLOT_SOLUTION = True
-    zhukovskii_glider = ZhukovskiiGlider()
     avg_speed, traj, curr_solution = direct_collocation(
         zhukovskii_glider, psi, PLOT_SOLUTION=False
     )
@@ -70,13 +43,6 @@ def do_single_dircol(psi):
         plot_glider_input(times, u_knots)
         plt.show()
 
-        if False:
-            # TODO continue on this later: ensure that c_l and AoA is realistic!
-            # TODO continue on this after asking morten
-            c_l_knots = np.zeros((200,))
-            for k in range(len(times)):
-                c_l = zhukovskii_glider.get_lift_coeff(x_knots[k, :], u_knots[k, :])
-                c_l_knots[k] = c_l * (180 / np.pi)
     return
 
 

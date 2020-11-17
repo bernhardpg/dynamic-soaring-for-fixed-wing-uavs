@@ -30,6 +30,8 @@ def plot_glider_input(t, u_trj):
     using_brake = u_trj.shape[1] > 3
     if using_brake:
         add_plot = 1
+    else:
+        add_plot = 1
 
     plt.subplots(figsize=(5, 3))
     plt.subplot(3 + add_plot, 1, 1)
@@ -55,6 +57,7 @@ def plot_glider_input(t, u_trj):
         plt.ylabel("brake")
 
     return
+
 
 def plot_glider_pos(x_trj, travel_angle):
     fig = plt.figure()
@@ -149,6 +152,7 @@ def plot_u_trj(t, u_trj, ax):
     ax.set_ylim(-7, 7)
     ax.legend()
     return
+
 
 def polar_plot_avg_velocities(avg_velocities):
     lists = sorted(avg_velocities.items())

@@ -9,6 +9,7 @@ from pydrake.all import (
     TemplateSystem,
     LeafSystem_,
 )
+from math import sqrt
 
 from dynamics.wind_models import (
     wind_model,
@@ -35,11 +36,6 @@ class ZhukovskiiGlider:
         self.t_f_max = 200  # s
         self.avg_vel_min = 2  # s
         self.avg_vel_max = 100  # s
-
-        self.drake_plant = DrakeZhukovskiiGlider(3, self.continuous_dynamics_dimless)
-        self.drake_plant_diff_flat = DrakeZhukovskiiGlider(
-            4, self.continuous_dynamics_diff_flat_dimless
-        )
         return
 
     def set_params(self, b, A, m, c_Dp, rho, g):
@@ -71,7 +67,7 @@ class ZhukovskiiGlider:
         return
 
     def calc_opt_glide_ratio(self, AR, c_Dp):
-        glide_ratio = 0.5 * np.sqrt(np.pi * AR / c_Dp)
+        glide_ratio = 0.5 * sqrt(np.pi * AR / c_Dp)
         return glide_ratio
 
     def calc_opt_glide_angle(self, AR, c_Dp):
@@ -81,15 +77,15 @@ class ZhukovskiiGlider:
 
     def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
         opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
-        opt_glide_speed = np.sqrt(
-            2 * m * g * np.cos(opt_glide_angle) / (np.sqrt(np.pi * c_Dp * A) * rho * b)
+        opt_glide_speed = sqrt(
+            2 * m * g * np.cos(opt_glide_angle) / (sqrt(np.pi * c_Dp * A) * rho * b)
         )
         return opt_glide_speed
 
     def calc_opt_level_glide_speed(self, AR, c_Dp, m, A, b, rho, g):
         opt_glide_angle = self.calc_opt_glide_angle(AR, c_Dp)
         opt_glide_speed = self.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
-        opt_level_glide_speed = opt_glide_speed / np.sqrt(np.cos(opt_glide_angle))
+        opt_level_glide_speed = opt_glide_speed / sqrt(np.cos(opt_glide_angle))
         return opt_level_glide_speed
 
     def get_char_values(self):
@@ -127,21 +123,10 @@ class ZhukovskiiGlider:
 
         return constraints_dimless
 
-    def get_drake_plant(self, diff_flat):
+    def create_drake_plant(self, diff_flat):
         if diff_flat:
-            return self.drake_plant_diff_flat
-        return self.drake_plant
-
-    def calc_lift_coeff(self, x, u):
-        c = u
-        vel_rel = self.get_vel_rel(x)
-        c_l = np.linalg.norm(c) / ((1 / 2) * self.A * np.linalg.norm(vel_rel))
-
-        return c_l
-
-    def calc_roll(self, u):
-
-        return
+            return DrakeSysWrapper(4, self.continuous_dynamics_diff_flat_dimless)
+        return DrakeSysWrapper(3, self.continuous_dynamics_dimless)
 
     # TODO something is strange with this
     def get_angle_of_attack(self, x, u):
@@ -161,7 +146,6 @@ class ZhukovskiiGlider:
         return vel - get_wind_vector(pos[2])
 
     def continuous_dynamics_dimless(self, x, u):
-        # NOTE Only depends on efficiency parameter
         # x = [x, y, z, xdot, ydot, zdot]
         # u = circulation vector
         c = u
@@ -178,9 +162,9 @@ class ZhukovskiiGlider:
             2 * np.sqrt(vel_rel.T.dot(vel_rel) + epsilon)
         )
 
-        vel_dot = -self.e_z - (
-            self.efficiency * l_term * np.eye(3) + skew_matrix(c)
-        ).dot(vel_rel)
+        vel_dot = -self.e_z - (1 / self.Lam * l_term * np.eye(3) + skew_matrix(c)).dot(
+            vel_rel
+        )
 
         x_dot = np.concatenate((vel, vel_dot))
 
@@ -190,7 +174,6 @@ class ZhukovskiiGlider:
         # TODO implement
         # x = [x, y, z, xdot, ydot, zdot]
         # u = circulation vector, brake param
-        # Only depends on efficiency parameter
         c = u[0:3]
         b = u[3]
         pos = x[0:3]
@@ -215,8 +198,8 @@ class ZhukovskiiGlider:
         return x_dot
 
 
-@TemplateSystem.define("DrakeZhukovskiiGlider_")
-def DrakeZhukovskiiGlider_(T):
+@TemplateSystem.define("DrakeSysWrapper_")
+def DrakeSysWrapper_(T):
     class Impl(LeafSystem_[T]):
         def _construct(self, num_inputs, continuous_dynamics, converter=None):
             LeafSystem_[T].__init__(self, converter)
@@ -237,9 +220,7 @@ def DrakeZhukovskiiGlider_(T):
         def DoCalcTimeDerivatives(self, context, derivatives):
             x = context.get_continuous_state_vector().CopyToVector()
             u = self.EvalVectorInput(context, 0).CopyToVector()
-
             x_dot = self.continuous_dynamics(x, u)
-
             derivatives.get_mutable_vector().SetFromVector(x_dot)
 
         # y = x
@@ -250,7 +231,7 @@ def DrakeZhukovskiiGlider_(T):
     return Impl
 
 
-DrakeZhukovskiiGlider = DrakeZhukovskiiGlider_[None]
+DrakeSysWrapper = DrakeSysWrapper_[None]
 
 
 def skew_matrix(v):
