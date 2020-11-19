@@ -103,10 +103,18 @@ class RelativeZhukovskiiGlider:
         return v
 
     def calc_bank_angle(self, v_r, c):
-        temp = c[2] / (np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r))))
-        if temp > 1 or temp < -1:
-            breakpoint()
-        phi = np.arcsin(temp)
+        v_r_norm = np.linalg.norm(v_r)
+        gamma = np.arcsin(-v_r[2] / v_r_norm) # Relative flight path angle
+        c_norm = np.linalg.norm(c)
+
+        phi = np.arcsin(c[2] / (c_norm) * np.cos(gamma))
+
+#        temp = c[2] / (
+#            np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r)))
+#        )
+#        if temp > 1 or temp < -1:
+#            breakpoint()
+        #phi = np.arcsin(temp)
         return phi
 
     def calc_lift_coeff(self, v_r, c, A):
@@ -122,7 +130,7 @@ class RelativeZhukovskiiGlider:
         lift = rho * c_norm * v_r_norm
         weight = m * g
 
-        n = lift/weight
+        n = lift / weight
         return n
 
     def get_char_values(self):
