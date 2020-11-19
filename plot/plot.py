@@ -26,7 +26,7 @@ def plot_trajectories(trajectories):
     return
 
 
-def plot_glider_input(t, u_trj, c_l_trj, phi_trj):
+def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     # Circulation
     plt.subplots(figsize=(5, 4))
     plt.subplot(3, 2, 1)
@@ -56,6 +56,13 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj):
     plt.xlabel("time [s]")
     plt.title("Bank angle")
     plt.ylabel("deg")
+
+    plt.subplot(3, 2, 6)
+    plt.plot(t, n_trj)
+    plt.xlabel("time [s]")
+    plt.title("Load factor")
+    plt.ylabel("")
+
     return
 
 

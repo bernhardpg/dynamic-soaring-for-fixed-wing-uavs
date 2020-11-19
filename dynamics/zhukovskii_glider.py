@@ -27,8 +27,9 @@ class RelativeZhukovskiiGlider:
 
         # Optimization constraints
         self.max_bank_angle = 80 * np.pi / 180  # radians
-        self.max_lift_coeff = 1.2
+        self.max_lift_coeff = 1.5
         self.min_lift_coeff = 0
+        self.max_load_factor = 3
         self.min_height = 0.5  # m
         self.max_height = 100  # m
         self.min_vel = 5  # m/s
@@ -102,9 +103,10 @@ class RelativeZhukovskiiGlider:
         return v
 
     def calc_bank_angle(self, v_r, c):
-        phi = np.arcsin(
-            c[2] / (np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r))))
-        )
+        temp = c[2] / (np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r))))
+        if temp > 1 or temp < -1:
+            breakpoint()
+        phi = np.arcsin(temp)
         return phi
 
     def calc_lift_coeff(self, v_r, c, A):
@@ -113,6 +115,15 @@ class RelativeZhukovskiiGlider:
 
         c_l = c_norm / (0.5 * A * v_r_norm)
         return c_l
+
+    def calc_load_factor(self, v_r, c, m, g, rho):
+        c_norm = np.linalg.norm(c)
+        v_r_norm = np.linalg.norm(v_r)
+        lift = rho * c_norm * v_r_norm
+        weight = m * g
+
+        n = lift/weight
+        return n
 
     def get_char_values(self):
         return (
@@ -130,6 +141,7 @@ class RelativeZhukovskiiGlider:
             self.max_bank_angle,
             self.max_lift_coeff,
             self.min_lift_coeff,
+            self.max_load_factor,
             self.min_height,
             self.max_height,
             self.min_vel,

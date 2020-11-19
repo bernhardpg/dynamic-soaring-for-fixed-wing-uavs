@@ -33,6 +33,7 @@ def direct_collocation_relative(
         max_bank_angle,
         max_lift_coeff,
         min_lift_coeff,
+        max_load_factor,
         min_height,
         max_height,
         min_vel,
@@ -41,7 +42,7 @@ def direct_collocation_relative(
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
 
-    print("*** Running DirCol for travel_angle: {0}".format(travel_angle))
+    print("*** Running DirCol for travel_angle: {0} deg".format(travel_angle * 180 / np.pi))
 
     if PRINT_GLIDER_DETAILS:
         print("Running direct collocation with:")
@@ -53,9 +54,9 @@ def direct_collocation_relative(
         )
 
     # Optimization params
-    N = 21  # Collocation points
-    min_dt = 0.25
-    max_dt = 0.5
+    N = 31  # Collocation points
+    min_dt = 0.15
+    max_dt = 0.35
 
     # Initial guess
     avg_vel_guess = V_l * 2  # TODO tune this
@@ -114,13 +115,17 @@ def direct_collocation_relative(
     dircol.AddConstraintToAllKnotPoints(lift_coeff_squared <= max_lift_coeff ** 2)
     dircol.AddConstraintToAllKnotPoints(min_lift_coeff ** 2 <= lift_coeff_squared)
 
+    # Load factor constraint
+    load_factor_squared = x[3:6].T.dot(x[3:6]) * u.T.dot(u)
+    dircol.AddConstraintToAllKnotPoints(load_factor_squared <= max_load_factor ** 2)
+
     # Height constraints
     dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
     dircol.AddConstraintToAllKnotPoints(x[2] <= max_height)
 
     # Velocity constraints
-    dircol.AddConstraintToAllKnotPoints(min_vel ** 2 <= x[3:6].T.dot(x[3:6]))
-    dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
+#    dircol.AddConstraintToAllKnotPoints(min_vel ** 2 <= x[3:6].T.dot(x[3:6]))
+#    dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
     # TODO change max_vel
 
     # Bank angle constraint
@@ -237,7 +242,11 @@ def direct_collocation_relative(
         )
 
         x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T
-        x_knots = x_knots_dimless * L
+
+        p_knots = x_knots_dimless[:,0:3] * L
+        v_r_knots = x_knots_dimless[:,3:6] * V_l
+        x_knots = np.hstack((p_knots, v_r_knots))
+
         times = times_dimless * T
 
         u_traj_dimless = dircol.ReconstructInputTrajectory(result)
