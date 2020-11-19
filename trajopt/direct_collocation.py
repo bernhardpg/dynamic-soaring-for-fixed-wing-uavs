@@ -40,7 +40,11 @@ def direct_collocation_relative(
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
 
-    print("*** Running DirCol for travel_angle: {0} deg".format(travel_angle * 180 / np.pi))
+    print(
+        "*** Running DirCol for travel_angle: {0} deg".format(
+            travel_angle * 180 / np.pi
+        )
+    )
 
     if PRINT_GLIDER_DETAILS:
         print("Running direct collocation with:")
@@ -52,7 +56,7 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 8 # seconds # TODO change?
+    end_time_guess = 8  # seconds # TODO change?
     avg_vel_guess = V_l * 2  # TODO tune this
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
@@ -120,9 +124,15 @@ def direct_collocation_relative(
 
     # Bank angle constraint
     max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2
-    sin_bank_angle_squared = u[2] ** 2 / (u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6]))))
-    dircol.AddConstraintToAllKnotPoints(sin_bank_angle_squared <= max_sin_bank_angle_squared)
-    dircol.AddConstraintToAllKnotPoints(sin_bank_angle_squared >= -max_sin_bank_angle_squared)
+    sin_bank_angle_squared = u[2] ** 2 / (
+        u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6])))
+    )
+    dircol.AddConstraintToAllKnotPoints(
+        sin_bank_angle_squared <= max_sin_bank_angle_squared
+    )
+    dircol.AddConstraintToAllKnotPoints(
+        sin_bank_angle_squared >= -max_sin_bank_angle_squared
+    )
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])
@@ -163,9 +173,15 @@ def direct_collocation_relative(
     if enable_brake_param:
         dircol.AddRunningCost(R * u[3] ** 2)
 
+    # TODO what to set these to?
+    # Constrain input rates
+    for k in range(N - 1):
+        u_change = dircol.input(k + 1) - dircol.input(k)
+        dircol.AddCost(R * u_change.T.dot(u_change))
+
     # Maximize distance travelled in desired direction
     Q = 5
-    dircol.AddFinalCost(-(dir_vector.T.dot(x[0:2])) * Q)
+    dircol.AddCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
 
     ######
     # PROVIDE INITIAL GUESS
@@ -233,8 +249,8 @@ def direct_collocation_relative(
 
         x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T
 
-        p_knots = x_knots_dimless[:,0:3] * L
-        v_r_knots = x_knots_dimless[:,3:6] * V_l
+        p_knots = x_knots_dimless[:, 0:3] * L
+        v_r_knots = x_knots_dimless[:, 3:6] * V_l
         x_knots = np.hstack((p_knots, v_r_knots))
 
         times = times_dimless * T
