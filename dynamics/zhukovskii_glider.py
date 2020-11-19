@@ -32,14 +32,13 @@ class RelativeZhukovskiiGlider:
         self.max_load_factor = 3
         self.min_height = 0.5  # m
         self.max_height = 100  # m
-        self.min_vel = 5  # m/s
-        self.max_vel = 60  # m/s
-        self.h0 = 20  # m
         self.min_travelled_distance = 5  # m
         self.t_f_min = 0.5  # s
         self.t_f_max = 200  # s
         self.avg_vel_min = 2  # s
         self.avg_vel_max = 100  # s
+        self.h0 = 20  # m
+        # TODO remove unused constraints
         return
 
     def set_params(self, b, A, m, c_Dp, rho, g):
@@ -152,8 +151,6 @@ class RelativeZhukovskiiGlider:
             self.max_load_factor,
             self.min_height,
             self.max_height,
-            self.min_vel,
-            self.max_vel,
             self.h0,
             self.min_travelled_distance,
         )
@@ -204,6 +201,7 @@ class RelativeZhukovskiiGlider:
         return x_dot
 
 
+# NOTE Currently unused, as the relative formulation allows for much easier constraint handling
 class ZhukovskiiGlider:
     def __init__(self, b=3.306, A=0.65, m=8.5, c_Dp=0.033, rho=1.255, g=9.81):
         # Set model params
@@ -335,18 +333,6 @@ class ZhukovskiiGlider:
         # TODO implement
         phi = None
         return phi
-
-    # TODO something is strange with this
-    def get_angle_of_attack(self, x, u):
-        c = u
-        v_r = self.get_vel_rel(x)
-
-        alpha = np.arcsin(
-            (1 + (2 / self.AR))
-            / (np.pi * self.A)
-            * (np.linalg.norm(c) / np.linalg.norm(v_r))
-        )
-        return alpha
 
     def get_vel_rel(self, x):
         pos = x[0:3]

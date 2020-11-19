@@ -36,8 +36,6 @@ def direct_collocation_relative(
         max_load_factor,
         min_height,
         max_height,
-        min_vel,
-        max_vel,
         h0,
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
@@ -53,26 +51,18 @@ def direct_collocation_relative(
             )
         )
 
-    # Optimization params
-    N = 31  # Collocation points
-    min_dt = 0.15
-    max_dt = 0.35
-
     # Initial guess
+    end_time_guess = 8 # seconds # TODO change?
     avg_vel_guess = V_l * 2  # TODO tune this
-    end_time_guess = N * min_dt
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
     max_lift_coeff *= V_l / C
-
     min_height /= L
     max_height /= L
     min_travelled_distance /= L
     h0 /= L
     total_dist_travelled_guess /= L
-    min_vel /= V_l
-    max_vel /= V_l
     avg_vel_guess /= V_l
     end_time_guess /= T
 
@@ -80,6 +70,11 @@ def direct_collocation_relative(
     # DEFINE TRAJOPT PROBLEM
     # Implemented as dimensionless
     ######
+
+    # Optimization params
+    N = 21  # Collocation points
+    min_dt = (end_time_guess / N) * 0.75
+    max_dt = (end_time_guess / N) * 1.5
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()
@@ -123,23 +118,17 @@ def direct_collocation_relative(
     dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
     dircol.AddConstraintToAllKnotPoints(x[2] <= max_height)
 
-    # Velocity constraints
-#    dircol.AddConstraintToAllKnotPoints(min_vel ** 2 <= x[3:6].T.dot(x[3:6]))
-#    dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
-    # TODO change max_vel
-
     # Bank angle constraint
-    sin_bank_angle_squared = np.sin(max_bank_angle) ** 2
-    temp = u[2] ** 2 / (u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6]))))
-    dircol.AddConstraintToAllKnotPoints(temp <= sin_bank_angle_squared)
-    dircol.AddConstraintToAllKnotPoints(temp >= -sin_bank_angle_squared)
+    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2
+    sin_bank_angle_squared = u[2] ** 2 / (u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6]))))
+    dircol.AddConstraintToAllKnotPoints(sin_bank_angle_squared <= max_sin_bank_angle_squared)
+    dircol.AddConstraintToAllKnotPoints(sin_bank_angle_squared >= -max_sin_bank_angle_squared)
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])
     dircol.AddBoundingBoxConstraint(x0_pos, x0_pos, dircol.initial_state()[0:3])
 
     ## Periodicity constraints
-
     # Periodic height
     dircol.AddLinearConstraint(dircol.final_state()[2] == dircol.initial_state()[2])
 
@@ -160,25 +149,23 @@ def direct_collocation_relative(
             dircol.final_state()[0] == dircol.final_state()[1] * np.tan(travel_angle)
         )
 
-    # Make sure covered distance along travel angle is positive
+    # Constraint covered distance along travel angle is positive
     xy_pos_final = dircol.final_state()[0:2]
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
     dircol.AddConstraintToAllKnotPoints(
-        dir_vector.T.dot(xy_pos_final) >= min_travelled_distance
+        min_travelled_distance <= dir_vector.T.dot(xy_pos_final)
     )
 
     ## Objective function
-
     # Cost on input effort
-    R = 5
-    # TODO replace 0.125
-    dircol.AddRunningCost(R * (u[0] ** 2 + (u[1] - 1) ** 2 + u[2] ** 2))
+    R = 10
+    dircol.AddRunningCost(R * (u.T.dot(u) - 1))
     if enable_brake_param:
         dircol.AddRunningCost(R * u[3] ** 2)
 
     # Maximize distance travelled in desired direction
-    Q = 2
-    dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
+    Q = 5
+    dircol.AddFinalCost(-(dir_vector.T.dot(x[0:2])) * Q)
 
     ######
     # PROVIDE INITIAL GUESS
@@ -233,6 +220,9 @@ def direct_collocation_relative(
         solution_time = time.time()
         print("Found a solution in: {0} s".format(solution_time - formulate_time))
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
+        temp = dircol.GetSampleTimes(result)
+        time_step = temp[1] - temp[0]
+        print("Time step:", time_step * T)
 
         N_plot = 200
 
