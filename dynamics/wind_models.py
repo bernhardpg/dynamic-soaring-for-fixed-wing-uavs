@@ -20,19 +20,26 @@ def ddt_exp_wind_model(z, z_dot):
 
 
 def log_wind_model(z):  # Taken from slotine
-    W0 = 16  # Free stream wind speed
+    w0 = 16  # Free stream wind speed
     delta = 5  # wind_shear_layer thickness
-    W = W0 / (1 + np.exp(-z / delta))
-    return W
+    w = w0 / (1 + np.exp(-z / delta))
+    return w
+
+
+def ddz_log_wind_model(z):
+    w0 = 16  # Free stream wind speed
+    delta = 5  # wind_shear_layer thickness
+    dw_dz = (w0 * np.exp(-z / delta)) / (delta * (1 + np.exp(-z / delta)) ** 2)
+    return dw_dz
 
 
 def ddt_log_wind_model(z, z_dot):
-    W0 = 16  # Free stream wind speed
-    delta = 5  # wind_shear_layer thickness
-    W_dot = (W0 * np.exp(-z / delta) * z_dot) / (delta * (1 + np.exp(-z / delta)) ** 2)
-    return W_dot
+    dw_dz = ddz_log_wind_model(z)
+    w_dot = dw_dz * z_dot
+    return w_dot
 
 
+# TODO currently only used for plotting
 # Assume wind blows from north to south, i.e. along negative y axis
 def get_wind_field(x, y, z):
     u = np.zeros(x.shape)
@@ -43,8 +50,14 @@ def get_wind_field(x, y, z):
 
 
 def get_wind_vector(z):
-    W_vec = np.array([0, -wind_model(z), 0])
-    return W_vec
+    w_vec = np.array([0, -wind_model(z), 0])
+    return w_vec
+
+
+def get_wind_jacobian(z):
+    dw_dz = ddz_log_wind_model(z)
+    dw_dx = np.array([[0, 0, 0], [0, 0, dw_dz], [0, 0, 0]])
+    return dw_dx
 
 
 wind_model = log_wind_model

@@ -19,7 +19,6 @@ def direct_collocation(
     zhukovskii_glider,
     travel_angle,
     initial_guess=None,
-    PLOT_SOLUTION=False,
     PRINT_GLIDER_DETAILS=False,
     PLOT_INITIAL_GUESS=False,
 ):
@@ -30,6 +29,7 @@ def direct_collocation(
     V_l, L, T, C = zhukovskii_glider.get_char_values()
     # TODO neater way of passing params
     (
+        max_bank_angle,
         min_height,
         max_height,
         min_vel,
@@ -51,12 +51,12 @@ def direct_collocation(
 
     # Optimization params
     N = 21  # Collocation points
-    min_dt = 0.05
+    min_dt = 0.25
     max_dt = 0.5
 
     # Initial guess
-    avg_vel_guess = V_l * 0.5  # TODO tune this
-    end_time_guess = N * max_dt
+    avg_vel_guess = V_l * 2 # TODO tune this
+    end_time_guess = N * min_dt
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
@@ -74,7 +74,7 @@ def direct_collocation(
     # DEFINE TRAJOPT PROBLEM
     ######
 
-    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)
+    plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()
     dircol = DirectCollocation(
         plant,
@@ -94,8 +94,9 @@ def direct_collocation(
 
     ## Add input constraint
     u = dircol.input()
-    enable_brake_param = u.shape[0] > 3
 
+    # Brake param
+    enable_brake_param = u.shape[0] > 3
     if enable_brake_param:
         dircol.AddConstraintToAllKnotPoints(0 <= u[3])
 
@@ -103,7 +104,6 @@ def direct_collocation(
 
     ## Add state constraints
     x = dircol.state()
-    # TODO add bank angle constraint
 
     # Height constraints
     dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
@@ -112,6 +112,14 @@ def direct_collocation(
     # Velocity constraints
     dircol.AddConstraintToAllKnotPoints(min_vel ** 2 <= x[3:6].T.dot(x[3:6]))
     dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
+    # TODO change max_vel
+
+    # TODO come back to this
+    # Bank angle constraint
+    sin_bank_angle_squared = np.sin(max_bank_angle) ** 2
+    temp = u[2] ** 2 / (u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6]))))
+    dircol.AddConstraintToAllKnotPoints(temp <= sin_bank_angle_squared)
+    dircol.AddConstraintToAllKnotPoints(temp >= -sin_bank_angle_squared)
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])

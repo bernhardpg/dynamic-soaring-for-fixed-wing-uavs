@@ -1,3 +1,4 @@
+from dynamics.zhukovskii_glider import *
 from trajopt.nonlin_trajopt import *
 from trajopt.fourier_collocation import *
 from plot.plot import *
@@ -5,9 +6,51 @@ from trajopt.direct_collocation import *
 
 
 def main():
-    single_dircol_w_real_values()
+    single_dircol_w_real_values_rel_formulation()
     # do_dircol()
     return 0
+
+
+def single_dircol_w_real_values_rel_formulation():
+    PLOT_SOLUTION = True
+    # Physical parameters
+    m = 8.5
+    c_Dp = 0.033
+    A = 0.65
+    b = 3.306
+    rho = 1.255  # g/m**3 Air density
+    g = 9.81
+    AR = b ** 2 / A
+
+    zhukovskii_glider = RelativeZhukovskiiGlider()
+
+    # Print performance params
+    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
+    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
+    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
+    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
+
+    print("Running dircol with:")
+    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
+
+    psi = np.pi * 0.95
+
+    avg_speed, traj, curr_solution = direct_collocation(zhukovskii_glider, psi)
+
+    times, x_knots, u_knots = traj
+
+    # Calculate corresponding lift coeff
+    c_l_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        c_l = zhukovskii_glider.calc_lift_coeff(x_knots[k, :], u_knots[k, :], A)
+        c_l_knots[k] = c_l
+
+    if PLOT_SOLUTION:
+        plot_glider_pos(x_knots[:, 0:3], psi)
+        plot_glider_input(times, u_knots, c_l_knots)
+        plt.show()
+
+    return
 
 
 def single_dircol_w_real_values():
@@ -32,7 +75,7 @@ def single_dircol_w_real_values():
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    psi = np.pi
+    psi = np.pi * 0.5
 
     avg_speed, traj, curr_solution = direct_collocation(
         zhukovskii_glider, psi, PLOT_SOLUTION=False

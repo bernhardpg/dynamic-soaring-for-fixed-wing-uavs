@@ -55,6 +55,7 @@ def plot_glider_input(t, u_trj, c_l_trj):
     plt.subplot(4 + add_plot, 1, 4)
     plt.plot(t, c_l_trj)
     plt.xlabel("time [s]")
+    plt.title("Lift coeff")
     plt.ylabel("c_L")
 
     # Brake param
