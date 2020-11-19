@@ -35,7 +35,7 @@ def single_dircol_w_real_values_rel_formulation():
 
     psi = np.pi * 0.95
 
-    avg_speed, traj, curr_solution = direct_collocation(zhukovskii_glider, psi)
+    avg_speed, traj, curr_solution = direct_collocation_relative(zhukovskii_glider, psi)
 
     times, x_knots, u_knots = traj
 
