@@ -27,9 +27,12 @@ def direct_collocation_relative(
 
     # Get model parameters
     V_l, L, T, C = zhukovskii_glider.get_char_values()
+    A = zhukovskii_glider.get_wing_area()
     # TODO neater way of passing params
     (
         max_bank_angle,
+        max_lift_coeff,
+        min_lift_coeff,
         min_height,
         max_height,
         min_vel,
@@ -55,11 +58,13 @@ def direct_collocation_relative(
     max_dt = 0.5
 
     # Initial guess
-    avg_vel_guess = V_l * 2 # TODO tune this
+    avg_vel_guess = V_l * 2  # TODO tune this
     end_time_guess = N * min_dt
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
+    max_lift_coeff *= V_l / C
+
     min_height /= L
     max_height /= L
     min_travelled_distance /= L
@@ -72,6 +77,7 @@ def direct_collocation_relative(
 
     ######
     # DEFINE TRAJOPT PROBLEM
+    # Implemented as dimensionless
     ######
 
     plant = zhukovskii_glider.create_drake_plant()
@@ -100,10 +106,13 @@ def direct_collocation_relative(
     if enable_brake_param:
         dircol.AddConstraintToAllKnotPoints(0 <= u[3])
 
-    # TODO Add more input constraints?
-
     ## Add state constraints
     x = dircol.state()
+
+    # Lift coefficient constraint
+    lift_coeff_squared = u.T.dot(u) / ((0.5 * A) ** 2 * x[3:6].T.dot(x[3:6]))
+    dircol.AddConstraintToAllKnotPoints(lift_coeff_squared <= max_lift_coeff ** 2)
+    dircol.AddConstraintToAllKnotPoints(min_lift_coeff ** 2 <= lift_coeff_squared)
 
     # Height constraints
     dircol.AddConstraintToAllKnotPoints(min_height <= x[2])
@@ -114,7 +123,6 @@ def direct_collocation_relative(
     dircol.AddConstraintToAllKnotPoints(x[3:6].T.dot(x[3:6]) <= max_vel ** 2)
     # TODO change max_vel
 
-    # TODO come back to this
     # Bank angle constraint
     sin_bank_angle_squared = np.sin(max_bank_angle) ** 2
     temp = u[2] ** 2 / (u.T.dot(u) * (1 - x[5] ** 2 / (x[3:6].T.dot(x[3:6]))))
@@ -214,7 +222,7 @@ def direct_collocation_relative(
     formulate_time = time.time()
     print("Formulated trajopt in: {0} s".format(formulate_time - start_time))
     result = Solve(dircol)
-    # assert result.is_success()
+    assert result.is_success()
 
     if result.is_success():
         solution_time = time.time()
@@ -254,7 +262,6 @@ def direct_collocation_relative(
     else:  # No solution
         print("ERROR: Did not find a solution")
         return -1, None, None
-
 
 
 # TODO this is the old dircol
@@ -489,4 +496,3 @@ def direct_collocation(
     else:  # No solution
         print("ERROR: Did not find a solution")
         return -1, None, None
-

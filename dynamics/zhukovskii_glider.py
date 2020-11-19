@@ -26,7 +26,9 @@ class RelativeZhukovskiiGlider:
         self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
 
         # Optimization constraints
-        self.max_bank_angle = 40 * np.pi / 180  # radians
+        self.max_bank_angle = 80 * np.pi / 180  # radians
+        self.max_lift_coeff = 1.2
+        self.min_lift_coeff = 0
         self.min_height = 0.5  # m
         self.max_height = 100  # m
         self.min_vel = 5  # m/s
@@ -89,7 +91,8 @@ class RelativeZhukovskiiGlider:
         opt_level_glide_speed = opt_glide_speed / sqrt(np.cos(opt_glide_angle))
         return opt_level_glide_speed
 
-    # NOTE for reconstructing trajectories. Fully dimensionalized
+    # NOTE for reconstructing trajectories.
+    # This is meant to be used for dimensionalized inputs and outputs
     # TODO currently unused
     def calc_vel(self, x):
         p = x[0:3]
@@ -98,8 +101,13 @@ class RelativeZhukovskiiGlider:
         v = v_r + w
         return v
 
-    def calc_lift_coeff(self, x, c, A):
-        v_r = x[3:6]
+    def calc_bank_angle(self, v_r, c):
+        phi = np.arcsin(
+            c[2] / (np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r))))
+        )
+        return phi
+
+    def calc_lift_coeff(self, v_r, c, A):
         c_norm = np.linalg.norm(c)
         v_r_norm = np.linalg.norm(v_r)
 
@@ -114,9 +122,14 @@ class RelativeZhukovskiiGlider:
             self.C,
         )
 
+    def get_wing_area(self):
+        return self.A
+
     def get_constraints(self):
         constraints = (
             self.max_bank_angle,
+            self.max_lift_coeff,
+            self.min_lift_coeff,
             self.min_height,
             self.max_height,
             self.min_vel,
@@ -178,7 +191,7 @@ class ZhukovskiiGlider:
         self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
 
         # Optimization constraints
-        self.max_bank_angle = 80 * np.pi / 180  # radians
+        self.max_bank_angle = 50 * np.pi / 180  # radians
         self.min_height = 0.5  # m
         self.max_height = 100  # m
         self.min_vel = 5  # m/s
@@ -318,7 +331,7 @@ class ZhukovskiiGlider:
     def get_vel_rel(self, x):
         pos = x[0:3]
         vel = x[3:6]
-        return vel - get_wind_vector(pos[2]) # TODO Should not this be dimensionless??
+        return vel - get_wind_vector(pos[2])  # TODO Should not this be dimensionless??
 
     def continuous_dynamics_dimless(self, x, u):
         # x = [x, y, z, xdot, ydot, zdot]

@@ -38,16 +38,29 @@ def single_dircol_w_real_values_rel_formulation():
     avg_speed, traj, curr_solution = direct_collocation_relative(zhukovskii_glider, psi)
 
     times, x_knots, u_knots = traj
+    c_knots = u_knots # Circulation
 
     # Calculate corresponding lift coeff
     c_l_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(len(times)):
-        c_l = zhukovskii_glider.calc_lift_coeff(x_knots[k, :], u_knots[k, :], A)
+        v_r = x_knots[k, 3:6]
+        c = u_knots[k, :]
+
+        c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
         c_l_knots[k] = c_l
+
+    # Calculate corresponding bank angle
+    phi_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        v_r = x_knots[k, 3:6]
+        c = u_knots[k, :]
+
+        phi = zhukovskii_glider.calc_bank_angle(v_r, c)
+        phi_knots[k] = phi
 
     if PLOT_SOLUTION:
         plot_glider_pos(x_knots[:, 0:3], psi)
-        plot_glider_input(times, u_knots, c_l_knots)
+        plot_glider_input(times, c_knots, c_l_knots, phi_knots)
         plt.show()
 
     return
