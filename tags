@@ -93,7 +93,9 @@ ddt_logistic_wind_model	dynamics/wind_models.py	/^def ddt_logistic_wind_model(z,
 ddt_wind_model	dynamics/slotine_dynamics.py	/^from dynamics.wind_models import wind_model, ddt_wind_model$/;"	i
 ddt_wind_model	dynamics/wind_models.py	/^ddt_wind_model = ddt_log_wind_model$/;"	v
 ddt_wind_model	plot/plot.py	/^from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field$/;"	i
+ddz_log_wind_model	dynamics/wind_models.py	/^def ddz_log_wind_model(z):$/;"	f
 ddz_logistic_wind_model	dynamics/wind_models.py	/^def ddz_logistic_wind_model(z):$/;"	f
+ddz_wind_model	dynamics/wind_models.py	/^ddz_wind_model = ddz_log_wind_model$/;"	v
 derivatives	ilqr/ilqr.py	/^class derivatives:$/;"	c
 dir_vector	trajopt/direct_collocation.py	/^    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])$/;"	v
 dircol	trajopt/direct_collocation.py	/^    dircol = DirectCollocation($/;"	v
@@ -156,7 +158,7 @@ matplotlib	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	test/test_ilqr.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	trajopt/nonlin_trajopt.py	/^import matplotlib.pyplot as plt$/;"	i
-max_dt	trajopt/direct_collocation.py	/^    max_dt = (end_time_guess \/ N) * 1.5$/;"	v
+max_dt	trajopt/direct_collocation.py	/^    max_dt = (end_time_guess \/ N) * 1.25$/;"	v
 max_dt	trajopt/direct_collocation.py	/^    max_dt = 0.5$/;"	v
 max_sin_bank_angle_squared	trajopt/direct_collocation.py	/^    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2$/;"	v
 maximum_timestep	trajopt/direct_collocation.py	/^        maximum_timestep=max_dt,$/;"	v
