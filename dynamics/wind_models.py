@@ -1,22 +1,21 @@
 import numpy as np
 
 
-# Wind models
 def exp_wind_model(z):  # Taken from Deittert et al.
     w_ref = 16  # m/s
     p = 0.143
     h_r = 5  # ref height, can be set arbritrary
-    W = w_ref * (z / h_r) ** p  # wind strength
+    w = w_ref * (z / h_r) ** p  # wind strength
 
-    return W
+    return w
 
 
 def ddt_exp_wind_model(z, z_dot):
     w_ref = 16  # m/s
     p = 0.143
     h_r = 5  # ref height, can be set arbritrary
-    W_dot = ((p * w_ref) / z) * (z / h_r) ** p * z_dot
-    return W_dot
+    w_dot = ((p * w_ref) / z) * (z / h_r) ** p * z_dot
+    return w_dot
 
 
 def log_wind_model(z):
@@ -37,16 +36,16 @@ def ddt_log_wind_model(z, z_dot):
 
 
 def logistic_wind_model(z):  # Taken from slotine
-    w0 = 16  # Free stream wind speed
+    w_freestream = 16  # Free stream wind speed
     delta = 5  # wind_shear_layer thickness
-    w = w0 / (1 + np.exp(-z / delta))
+    w = w_freestream / (1 + np.exp(-z / delta))
     return w
 
 
 def ddz_logistic_wind_model(z):
-    w0 = 16  # Free stream wind speed
+    w_freestream = 16  # Free stream wind speed
     delta = 5  # wind_shear_layer thickness
-    dw_dz = (w0 * np.exp(-z / delta)) / (delta * (1 + np.exp(-z / delta)) ** 2)
+    dw_dz = (w_freestream * np.exp(-z / delta)) / (delta * (1 + np.exp(-z / delta)) ** 2)
     return dw_dz
 
 
@@ -81,9 +80,11 @@ def get_wind_jacobian(z):
 #wind_model = logistic_wind_model
 #ddt_wind_model = ddt_logistic_wind_model
 
-wind_model = log_wind_model
-ddt_wind_model = ddt_log_wind_model
+#wind_model = log_wind_model
+#ddt_wind_model = ddt_log_wind_model
 
+wind_model = exp_wind_model
+ddt_wind_model = ddt_exp_wind_model
 
 def get_dimless_wind_vector(z, L, V_l):
     return get_wind_vector(L * z) / V_l
