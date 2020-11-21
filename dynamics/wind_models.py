@@ -55,16 +55,6 @@ def ddt_logistic_wind_model(z, z_dot):
     return w_dot
 
 
-# TODO currently only used for plotting
-# Assume wind blows from north to south, i.e. along negative y axis
-def get_wind_field(x, y, z):
-    u = np.zeros(x.shape)
-    v = np.zeros(y.shape)
-    #v = -wind_model(z)
-    w = np.zeros(z.shape)
-
-    return u, v, w
-
 
 def get_wind_vector(z):
     w_vec = np.array([0, -wind_model(z), 0])
@@ -86,5 +76,22 @@ ddt_wind_model = ddt_log_wind_model
 #wind_model = exp_wind_model
 #ddt_wind_model = ddt_exp_wind_model
 
-def get_dimless_wind_vector(z, L, V_l):
-    return get_wind_vector(L * z) / V_l
+
+# PLOTTING FUNCTIONs
+def plot_log_wind_model(z):
+    w_ref = 10  # m/s
+    h_ref = 10  # m
+    h_0 = 0.03  # m
+    w = w_ref * (np.log(z / h_0)) / (np.log(h_ref / h_0))
+    return w
+
+plot_wind_model = plot_log_wind_model
+
+# Assume wind blows from north to south, i.e. along negative y axis
+def get_wind_field(x, y, z):
+    u = np.zeros(x.shape)
+    v = -plot_wind_model(z)
+    w = np.zeros(z.shape)
+
+    return u, v, w
+

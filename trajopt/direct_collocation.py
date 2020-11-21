@@ -78,7 +78,7 @@ def direct_collocation_relative(
     # Optimization params
     N = 21  # Collocation points
     min_dt = (end_time_guess / N) * 0.75
-    max_dt = (end_time_guess / N) * 1.5
+    max_dt = (end_time_guess / N) * 1.25
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()

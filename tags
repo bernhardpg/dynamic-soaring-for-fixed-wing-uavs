@@ -127,7 +127,6 @@ get_constraints	dynamics/zhukovskii_glider.py	/^    def get_constraints(self):$/
 get_constraints	dynamics/zhukovskii_glider.py	/^    def get_constraints(self):$/;"	m	class:ZhukovskiiGlider
 get_constraints_dimless	dynamics/zhukovskii_glider.py	/^    def get_constraints_dimless(self):$/;"	m	class:RelativeZhukovskiiGlider
 get_constraints_dimless	dynamics/zhukovskii_glider.py	/^    def get_constraints_dimless(self):$/;"	m	class:ZhukovskiiGlider
-get_dimless_wind_vector	dynamics/wind_models.py	/^def get_dimless_wind_vector(z, L, V_l):$/;"	f
 get_pos_fourier	trajopt/fourier_collocation.py	/^    def get_pos_fourier(self, collocation_time):$/;"	m	class:FourierCollocationProblem
 get_solution	trajopt/fourier_collocation.py	/^    def get_solution(self):$/;"	m	class:FourierCollocationProblem
 get_vel_dot_fourier	trajopt/fourier_collocation.py	/^    def get_vel_dot_fourier(self, collocation_time):$/;"	m	class:FourierCollocationProblem
@@ -183,10 +182,12 @@ plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake
 plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)$/;"	v
 plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):$/;"	f
 plot_glider_pos	plot/plot.py	/^def plot_glider_pos(x_trj, travel_angle):$/;"	f
+plot_log_wind_model	dynamics/wind_models.py	/^def plot_log_wind_model(z):$/;"	f
 plot_trajectories	plot/plot.py	/^def plot_trajectories(trajectories):$/;"	f
 plot_trj_3_wind	test/test_dynamics.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_trj_3_wind	test/test_ilqr.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_u_trj	plot/plot.py	/^def plot_u_trj(t, u_trj, ax):$/;"	f
+plot_wind_model	dynamics/wind_models.py	/^plot_wind_model = plot_log_wind_model$/;"	v
 plot_x_trj	plot/plot.py	/^def plot_x_trj(x_trj, travel_angle, ax):$/;"	f
 plt	examples/trajopt_example.py	/^import matplotlib.pyplot as plt$/;"	i
 plt	plot/plot.py	/^import matplotlib.pyplot as plt$/;"	i
@@ -205,6 +206,7 @@ run_ilqr	ilqr/ilqr.py	/^def run_ilqr(x0, n_x, n_u, N, max_iter=50, regu_init=100
 run_ilqr	test/test_ilqr.py	/^from ilqr.ilqr import run_ilqr$/;"	i
 save_trajectory_gif	plot/plot.py	/^def save_trajectory_gif(zhukovskii_glider, traj, travel_angle):$/;"	f
 second_order_finite_diff_matrix	trajopt/direct_collocation.py	/^    second_order_finite_diff_matrix = ($/;"	v
+set_axes_equal	plot/plot.py	/^def set_axes_equal(ax: plt.Axes):$/;"	f
 set_params	dynamics/zhukovskii_glider.py	/^    def set_params(self, b, A, m, c_Dp, rho, g):$/;"	m	class:RelativeZhukovskiiGlider
 set_params	dynamics/zhukovskii_glider.py	/^    def set_params(self, b, A, m, c_Dp, rho, g):$/;"	m	class:ZhukovskiiGlider
 simulate_drake_system	trajopt/nonlin_trajopt.py	/^def simulate_drake_system(plant):$/;"	f

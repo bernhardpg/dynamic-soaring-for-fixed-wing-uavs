@@ -75,22 +75,66 @@ def plot_glider_pos(x_trj, travel_angle):
     return
 
 
+def set_axes_equal(ax: plt.Axes):
+    """Set 3D plot axes to equal scale.
+
+    Make axes of 3D plot have equal scale so that spheres appear as
+    spheres and cubes as cubes.  Required since `ax.axis('equal')`
+    and `ax.set_aspect('equal')` don't work on 3D.
+    """
+
+
 # Params:
 # x_trj.shape = (N, 3)
 # x_trj = [x, y, z]
+# TODO continue with adding figure of glider
+# TODO continue with only plotting wind at one point
 def plot_x_trj(x_trj, travel_angle, ax):
+    # Plot trajectory
+    traj_plot = ax.plot(
+        x_trj[:, 0],
+        x_trj[:, 1],
+        x_trj[:, 2],
+        label="Flight path",
+        color="red",
+        linewidth=1,
+    )
+
+    # Calculate axis properties
+    limits = np.array(
+        [
+            ax.get_xlim3d(),
+            ax.get_ylim3d(),
+            ax.get_zlim3d(),
+        ]
+    )
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = limits
+    x_diff = np.abs(x_min - x_max)
+    y_diff = np.abs(y_min - y_max)
+    z_diff = np.abs(z_min - z_max)
+
+    dx = x_diff / 3 - 1
+    dy = y_diff / 3 - 1
+    dz = z_diff / 3 - 1
+
+    # Plot start position
     x0 = x_trj[0, :]
+    ax.scatter(x0[0], x0[1], x0[2])
 
-    x_min = min(x_trj[:, 0])
-    x_max = max(x_trj[:, 0])
-    y_min = min(x_trj[:, 1])
-    y_max = max(x_trj[:, 1])
-    z_min = 0
-    z_max = max(x_trj[:, 2])
-
-    dx = np.abs((x_min - x_max) / 2) - 1
-    dy = np.abs((y_min - y_max) / 2.0) - 1
-    dz = np.abs((z_min - z_max) / 2.0) - 1
+    # Plot direction vector
+    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
+    ax.quiver(
+        x0[0],
+        x0[1],
+        x0[2],
+        dir_vector[0],
+        dir_vector[1],
+        0,
+        color="green",
+        label="Desired direction",
+        length=np.sqrt(dx ** 2 + dy ** 2),
+        arrow_length_ratio=0.1,
+    )
 
     # Plot wind field
     x, y, z = np.meshgrid(
@@ -113,39 +157,20 @@ def plot_x_trj(x_trj, travel_angle, ax):
         pivot="middle",
     )
 
-    # Plot trajectory
-    traj_plot = ax.plot(
-        x_trj[:, 0],
-        x_trj[:, 1],
-        x_trj[:, 2],
-        label="Flight path",
-        color="red",
-        linewidth=1,
-    )
-
-    # Plot start position
-    ax.scatter(x0[0], x0[1], x0[2])
-
-    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
-    # Plot direction vector
-    ax.quiver(
-        x0[0],
-        x0[1],
-        x0[2],
-        dir_vector[0],
-        dir_vector[1],
-        0,
-        color="green",
-        label="Desired direction",
-        length=np.sqrt(dx ** 2 + dy ** 2),
-        arrow_length_ratio=0.1,
-    )
-
-    ax.set_zlim(0, z_max)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_zlabel("z [m]")
 
+    # FIX ASPECT RATIO
+    origin = np.mean(limits, axis=1)
+    radius = 0.5 * np.max(np.abs(limits[:, 1] - limits[:, 0]))
+
+    x, y, z = origin
+    ax.set_xlim3d([x - x_diff / 2, x + x_diff / 2])
+    ax.set_ylim3d([y - y_diff / 2, y + y_diff / 2])
+    ax.set_zlim3d([0, z_diff])
+
+    ax.set_box_aspect([x_diff, y_diff, z_diff])
     return
 
 
