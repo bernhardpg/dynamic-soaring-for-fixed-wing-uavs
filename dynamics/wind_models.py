@@ -80,11 +80,11 @@ def get_wind_jacobian(z):
 #wind_model = logistic_wind_model
 #ddt_wind_model = ddt_logistic_wind_model
 
-#wind_model = log_wind_model
-#ddt_wind_model = ddt_log_wind_model
+wind_model = log_wind_model
+ddt_wind_model = ddt_log_wind_model
 
-wind_model = exp_wind_model
-ddt_wind_model = ddt_exp_wind_model
+#wind_model = exp_wind_model
+#ddt_wind_model = ddt_exp_wind_model
 
 def get_dimless_wind_vector(z, L, V_l):
     return get_wind_vector(L * z) / V_l
