@@ -178,22 +178,41 @@ def direct_collocation_relative(
     dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
 
     # Cost on input effort
-    R = 1
-
-    # TODO what to set these to?
-    # Constrain input rates
-#    for k in range(N - 1):
-#        u_change = dircol.input(k + 1) - dircol.input(k)
-#        cost = R * u_change.T.dot(u_change)
-
-#        #dircol.AddCost(cost)
+    R = 0.5
 
     # Constrain input rates
-    input_vars = np.vstack([dircol.input(i) for i in range(N)])
-    finite_diff_matrix = - np.diag(np.ones(N)) + np.diag(np.ones((N - 1)), 1)
-    u_change = finite_diff_matrix.dot(input_vars)
-    u_change_squared = np.sum(np.diag(u_change.T.dot(u_change)))
-    dircol.AddCost(R * u_change_squared)
+    # Using 2nd order forward finite differences for first derivative
+    first_order_finite_diff_matrix = (
+        -1 * np.diag(np.ones(N), 0)
+        + 1 * np.diag(np.ones((N - 1)), 1)
+    )
+    second_order_finite_diff_matrix = (
+        -3 / 2 * np.diag(np.ones(N), 0)
+        + 2 * np.diag(np.ones((N - 1)), 1)
+        - 1 / 2 * np.diag(np.ones((N - 2)), 2)
+    )
+    third_order_finite_diff_matrix = (
+        -11 / 6 * np.diag(np.ones(N), 0)
+        + 3 * np.diag(np.ones((N - 1)), 1)
+        - 3 / 2 * np.diag(np.ones((N - 2)), 2)
+        + 1 / 3 * np.diag(np.ones((N - 3)), 3)
+    )
+    finite_diff_matrix = second_order_finite_diff_matrix
+
+    def input_rate(vars):
+        h = vars[0]
+        u = np.array(vars[1:]).reshape(N, 3)
+        u_change = finite_diff_matrix.dot(u)
+        u_change_squared = np.sum(np.diag(u_change.T.dot(u_change)))
+
+        return R * u_change_squared / h
+
+    input_vars = (
+        np.vstack([dircol.input(i).reshape((3, 1)) for i in range(N)])
+        .flatten()
+        .tolist()
+    )
+    dircol.AddCost(input_rate, vars=[time_step] + input_vars)
 
     ######
     # PROVIDE INITIAL GUESS
@@ -248,10 +267,9 @@ def direct_collocation_relative(
         solution_time = time.time()
         print("Found a solution in: {0} s".format(solution_time - formulate_time))
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
-        temp = dircol.GetSampleTimes(result)
-        time_step = temp[1] - temp[0]
-        print("Time step:", time_step * T)
-
+        sample_times = dircol.GetSampleTimes(result)
+        time_step = sample_times[1] - sample_times[0]
+        print("Time step: {0}, max time step: {1}".format(time_step, max_dt))
         N_plot = 200
 
         ## Reconstruct and re-scale trajectory
