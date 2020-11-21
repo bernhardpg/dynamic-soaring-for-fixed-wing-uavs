@@ -56,8 +56,8 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 8  # seconds # TODO change?
-    avg_vel_guess = V_l * 2  # TODO tune this
+    end_time_guess = 8 # seconds # TODO tune this?
+    avg_vel_guess = V_l * 1.5  # TODO tune this?
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
@@ -159,17 +159,16 @@ def direct_collocation_relative(
             dircol.final_state()[0] == dircol.final_state()[1] * np.tan(travel_angle)
         )
 
-    # Constraint covered distance along travel angle is positive
-    xy_pos_final = dircol.final_state()[0:2]
+#    # Constraint covered distance along travel angle to be positive
+    hor_pos_final = dircol.final_state()[0:2]
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
     dircol.AddConstraintToAllKnotPoints(
-        min_travelled_distance <= dir_vector.T.dot(xy_pos_final)
+        min_travelled_distance <= dir_vector.T.dot(hor_pos_final)
     )
 
     ## Objective function
     # Cost on input effort
-    R = 10
-    dircol.AddRunningCost(R * (u.T.dot(u) - 1))
+    R = 1
     if enable_brake_param:
         dircol.AddRunningCost(R * u[3] ** 2)
 
@@ -179,9 +178,15 @@ def direct_collocation_relative(
         u_change = dircol.input(k + 1) - dircol.input(k)
         dircol.AddCost(R * u_change.T.dot(u_change))
 
-    # Maximize distance travelled in desired direction
-    Q = 5
-    dircol.AddCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
+    # Maximize average velocity travelled in desired direction
+    def average_speed(vars):
+        hor_pos_final = vars[0:2]
+        time_step = vars[2]
+        avg_speed = dir_vector.T.dot(hor_pos_final) / (time_step * N)
+        return -avg_speed
+
+    time_step = dircol.timestep(0)[0]
+    dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
 
     ######
     # PROVIDE INITIAL GUESS
@@ -405,10 +410,10 @@ def direct_collocation(
         )
 
     # Make sure covered distance along travel angle is positive
-    xy_pos_final = dircol.final_state()[0:2]
+    hor_pos_final = dircol.final_state()[0:2]
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
     dircol.AddConstraintToAllKnotPoints(
-        dir_vector.T.dot(xy_pos_final) >= min_travelled_distance
+        dir_vector.T.dot(hor_pos_final) >= min_travelled_distance
     )
 
     ## Objective function
@@ -422,7 +427,7 @@ def direct_collocation(
 
     # Maximize distance travelled in desired direction
     Q = 2
-    dircol.AddFinalCost(-(dir_vector.T.dot(xy_pos_final)) * Q)
+    dircol.AddFinalCost(-(dir_vector.T.dot(hor_pos_final)) * Q)
 
     ######
     # PROVIDE INITIAL GUESS
