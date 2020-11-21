@@ -56,7 +56,7 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 8 # seconds # TODO tune this?
+    end_time_guess = 8  # seconds # TODO tune this?
     avg_vel_guess = V_l * 1.5  # TODO tune this?
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
@@ -159,7 +159,7 @@ def direct_collocation_relative(
             dircol.final_state()[0] == dircol.final_state()[1] * np.tan(travel_angle)
         )
 
-#    # Constraint covered distance along travel angle to be positive
+    #    # Constraint covered distance along travel angle to be positive
     hor_pos_final = dircol.final_state()[0:2]
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
     dircol.AddConstraintToAllKnotPoints(
@@ -167,17 +167,6 @@ def direct_collocation_relative(
     )
 
     ## Objective function
-    # Cost on input effort
-    R = 1
-    if enable_brake_param:
-        dircol.AddRunningCost(R * u[3] ** 2)
-
-    # TODO what to set these to?
-    # Constrain input rates
-    for k in range(N - 1):
-        u_change = dircol.input(k + 1) - dircol.input(k)
-        dircol.AddCost(R * u_change.T.dot(u_change))
-
     # Maximize average velocity travelled in desired direction
     def average_speed(vars):
         hor_pos_final = vars[0:2]
@@ -187,6 +176,24 @@ def direct_collocation_relative(
 
     time_step = dircol.timestep(0)[0]
     dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
+
+    # Cost on input effort
+    R = 1
+
+    # TODO what to set these to?
+    # Constrain input rates
+#    for k in range(N - 1):
+#        u_change = dircol.input(k + 1) - dircol.input(k)
+#        cost = R * u_change.T.dot(u_change)
+
+#        #dircol.AddCost(cost)
+
+    # Constrain input rates
+    input_vars = np.vstack([dircol.input(i) for i in range(N)])
+    finite_diff_matrix = - np.diag(np.ones(N)) + np.diag(np.ones((N - 1)), 1)
+    u_change = finite_diff_matrix.dot(input_vars)
+    u_change_squared = np.sum(np.diag(u_change.T.dot(u_change)))
+    dircol.AddCost(R * u_change_squared)
 
     ######
     # PROVIDE INITIAL GUESS
