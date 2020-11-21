@@ -89,10 +89,11 @@ create_drake_plant	dynamics/zhukovskii_glider.py	/^    def create_drake_plant(se
 create_drake_plant	dynamics/zhukovskii_glider.py	/^    def create_drake_plant(self, diff_flat):$/;"	m	class:ZhukovskiiGlider
 ddt_exp_wind_model	dynamics/wind_models.py	/^def ddt_exp_wind_model(z, z_dot):$/;"	f
 ddt_log_wind_model	dynamics/wind_models.py	/^def ddt_log_wind_model(z, z_dot):$/;"	f
+ddt_logistic_wind_model	dynamics/wind_models.py	/^def ddt_logistic_wind_model(z, z_dot):$/;"	f
 ddt_wind_model	dynamics/slotine_dynamics.py	/^from dynamics.wind_models import wind_model, ddt_wind_model$/;"	i
 ddt_wind_model	dynamics/wind_models.py	/^ddt_wind_model = ddt_log_wind_model$/;"	v
 ddt_wind_model	plot/plot.py	/^from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field$/;"	i
-ddz_log_wind_model	dynamics/wind_models.py	/^def ddz_log_wind_model(z):$/;"	f
+ddz_logistic_wind_model	dynamics/wind_models.py	/^def ddz_logistic_wind_model(z):$/;"	f
 derivatives	ilqr/ilqr.py	/^class derivatives:$/;"	c
 dir_vector	trajopt/direct_collocation.py	/^    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])$/;"	v
 dircol	trajopt/direct_collocation.py	/^    dircol = DirectCollocation($/;"	v
@@ -148,7 +149,8 @@ input_rate	trajopt/direct_collocation.py	/^    def input_rate(vars):$/;"	f
 input_vars	trajopt/direct_collocation.py	/^    input_vars = ($/;"	v
 lift_coeff_squared	trajopt/direct_collocation.py	/^    lift_coeff_squared = u.T.dot(u) \/ ((0.5 * A) ** 2 * x[3:6].T.dot(x[3:6]))$/;"	v
 load_factor_squared	trajopt/direct_collocation.py	/^    load_factor_squared = x[3:6].T.dot(x[3:6]) * u.T.dot(u)$/;"	v
-log_wind_model	dynamics/wind_models.py	/^def log_wind_model(z):  # Taken from slotine$/;"	f
+log_wind_model	dynamics/wind_models.py	/^def log_wind_model(z):$/;"	f
+logistic_wind_model	dynamics/wind_models.py	/^def logistic_wind_model(z):  # Taken from slotine$/;"	f
 main	main.py	/^def main():$/;"	f
 matplotlib	examples/trajopt_example.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.animation as animation$/;"	i

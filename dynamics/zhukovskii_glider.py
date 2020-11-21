@@ -30,7 +30,7 @@ class RelativeZhukovskiiGlider:
         self.max_lift_coeff = 1.5
         self.min_lift_coeff = 0
         self.max_load_factor = 3
-        self.min_height = 0.5  # m
+        self.min_height = 1 # m
         self.max_height = 100  # m
         self.min_travelled_distance = 5  # m
         self.t_f_min = 0.5  # s
