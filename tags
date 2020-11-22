@@ -187,10 +187,8 @@ plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake
 plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):$/;"	f
 plot_glider_pos	plot/plot.py	/^def plot_glider_pos(x_trj, travel_angle):$/;"	f
 plot_location	plot/plot.py	/^plot_location = ".\/results\/plots\/"$/;"	v
-plot_trajectories	plot/plot.py	/^def plot_trajectories(trajectories):$/;"	f
 plot_trj_3_wind	test/test_dynamics.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_trj_3_wind	test/test_ilqr.py	/^from plot.plot import plot_trj_3_wind$/;"	i
-plot_u_trj	plot/plot.py	/^def plot_u_trj(t, u_trj, ax):$/;"	f
 plot_wind_profile	plot/plot.py	/^def plot_wind_profile(ax, wind_function, h_max=20):$/;"	f
 plot_wind_profiles	plot/plot.py	/^def plot_wind_profiles():$/;"	f
 plot_x_trj	plot/plot.py	/^def plot_x_trj(x_trj, travel_angle, ax):$/;"	f

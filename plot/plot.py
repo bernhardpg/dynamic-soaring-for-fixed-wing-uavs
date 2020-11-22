@@ -8,16 +8,19 @@ from dynamics.wind_models import *
 
 plot_location = "./results/plots/"
 
+
 def plot_wind_profile(ax, wind_function, h_max=20):
     dh_arrows = 2.5
 
     h = np.arange(0.03, h_max, 0.05)
-    ax.plot(wind_function(h), h)
+    ax.plot(wind_function(h), h, color="black")
 
-    arrow_start = np.arange(0.03, h_max, dh_arrows)
+    arrow_start = np.arange(dh_arrows, h_max, dh_arrows)
     wind_strengths = wind_function(arrow_start)
     zeros = np.zeros(arrow_start.shape[0])
-    ax.quiver(zeros, arrow_start, wind_strengths, zeros, units="xy", scale=1)
+    ax.quiver(
+            zeros, arrow_start, wind_strengths, zeros, units="xy", scale=1, color="tab:blue"
+    )
     ax.set_aspect("equal")
     ax.set_xlim(0, 20)
     ax.set_ylim(0, h_max)
@@ -51,58 +54,22 @@ def plot_wind_profiles():
     return
 
 
-# TODO remove if not used in near future
-def plot_trajectories(trajectories):
-    N = len(trajectories.items())
-    fig = plt.figure(figsize=(3, int(N * 3 / 2)))
-
-    i = 1
-    for travel_angle, traj in trajectories.items():
-        times, x_trj, u_trj = traj
-        ax_x = fig.add_subplot(N, 2, 2 * i - 1, projection="3d")
-        plot_x_trj(x_trj, travel_angle, ax_x)
-        ax_x.set_title("{0}".format(travel_angle))
-
-        ax_u = fig.add_subplot(N, 2, 2 * i)
-        plot_u_trj(times, u_trj, ax_u)
-
-        i = i + 1
-
-    return
-
-
 def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
-    # Circulation
     plt.subplots(figsize=(5, 4))
-    plt.subplot(3, 2, 1)
-    plt.plot(t, u_trj[:, 0])
-    plt.xlabel("time [s]")
-    plt.ylabel("x")
-    plt.title("Circulation")
 
-    plt.subplot(3, 2, 3)
-    plt.plot(t, u_trj[:, 1])
-    plt.xlabel("time [s]")
-    plt.ylabel("y")
-
-    plt.subplot(3, 2, 5)
-    plt.plot(t, u_trj[:, 2])
-    plt.xlabel("time [s]")
-    plt.ylabel("z")
-
-    plt.subplot(3, 2, 2)
+    plt.subplot(3, 1, 1)
     plt.plot(t, c_l_trj)
     plt.xlabel("time [s]")
     plt.title("Lift coeff")
     plt.ylabel("c_L")
 
-    plt.subplot(3, 2, 4)
+    plt.subplot(3, 1, 2)
     plt.plot(t, phi_trj * 180 / np.pi)
     plt.xlabel("time [s]")
     plt.title("Bank angle")
     plt.ylabel("deg")
 
-    plt.subplot(3, 2, 6)
+    plt.subplot(3, 1, 3)
     plt.plot(t, n_trj)
     plt.xlabel("time [s]")
     plt.title("Load factor")
@@ -132,7 +99,7 @@ def plot_x_trj(x_trj, travel_angle, ax):
         x_trj[:, 1],
         x_trj[:, 2],
         label="Flight path",
-        color="red",
+        color="tab:red",
         linewidth=1,
     )
 
@@ -149,13 +116,14 @@ def plot_x_trj(x_trj, travel_angle, ax):
     y_diff = np.abs(y_min - y_max)
     z_diff = np.abs(z_min - z_max)
 
-    dx = x_diff / 3 - 1
-    dy = y_diff / 3 - 1
-    dz = z_diff / 3 - 1
+    N_arrows = 3
+    dx = x_diff / N_arrows - 1
+    dy = y_diff / N_arrows - 1
+    dz = z_diff / N_arrows - 1
 
     # Plot start position
     x0 = x_trj[0, :]
-    ax.scatter(x0[0], x0[1], x0[2])
+    ax.scatter(x0[0], x0[1], x0[2], color="maroon")
 
     # Plot direction vector
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
@@ -166,31 +134,31 @@ def plot_x_trj(x_trj, travel_angle, ax):
         dir_vector[0],
         dir_vector[1],
         0,
-        color="green",
+        color="tab:green",
         label="Desired direction",
-        length=np.sqrt(dx ** 2 + dy ** 2),
-        arrow_length_ratio=0.1,
+        length=np.sqrt(dx ** 2 + dy ** 2) * 0.4,
+        linewidth=1,
+        arrow_length_ratio=0.2,
     )
 
     # Plot wind field
-    x, y, z = np.meshgrid(
-        # (-min, max, step_length)
-        np.arange(x_min, x_max, dx),
-        np.arange(y_min, y_max, dy),
-        np.arange(z_min, z_max, dz),
-    )
-    u, v, w = get_wind_field(x, y, z)
+    xs = np.arange(x_min, x_max, dx),
+    ys = np.ones(N_arrows + 1) * y_max
+    zs = np.arange(z_min, z_max, dz),
+
+    X, Y, Z = np.meshgrid(xs, ys, zs)
+    u, v, w = get_wind_field(X, Y, Z)
     ax.quiver(
-        x,
-        y,
-        z,
+        X,
+        Y,
+        Z,
         u,
         v,
         w,
         length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
-        linewidth=0.7,
+        linewidth=0.5,
         arrow_length_ratio=0.1,
-        pivot="middle",
+        color="tab:blue"
     )
 
     ax.set_xlabel("x [m]")
@@ -210,17 +178,6 @@ def plot_x_trj(x_trj, travel_angle, ax):
     return
 
 
-# TODO remove if not used in near future
-def plot_u_trj(t, u_trj, ax):
-    ax.set_title("input (circulation)")
-
-    ax.plot(t, u_trj[:, 0], label="x-axis")
-    ax.plot(t, u_trj[:, 1], label="y-axis")
-    ax.plot(t, u_trj[:, 2], label="z-axis")
-    ax.set_ylim(-7, 7)
-    ax.legend()
-    return
-
 
 def polar_plot_avg_velocities(avg_velocities):
     lists = sorted(avg_velocities.items())
@@ -235,6 +192,7 @@ def polar_plot_avg_velocities(avg_velocities):
     return
 
 
+# TODO OUTDATED with new relative model
 def save_trajectory_gif(zhukovskii_glider, traj, travel_angle):
     ## ANIMATION FILE SETTINGS
     filepath = "./animations/"
@@ -303,7 +261,7 @@ def save_trajectory_gif(zhukovskii_glider, traj, travel_angle):
             linewidth=0.5,
             arrow_length_ratio=0.2,
             pivot="middle",
-            color="blue",
+            color="tab:blue",
         )
 
         # Plot direction vector
