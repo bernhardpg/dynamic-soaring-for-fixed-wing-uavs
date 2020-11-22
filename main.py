@@ -42,6 +42,31 @@ def single_dircol_w_real_values_rel_formulation():
     times, x_knots, u_knots = traj
     c_knots = u_knots # Circulation
 
+    # Calculate corresponding bank angle
+    phi_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        v_r = x_knots[k, 3:6]
+        c = u_knots[k, :]
+        phi = zhukovskii_glider.calc_bank_angle(v_r, c)
+        phi_knots[k] = phi
+
+    # Calculate corresponding relative flight path angle
+    gamma_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        h = x_knots[k, 2]
+        v_r = x_knots[k, 3:6]
+        gamma = zhukovskii_glider.calc_rel_flight_path_angle(v_r)
+        gamma_knots[k] = gamma
+
+    # Calculate corresponding heading angle
+    psi_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        h = x_knots[k, 2]
+        v_r = x_knots[k, 3:6]
+        psi = zhukovskii_glider.calc_heading(h, v_r)
+        psi_knots[k] = psi
+
+
     # Calculate corresponding lift coeff
     c_l_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(len(times)):
@@ -50,13 +75,6 @@ def single_dircol_w_real_values_rel_formulation():
         c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
         c_l_knots[k] = c_l
 
-    # Calculate corresponding bank angle
-    phi_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
-        v_r = x_knots[k, 3:6]
-        c = u_knots[k, :]
-        phi = zhukovskii_glider.calc_bank_angle(v_r, c)
-        phi_knots[k] = phi
 
     # Calculate corresponding load factor
     n_knots = np.zeros((x_knots.shape[0], 1))
@@ -66,18 +84,11 @@ def single_dircol_w_real_values_rel_formulation():
         n = zhukovskii_glider.calc_load_factor(v_r, c, m, g, rho)
         n_knots[k] = n
 
-    psi_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
-        h = x_knots[k, 2]
-        v_r = x_knots[k, 3:6]
-        psi = zhukovskii_glider.calc_heading(h, v_r)
-        psi_knots[k] = psi
-
-    plt.plot(times, psi_knots)
 
     if PLOT_SOLUTION:
         plot_glider_pos(zhukovskii_glider, x_knots, u_knots, travel_angle)
-        plot_glider_input(times, c_knots, c_l_knots, phi_knots, n_knots)
+        plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
+        #plot_glider_input(times, c_knots, c_l_knots, phi_knots, n_knots)
         plt.show()
 
     return

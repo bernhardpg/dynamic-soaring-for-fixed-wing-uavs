@@ -98,9 +98,13 @@ class RelativeZhukovskiiGlider:
         psi = np.arctan2(v_r[0],v_r[1])
         return psi
 
-    def calc_bank_angle(self, v_r, c):
+    def calc_rel_flight_path_angle(self, v_r):
         v_r_norm = np.linalg.norm(v_r)
         gamma = np.arcsin(-v_r[2] / v_r_norm) # Relative flight path angle
+        return gamma
+
+    def calc_bank_angle(self, v_r, c):
+        gamma = self.calc_rel_flight_path_angle(v_r)
         c_norm = np.linalg.norm(c)
 
         phi = np.arcsin(c[2] / (c_norm) * np.cos(gamma))

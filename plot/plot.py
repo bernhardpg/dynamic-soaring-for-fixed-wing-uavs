@@ -54,6 +54,29 @@ def plot_wind_profiles():
     return
 
 
+def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):
+    plt.subplots(figsize=(5, 4))
+
+    plt.subplot(3, 1, 1)
+    plt.plot(t, gamma_trj * 180 / np.pi)
+    plt.xlabel("time [s]")
+    plt.ylabel("deg")
+    plt.title("Rel flight path angle")
+
+    plt.subplot(3, 1, 2)
+    plt.plot(t, phi_trj * 180 / np.pi)
+    plt.xlabel("time [s]")
+    plt.title("Bank angle")
+    plt.ylabel("deg")
+
+    plt.subplot(3, 1, 3)
+    plt.plot(t, psi_trj * 180 / np.pi)
+    plt.xlabel("time [s]")
+    plt.title("Heading angle")
+    plt.ylabel("deg")
+
+    return
+
 def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     plt.subplots(figsize=(5, 4))
 
@@ -186,12 +209,28 @@ def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
     c = u_trj[0, :]
     F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
 
+    # Create lines
+    origins = np.vstack([F, RF, RB, LB, LF]).T
+    temp = np.vstack([RF, RB, LB, LF, F]).T
+    lengths = temp - origins
+    ax.quiver(
+        origins[0, :],
+        origins[1, :],
+        origins[2, :],
+        lengths[0, :],
+        lengths[1, :],
+        lengths[2, :],
+        linewidth=2,
+        arrow_length_ratio=0.0,
+        color="black",
+    )
     return
 
 
+# TODO pass zhukovskii_glider somewhere else
 def get_glider_corners(zhukovskii_glider, x, c):
-    sweep = 0.3
-    tip_chord = 0.7
+    sweep = 0.7
+    tip_chord = 0.3
     b = 3.03
     dist_cg_front = 0.5
     # TODO chord =
@@ -202,46 +241,67 @@ def get_glider_corners(zhukovskii_glider, x, c):
     h = p[2]
 
     # Define glider corners
-    com_to_front = np.array([dist_cg_front, 0, 0])
-    com_to_wing_front = np.array([dist_cg_front - sweep, b / 2, 0])
-    com_to_wing_back = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0])
+    scale = 10
+    com_to_F = np.array([dist_cg_front, 0, 0]) * scale
+    com_to_RF = np.array([dist_cg_front - sweep, b / 2, 0]) * scale
+    com_to_RB = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0]) * scale
+    com_to_LF = np.array([com_to_RF[0], -com_to_RF[1], com_to_RF[2]])
+    com_to_LB = np.array([com_to_RB[0], -com_to_RB[1], com_to_RB[2]])
 
     # Calculate heading
-    psi = zhukovskii_glider.calc_heading(h, v_r)
+    psi = -zhukovskii_glider.calc_heading(h, v_r)
     # Calculate bank angle
     phi = zhukovskii_glider.calc_bank_angle(v_r, c)
     # Calculate angle of attack from lift coeff
-    c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
-    alpha = c_l  # TODO fix this
+    c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, 0.65)
+    alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)# TODO fix this
 
     # Create rotation matrix
-    R = np.array(
+    #R_ned_to_body = np.array(
+    #    [
+    #        [
+    #            np.cos(psi) * np.cos(alpha),
+    #            np.cos(psi) * np.sin(alpha) * np.sin(phi) - np.sin(psi) * np.cos(phi),
+    #            np.cos(phi) * np.sin(alpha) * np.cos(phi) + np.sin(psi) * np.sin(phi),
+    #        ],
+    #        [
+    #            np.sin(psi) * np.cos(alpha),
+    #            np.sin(psi) * np.sin(alpha) * np.sin(phi) + np.cos(psi) * np.cos(phi),
+    #            np.sin(psi) * np.sin(alpha) * np.cos(phi) - np.cos(psi) * np.sin(phi),
+    #        ],
+    #        [-np.sin(alpha), np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi)],
+    #    ]
+    #)
+
+    j_body = c / np.linalg.norm(c)  # j unit vector in body frame
+
+    i_stability = v_r/ np.linalg.norm(v_r)  # i unit vec in stability frame
+    i_body = np.array(
         [
-            [
-                np.cos(psi) * np.cos(alpha),
-                np.cos(psi) * np.sin(alpha) * np.sin(phi) - np.sin(psi) * np.cos(phi),
-                np.cos(phi) * np.sin(alpha) * np.cos(phi) + np.sin(psi) * np.sin(phi),
-            ],
-            [
-                np.sin(psi) * np.cos(alpha),
-                np.sin(psi) * np.sin(alpha) * np.sin(phi) + np.cos(psi) * np.cos(phi),
-                np.sin(psi) * np.sin(alpha) * np.cos(phi) - np.cos(psi) * np.sin(phi),
-            ],
-            [-np.sin(alpha), np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi)],
+            [np.cos(alpha), 0, np.sin(alpha)],
+            [0, 1, 0],
+            [-np.sin(alpha), 0, np.cos(alpha)],
         ]
-    )
+    ).dot(
+        i_stability
+    )  # Rotate i_stab by alpha around y axis to get i_body
+    # TODO which way rotate by alpha here??
+    k_body = np.cross(j_body, i_body)
+    R_ned_to_body = np.stack((i_body, j_body, k_body), axis=1)
 
     # Rotate glider vectors by rotation matrix
-    rotated_com_to_front = R.dot(com_to_front)
-    rotated_com_to_wing_front = R.dot(com_to_wing_front)
-    rotated_com_to_wing_back = R.dot(com_to_wing_back)
+    rotated_com_to_F = R_ned_to_body.dot(com_to_F)
+    rotated_com_to_RF = R_ned_to_body.dot(com_to_RF)
+    rotated_com_to_RB = R_ned_to_body.dot(com_to_RB)
+    rotated_com_to_LF = R_ned_to_body.dot(com_to_LF)
+    rotated_com_to_LB = R_ned_to_body.dot(com_to_LB)
 
     # Calculate glider corners
-    F = p + rotated_com_to_front  # Front
-    RF = p + rotated_com_to_wing_front  # Right front
-    RB = p + rotated_com_to_wing_back  # Right back
-    LF = p - rotated_com_to_wing_front  # Left front
-    LB = p - rotated_com_to_wing_back  # Left back
+    F = p + rotated_com_to_F  # Front
+    RF = p + rotated_com_to_RF  # Right front
+    RB = p + rotated_com_to_RB # Right back
+    LF = p + rotated_com_to_LF # Left front
+    LB = p + rotated_com_to_LB # Left back
 
     # Plot all corners as vectors without arrowheads
     return F, RF, RB, LF, LB
