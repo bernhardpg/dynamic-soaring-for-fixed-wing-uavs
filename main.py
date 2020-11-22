@@ -3,10 +3,12 @@ from trajopt.nonlin_trajopt import *
 from trajopt.fourier_collocation import *
 from plot.plot import *
 from trajopt.direct_collocation import *
+from dynamics.wind_models import *
 
 
 def main():
     single_dircol_w_real_values_rel_formulation()
+    #plot_wind_profiles()
     # do_dircol()
     return 0
 
@@ -33,7 +35,7 @@ def single_dircol_w_real_values_rel_formulation():
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    psi = np.pi * 0.2
+    psi = np.pi * 0.0
 
     avg_speed, traj, curr_solution = direct_collocation_relative(zhukovskii_glider, psi)
 

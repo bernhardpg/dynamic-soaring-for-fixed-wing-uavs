@@ -4,7 +4,52 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
 
-from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_field
+from dynamics.wind_models import *
+
+plot_location = "./results/plots/"
+
+def plot_wind_profile(ax, wind_function, h_max=20):
+    dh_arrows = 2.5
+
+    h = np.arange(0.03, h_max, 0.05)
+    ax.plot(wind_function(h), h)
+
+    arrow_start = np.arange(0.03, h_max, dh_arrows)
+    wind_strengths = wind_function(arrow_start)
+    zeros = np.zeros(arrow_start.shape[0])
+    ax.quiver(zeros, arrow_start, wind_strengths, zeros, units="xy", scale=1)
+    ax.set_aspect("equal")
+    ax.set_xlim(0, 20)
+    ax.set_ylim(0, h_max)
+    # ax.grid()
+
+
+def plot_wind_profiles():
+    fig, axs = plt.subplots(1, 4, constrained_layout=True)
+    fig.set_size_inches(10, 3)
+    wind_profiles = [
+        linear_wind_model,
+        log_wind_model,
+        exp_wind_model,
+        logistic_wind_model,
+    ]
+    wind_profile_names = [
+        "Linear",
+        "Logarithmic",
+        "Exponential",
+        "Logistic",
+    ]
+    for i in range(len(wind_profiles)):
+        ax = axs[i]
+        plot_wind_profile(ax, wind_profiles[i])
+        ax.set_title(wind_profile_names[i])
+        if i == 0:
+            ax.set_xlabel("Wind strength [m/s]")
+            ax.set_ylabel("Height [m]")
+
+    plt.savefig(plot_location + "wind_models.eps", bbox_inches="tight")
+    return
+
 
 # TODO remove if not used in near future
 def plot_trajectories(trajectories):
@@ -73,15 +118,6 @@ def plot_glider_pos(x_trj, travel_angle):
 
     plot_x_trj(x_trj, travel_angle, ax)
     return
-
-
-def set_axes_equal(ax: plt.Axes):
-    """Set 3D plot axes to equal scale.
-
-    Make axes of 3D plot have equal scale so that spheres appear as
-    spheres and cubes as cubes.  Required since `ax.axis('equal')`
-    and `ax.set_aspect('equal')` don't work on 3D.
-    """
 
 
 # Params:

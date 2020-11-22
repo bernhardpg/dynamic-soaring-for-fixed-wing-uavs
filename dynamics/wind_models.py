@@ -1,5 +1,20 @@
 import numpy as np
 
+w_ref = 15  # m/s
+w_freestream = w_ref
+h_ref = 10  # m
+h_0 = 0.03  # m
+
+
+########
+# Linear wind model
+########
+
+def linear_wind_model(z):
+    w = w_ref / h_ref * z
+    return w
+
+
 
 ########
 # Exponential wind model
@@ -7,19 +22,15 @@ import numpy as np
 
 
 def exp_wind_model(z):  # Taken from Deittert et al.
-    w_ref = 16  # m/s
     p = 0.143
-    h_r = 5  # ref height, can be set arbritrary
-    w = w_ref * (z / h_r) ** p  # wind strength
+    w = w_ref * (z / h_ref) ** p  # wind strength
 
     return w
 
 
 def ddt_exp_wind_model(z, z_dot):
-    w_ref = 16  # m/s
     p = 0.143
-    h_r = 5  # ref height, can be set arbritrary
-    w_dot = ((p * w_ref) / z) * (z / h_r) ** p * z_dot
+    w_dot = ((p * w_ref) / z) * (z / h_ref) ** p * z_dot
     return w_dot
 
 
@@ -29,21 +40,14 @@ def ddt_exp_wind_model(z, z_dot):
 
 
 def log_wind_model(z):
-    w_ref = 15  # m/s
-    h_ref = 10  # m
-    h_0 = 0.03  # m
-
-    if z < h_0:
+    # Check for type for plotting. NOTE will fail if plotter has z<h_0
+    if (not type(z) == type(np.array(1))) and z < h_0:
         return 0  # NOTE zero wind below ground
     w = w_ref * (np.log(z / h_0)) / (np.log(h_ref / h_0))
     return w
 
 
 def ddz_log_wind_model(z):
-    w_ref = 15  # m/s
-    h_ref = 10  # m
-    h_0 = 0.03  # m
-
     dw_dz = w_ref / (np.log(h_ref / h_0) * z)
     if z < h_0:
         dw_dz = 0  # NOTE zero wind below ground
@@ -62,15 +66,13 @@ def ddt_log_wind_model(z, z_dot):
 
 
 def logistic_wind_model(z):  # Taken from slotine
-    w_freestream = 16  # Free stream wind speed
-    delta = 5  # wind_shear_layer thickness
+    delta = 3  # wind_shear_layer thickness
     w = w_freestream / (1 + np.exp(-z / delta))
     return w
 
 
 def ddz_logistic_wind_model(z):
-    w_freestream = 16  # Free stream wind speed
-    delta = 5  # wind_shear_layer thickness
+    delta = 3  # wind_shear_layer thickness
     dw_dz = (w_freestream * np.exp(-z / delta)) / (
         delta * (1 + np.exp(-z / delta)) ** 2
     )
@@ -104,20 +106,11 @@ ddz_wind_model = ddz_log_wind_model
 ddt_wind_model = ddt_log_wind_model
 
 # PLOTTING FUNCTIONs
-def plot_log_wind_model(z):
-    w_ref = 10  # m/s
-    h_ref = 10  # m
-    h_0 = 0.03  # m
-    w = w_ref * (np.log(z / h_0)) / (np.log(h_ref / h_0))
-    return w
-
-
-plot_wind_model = plot_log_wind_model
 
 # Assume wind blows from north to south, i.e. along negative y axis
 def get_wind_field(x, y, z):
     u = np.zeros(x.shape)
-    v = -plot_wind_model(z)
+    v = -wind_model(z)
     w = np.zeros(z.shape)
 
     return u, v, w
