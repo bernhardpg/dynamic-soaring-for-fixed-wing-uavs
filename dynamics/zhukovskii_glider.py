@@ -171,7 +171,8 @@ class RelativeZhukovskiiGlider:
         return DrakeSysWrapper(3, self.continuous_dynamics_dimless)
 
     def continuous_dynamics_dimless(self, x, u):
-        # x = [p, v_r]
+        # x = [x, y, h, [v_r]]
+        # h = -z NOTE somehow this is better for numerics
         # u = c
         c = u
         p = x[0:3]
