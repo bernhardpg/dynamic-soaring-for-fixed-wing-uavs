@@ -72,6 +72,7 @@ calc_opt_glide_speed	dynamics/zhukovskii_glider.py	/^    def calc_opt_glide_spee
 calc_opt_glide_speed	dynamics/zhukovskii_glider.py	/^    def calc_opt_glide_speed(self, AR, c_Dp, m, A, b, rho, g):$/;"	m	class:ZhukovskiiGlider
 calc_opt_level_glide_speed	dynamics/zhukovskii_glider.py	/^    def calc_opt_level_glide_speed(self, AR, c_Dp, m, A, b, rho, g):$/;"	m	class:RelativeZhukovskiiGlider
 calc_opt_level_glide_speed	dynamics/zhukovskii_glider.py	/^    def calc_opt_level_glide_speed(self, AR, c_Dp, m, A, b, rho, g):$/;"	m	class:ZhukovskiiGlider
+calc_rel_flight_path_angle	dynamics/zhukovskii_glider.py	/^    def calc_rel_flight_path_angle(self, v_r):$/;"	m	class:RelativeZhukovskiiGlider
 calc_rel_flight_path_angle	dynamics/zhukovskii_glider.py	/^    def calc_rel_flight_path_angle(self, x):$/;"	m	class:ZhukovskiiGlider
 context	trajopt/direct_collocation.py	/^    context = plant.CreateDefaultContext()$/;"	v
 continuous_dynamics	dynamics/glider.py	/^def continuous_dynamics(x, u):$/;"	f
@@ -107,7 +108,7 @@ direct_transcription	trajopt/nonlin_trajopt.py	/^def direct_transcription():$/;"
 discrete_dynamics	ilqr/ilqr.py	/^def discrete_dynamics(x, u):$/;"	f
 do_collocation_w_fourier	main.py	/^def do_collocation_w_fourier():$/;"	f
 do_sweep_dircol	main.py	/^def do_sweep_dircol():$/;"	f
-draw_gliders	plot/plot.py	/^def draw_gliders(x_trj, u_trj, ax):$/;"	f
+draw_gliders	plot/plot.py	/^def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):$/;"	f
 draw_pos_trajectory	plot/plot.py	/^def draw_pos_trajectory(pos_trj, travel_angle, ax):$/;"	f
 dt	examples/trajopt_example.py	/^dt = 0.01;$/;"	v
 enable_brake_param	trajopt/direct_collocation.py	/^    enable_brake_param = u.shape[0] > 3$/;"	v
@@ -132,7 +133,7 @@ get_constraints	dynamics/zhukovskii_glider.py	/^    def get_constraints(self):$/
 get_constraints	dynamics/zhukovskii_glider.py	/^    def get_constraints(self):$/;"	m	class:ZhukovskiiGlider
 get_constraints_dimless	dynamics/zhukovskii_glider.py	/^    def get_constraints_dimless(self):$/;"	m	class:RelativeZhukovskiiGlider
 get_constraints_dimless	dynamics/zhukovskii_glider.py	/^    def get_constraints_dimless(self):$/;"	m	class:ZhukovskiiGlider
-get_glider_corners	plot/plot.py	/^def get_glider_corners(x, c):$/;"	f
+get_glider_corners	plot/plot.py	/^def get_glider_corners(zhukovskii_glider, x, c):$/;"	f
 get_pos_fourier	trajopt/fourier_collocation.py	/^    def get_pos_fourier(self, collocation_time):$/;"	m	class:FourierCollocationProblem
 get_solution	trajopt/fourier_collocation.py	/^    def get_solution(self):$/;"	m	class:FourierCollocationProblem
 get_vel_dot_fourier	trajopt/fourier_collocation.py	/^    def get_vel_dot_fourier(self, collocation_time):$/;"	m	class:FourierCollocationProblem
@@ -188,8 +189,9 @@ pdb	test/test_ilqr.py	/^import pdb$/;"	i
 pdb	trajopt/nonlin_trajopt.py	/^import pdb$/;"	i
 plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant()$/;"	v
 plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)$/;"	v
+plot_glider_angles	plot/plot.py	/^def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):$/;"	f
 plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):$/;"	f
-plot_glider_pos	plot/plot.py	/^def plot_glider_pos(x_trj, u_trj, travel_angle):$/;"	f
+plot_glider_pos	plot/plot.py	/^def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):$/;"	f
 plot_location	plot/plot.py	/^plot_location = ".\/results\/plots\/"$/;"	v
 plot_trj_3_wind	test/test_dynamics.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_trj_3_wind	test/test_ilqr.py	/^from plot.plot import plot_trj_3_wind$/;"	i

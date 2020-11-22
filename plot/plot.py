@@ -77,6 +77,7 @@ def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):
 
     return
 
+
 def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     plt.subplots(figsize=(5, 4))
 
@@ -204,26 +205,30 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
 
 
 def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
-    # plot only start first
-    x = x_trj[0, :]
-    c = u_trj[0, :]
-    F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
+    N = x_trj.shape[0]
+    N_gliders = 8
+    indices = np.linspace(0, N-1, N_gliders, dtype=int)
 
-    # Create lines
-    origins = np.vstack([F, RF, RB, LB, LF]).T
-    temp = np.vstack([RF, RB, LB, LF, F]).T
-    lengths = temp - origins
-    ax.quiver(
-        origins[0, :],
-        origins[1, :],
-        origins[2, :],
-        lengths[0, :],
-        lengths[1, :],
-        lengths[2, :],
-        linewidth=2,
-        arrow_length_ratio=0.0,
-        color="black",
-    )
+    for i in indices:
+        x = x_trj[i, :]
+        c = u_trj[i, :]
+        F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
+
+        # Create lines
+        origins = np.vstack([F, RF, RB, LB, LF]).T
+        temp = np.vstack([RF, RB, LB, LF, F]).T
+        lengths = temp - origins
+        ax.quiver(
+            origins[0, :],
+            origins[1, :],
+            origins[2, :],
+            lengths[0, :],
+            lengths[1, :],
+            lengths[2, :],
+            linewidth=2,
+            arrow_length_ratio=0.0,
+            color="black",
+        )
     return
 
 
@@ -241,7 +246,7 @@ def get_glider_corners(zhukovskii_glider, x, c):
     h = p[2]
 
     # Define glider corners
-    scale = 10
+    scale = 5
     com_to_F = np.array([dist_cg_front, 0, 0]) * scale
     com_to_RF = np.array([dist_cg_front - sweep, b / 2, 0]) * scale
     com_to_RB = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0]) * scale
@@ -254,10 +259,10 @@ def get_glider_corners(zhukovskii_glider, x, c):
     phi = zhukovskii_glider.calc_bank_angle(v_r, c)
     # Calculate angle of attack from lift coeff
     c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, 0.65)
-    alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)# TODO fix this
+    alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)  # TODO fix this
 
     # Create rotation matrix
-    #R_ned_to_body = np.array(
+    # R_ned_to_body = np.array(
     #    [
     #        [
     #            np.cos(psi) * np.cos(alpha),
@@ -271,11 +276,11 @@ def get_glider_corners(zhukovskii_glider, x, c):
     #        ],
     #        [-np.sin(alpha), np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi)],
     #    ]
-    #)
+    # )
 
     j_body = c / np.linalg.norm(c)  # j unit vector in body frame
 
-    i_stability = v_r/ np.linalg.norm(v_r)  # i unit vec in stability frame
+    i_stability = v_r / np.linalg.norm(v_r)  # i unit vec in stability frame
     i_body = np.array(
         [
             [np.cos(alpha), 0, np.sin(alpha)],
@@ -299,9 +304,9 @@ def get_glider_corners(zhukovskii_glider, x, c):
     # Calculate glider corners
     F = p + rotated_com_to_F  # Front
     RF = p + rotated_com_to_RF  # Right front
-    RB = p + rotated_com_to_RB # Right back
-    LF = p + rotated_com_to_LF # Left front
-    LB = p + rotated_com_to_LB # Left back
+    RB = p + rotated_com_to_RB  # Right back
+    LF = p + rotated_com_to_LF  # Left front
+    LB = p + rotated_com_to_LB  # Left back
 
     # Plot all corners as vectors without arrowheads
     return F, RF, RB, LF, LB

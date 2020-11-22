@@ -170,6 +170,7 @@ class RelativeZhukovskiiGlider:
         return DrakeSysWrapper(3, self.continuous_dynamics_dimless)
 
     def continuous_dynamics_dimless(self, x, u):
+        # This actually uses normal ENU frame, not NED
         # x = [x, y, h, [v_r]]
         # h = -z NOTE somehow this is better for numerics
         # u = c
