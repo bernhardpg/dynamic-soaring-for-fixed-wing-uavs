@@ -57,7 +57,7 @@ def direct_collocation_relative(
 
     # Initial guess
     end_time_guess = 8  # seconds # TODO tune this?
-    avg_vel_guess = V_l * 1.5  # TODO tune this?
+    avg_vel_guess = V_l * 2  # TODO tune this?
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
     # Make all values dimless
@@ -168,11 +168,12 @@ def direct_collocation_relative(
 
     ## Objective function
     # Maximize average velocity travelled in desired direction
+    Q = 1
     def average_speed(vars):
         hor_pos_final = vars[0:2]
         time_step = vars[2]
         avg_speed = dir_vector.T.dot(hor_pos_final) / (time_step * N)
-        return -avg_speed
+        return - Q * avg_speed
 
     time_step = dircol.timestep(0)[0]
     dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
@@ -197,7 +198,7 @@ def direct_collocation_relative(
         - 3 / 2 * np.diag(np.ones((N - 2)), 2)
         + 1 / 3 * np.diag(np.ones((N - 3)), 3)
     )
-    finite_diff_matrix = second_order_finite_diff_matrix
+    finite_diff_matrix = first_order_finite_diff_matrix
 
     def input_rate(vars):
         h = vars[0]

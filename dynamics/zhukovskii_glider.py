@@ -30,15 +30,10 @@ class RelativeZhukovskiiGlider:
         self.max_lift_coeff = 1.5
         self.min_lift_coeff = 0
         self.max_load_factor = 3
-        self.min_height = 1 # m
+        self.min_height = 0.5 # m
         self.max_height = 100  # m
-        self.min_travelled_distance = 5  # m
-        self.t_f_min = 0.5  # s
-        self.t_f_max = 200  # s
-        self.avg_vel_min = 2  # s
-        self.avg_vel_max = 100  # s
-        self.h0 = 20  # m
-        # TODO remove unused constraints
+        self.min_travelled_distance = self.L * 0.67 # m TODO is this good?
+        self.h0 = 5  # m # TODO is this good?
         return
 
     def set_params(self, b, A, m, c_Dp, rho, g):
