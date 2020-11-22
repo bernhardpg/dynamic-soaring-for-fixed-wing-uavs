@@ -35,9 +35,9 @@ def single_dircol_w_real_values_rel_formulation():
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    psi = np.pi * 0.2
+    travel_angle = np.pi * 0.5
 
-    avg_speed, traj, curr_solution = direct_collocation_relative(zhukovskii_glider, psi)
+    avg_speed, traj, curr_solution = direct_collocation_relative(zhukovskii_glider, travel_angle)
 
     times, x_knots, u_knots = traj
     c_knots = u_knots # Circulation
@@ -47,7 +47,6 @@ def single_dircol_w_real_values_rel_formulation():
     for k in range(len(times)):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
-
         c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
         c_l_knots[k] = c_l
 
@@ -56,7 +55,6 @@ def single_dircol_w_real_values_rel_formulation():
     for k in range(len(times)):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
-
         phi = zhukovskii_glider.calc_bank_angle(v_r, c)
         phi_knots[k] = phi
 
@@ -65,12 +63,20 @@ def single_dircol_w_real_values_rel_formulation():
     for k in range(len(times)):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
-
         n = zhukovskii_glider.calc_load_factor(v_r, c, m, g, rho)
         n_knots[k] = n
 
+    psi_knots = np.zeros((x_knots.shape[0], 1))
+    for k in range(len(times)):
+        h = x_knots[k, 2]
+        v_r = x_knots[k, 3:6]
+        psi = zhukovskii_glider.calc_heading(h, v_r)
+        psi_knots[k] = psi
+
+    plt.plot(times, psi_knots)
+
     if PLOT_SOLUTION:
-        plot_glider_pos(x_knots[:, 0:3], psi)
+        plot_glider_pos(zhukovskii_glider, x_knots, u_knots, travel_angle)
         plot_glider_input(times, c_knots, c_l_knots, phi_knots, n_knots)
         plt.show()
 

@@ -86,15 +86,17 @@ class RelativeZhukovskiiGlider:
         opt_level_glide_speed = opt_glide_speed / sqrt(np.cos(opt_glide_angle))
         return opt_level_glide_speed
 
-    # NOTE for reconstructing trajectories.
-    # This is meant to be used for dimensionalized inputs and outputs
-    # TODO currently unused
-    def calc_vel(self, x):
-        p = x[0:3]
-        v_r = x[3:6]
-        w = get_wind_vector(pos[2])
+    # TODO unused
+    # NOTE This is meant to be used for dimensionalized inputs and outputs
+    def calc_abs_vel(self, h, v_r):
+        w = get_wind_vector(h)
         v = v_r + w
         return v
+
+    # NOTE This is meant to be used for dimensionalized inputs and outputs
+    def calc_heading(self, h, v_r):
+        psi = np.arctan2(v_r[0],v_r[1])
+        return psi
 
     def calc_bank_angle(self, v_r, c):
         v_r_norm = np.linalg.norm(v_r)
@@ -102,13 +104,6 @@ class RelativeZhukovskiiGlider:
         c_norm = np.linalg.norm(c)
 
         phi = np.arcsin(c[2] / (c_norm) * np.cos(gamma))
-
-#        temp = c[2] / (
-#            np.linalg.norm(c) * np.sqrt(1 - (v_r[2] ** 2) / (v_r.T.dot(v_r)))
-#        )
-#        if temp > 1 or temp < -1:
-#            breakpoint()
-        #phi = np.arcsin(temp)
         return phi
 
     def calc_lift_coeff(self, v_r, c, A):

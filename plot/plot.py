@@ -19,7 +19,7 @@ def plot_wind_profile(ax, wind_function, h_max=20):
     wind_strengths = wind_function(arrow_start)
     zeros = np.zeros(arrow_start.shape[0])
     ax.quiver(
-            zeros, arrow_start, wind_strengths, zeros, units="xy", scale=1, color="tab:blue"
+        zeros, arrow_start, wind_strengths, zeros, units="xy", scale=1, color="tab:blue"
     )
     ax.set_aspect("equal")
     ax.set_xlim(0, 20)
@@ -78,12 +78,14 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     return
 
 
-def plot_glider_pos(x_trj, travel_angle):
+def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
     ax.set_title("Glider position")
 
-    plot_x_trj(x_trj, travel_angle, ax)
+    pos_trj = x_trj[:, 0:3]
+    draw_pos_trajectory(pos_trj, travel_angle, ax)
+    draw_gliders(zhukovskii_glider, x_trj, u_trj, ax)
     return
 
 
@@ -92,12 +94,12 @@ def plot_glider_pos(x_trj, travel_angle):
 # x_trj = [x, y, z]
 # TODO continue with adding figure of glider
 # TODO continue with only plotting wind at one point
-def plot_x_trj(x_trj, travel_angle, ax):
+def draw_pos_trajectory(pos_trj, travel_angle, ax):
     # Plot trajectory
     traj_plot = ax.plot(
-        x_trj[:, 0],
-        x_trj[:, 1],
-        x_trj[:, 2],
+        pos_trj[:, 0],
+        pos_trj[:, 1],
+        pos_trj[:, 2],
         label="Flight path",
         color="tab:red",
         linewidth=1,
@@ -122,7 +124,7 @@ def plot_x_trj(x_trj, travel_angle, ax):
     dz = z_diff / N_arrows - 1
 
     # Plot start position
-    x0 = x_trj[0, :]
+    x0 = pos_trj[0, :]
     ax.scatter(x0[0], x0[1], x0[2], color="maroon")
 
     # Plot direction vector
@@ -142,9 +144,9 @@ def plot_x_trj(x_trj, travel_angle, ax):
     )
 
     # Plot wind field
-    xs = np.arange(x_min, x_max, dx),
+    xs = (np.arange(x_min, x_max, dx),)
     ys = np.ones(N_arrows + 1) * y_max
-    zs = np.arange(z_min, z_max, dz),
+    zs = (np.arange(z_min, z_max, dz),)
 
     X, Y, Z = np.meshgrid(xs, ys, zs)
     u, v, w = get_wind_field(X, Y, Z)
@@ -158,7 +160,7 @@ def plot_x_trj(x_trj, travel_angle, ax):
         length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
         linewidth=0.5,
         arrow_length_ratio=0.1,
-        color="tab:blue"
+        color="tab:blue",
     )
 
     ax.set_xlabel("x [m]")
@@ -177,6 +179,72 @@ def plot_x_trj(x_trj, travel_angle, ax):
     ax.set_box_aspect([x_diff, y_diff, z_diff])
     return
 
+
+def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
+    # plot only start first
+    x = x_trj[0, :]
+    c = u_trj[0, :]
+    F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
+
+    return
+
+
+def get_glider_corners(zhukovskii_glider, x, c):
+    sweep = 0.3
+    tip_chord = 0.7
+    b = 3.03
+    dist_cg_front = 0.5
+    # TODO chord =
+
+    # Extract values
+    p = x[0:3]
+    v_r = x[3:6]
+    h = p[2]
+
+    # Define glider corners
+    com_to_front = np.array([dist_cg_front, 0, 0])
+    com_to_wing_front = np.array([dist_cg_front - sweep, b / 2, 0])
+    com_to_wing_back = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0])
+
+    # Calculate heading
+    psi = zhukovskii_glider.calc_heading(h, v_r)
+    # Calculate bank angle
+    phi = zhukovskii_glider.calc_bank_angle(v_r, c)
+    # Calculate angle of attack from lift coeff
+    c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
+    alpha = c_l  # TODO fix this
+
+    # Create rotation matrix
+    R = np.array(
+        [
+            [
+                np.cos(psi) * np.cos(alpha),
+                np.cos(psi) * np.sin(alpha) * np.sin(phi) - np.sin(psi) * np.cos(phi),
+                np.cos(phi) * np.sin(alpha) * np.cos(phi) + np.sin(psi) * np.sin(phi),
+            ],
+            [
+                np.sin(psi) * np.cos(alpha),
+                np.sin(psi) * np.sin(alpha) * np.sin(phi) + np.cos(psi) * np.cos(phi),
+                np.sin(psi) * np.sin(alpha) * np.cos(phi) - np.cos(psi) * np.sin(phi),
+            ],
+            [-np.sin(alpha), np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi)],
+        ]
+    )
+
+    # Rotate glider vectors by rotation matrix
+    rotated_com_to_front = R.dot(com_to_front)
+    rotated_com_to_wing_front = R.dot(com_to_wing_front)
+    rotated_com_to_wing_back = R.dot(com_to_wing_back)
+
+    # Calculate glider corners
+    F = p + rotated_com_to_front  # Front
+    RF = p + rotated_com_to_wing_front  # Right front
+    RB = p + rotated_com_to_wing_back  # Right back
+    LF = p - rotated_com_to_wing_front  # Left front
+    LB = p - rotated_com_to_wing_back  # Left back
+
+    # Plot all corners as vectors without arrowheads
+    return F, RF, RB, LF, LB
 
 
 def polar_plot_avg_velocities(avg_velocities):
