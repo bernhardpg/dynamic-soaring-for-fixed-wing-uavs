@@ -30,9 +30,9 @@ class RelativeZhukovskiiGlider:
         self.max_lift_coeff = 1.5
         self.min_lift_coeff = 0
         self.max_load_factor = 3
-        self.min_height = 0.5 # m
+        self.min_height = 0.5  # m
         self.max_height = 100  # m
-        self.min_travelled_distance = self.L * 0.67 # m TODO is this good?
+        self.min_travelled_distance = self.L * 0.67  # m TODO is this good?
         self.h0 = 5  # m # TODO is this good?
         return
 
@@ -95,12 +95,12 @@ class RelativeZhukovskiiGlider:
 
     # NOTE This is meant to be used for dimensionalized inputs and outputs
     def calc_heading(self, h, v_r):
-        psi = np.arctan2(v_r[0],v_r[1])
+        psi = np.arctan2(v_r[0], v_r[1])
         return psi
 
     def calc_rel_flight_path_angle(self, v_r):
         v_r_norm = np.linalg.norm(v_r)
-        gamma = np.arcsin(-v_r[2] / v_r_norm) # Relative flight path angle
+        gamma = np.arcsin(-v_r[2] / v_r_norm)  # Relative flight path angle
         return gamma
 
     def calc_bank_angle(self, v_r, c):
@@ -125,6 +125,30 @@ class RelativeZhukovskiiGlider:
 
         n = lift / weight
         return n
+
+    def calc_drag_param(self, v_r, c, c_Dp, A, AR):
+        v_r_norm = np.linalg.norm(v_r)
+        d = 0.5 * A * v_r_norm * c_Dp + (2 * c.T.dot(c)) / (np.pi * AR * A * v_r_norm)
+        return d
+
+    # TODO currently unused
+    def calc_drag_force(self, v_r, c, c_Dp, A, AR, rho):
+        drag_param = self.calc_drag_param(v_r, c, c_Dp, A, AR)
+        d = -rho * drag_param * v_r
+        return d
+
+    def calc_dissipated_energy(self, v_r, c, c_Dp, A, AR, rho):
+        drag_param = self.calc_drag_param(v_r, c, c_Dp, A, AR)
+        dissipated_energy = -rho * drag_param * (v_r.T.dot(v_r))
+        return dissipated_energy
+
+    def calc_dynamic_soaring_energy_gain(self, h, v_r, m):
+        v = self.calc_abs_vel(h, v_r)
+        z_dot = v[2]
+        w_dot = np.array([0, ddt_wind_model(h, z_dot), 0])
+        temp = -m * v.T.dot(w_dot)
+        return temp
+
 
     def get_char_values(self):
         return (

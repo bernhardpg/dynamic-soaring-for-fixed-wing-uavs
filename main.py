@@ -4,6 +4,7 @@ from trajopt.fourier_collocation import *
 from plot.plot import *
 from trajopt.direct_collocation import *
 from dynamics.wind_models import *
+from analysis.energy_analysis import energy_analysis
 
 
 def main():
@@ -42,23 +43,30 @@ def calc_trajectory(travel_angle=0):
     )
 
     times, x_knots, u_knots = traj
-    phi_knots, gamma_knots, psi_knots, c_l_knots, n_knots = _calc_values_from_traj(
-        zhukovskii_glider, phys_params, x_knots, u_knots
-    )
+
+    (
+        phi_knots,
+        gamma_knots,
+        psi_knots,
+        c_l_knots,
+        n_knots,
+    ) = _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots)
 
     plot_glider_pos(x_knots, u_knots, travel_angle)
     plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
     plot_glider_input(times, u_knots, c_l_knots, phi_knots, n_knots)
 
-    #plt.show()
+
+    energy_analysis(times, x_knots, u_knots, phys_params)
+
     return
 
 
-def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
+def _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     c_knots = u_knots  # Circulation
 
-    # Calculate corresponding bank angle
+    # Calculate bank angle
     phi_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
@@ -66,7 +74,7 @@ def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
         phi = zhukovskii_glider.calc_bank_angle(v_r, c)
         phi_knots[k] = phi
 
-    # Calculate corresponding relative flight path angle
+    # Calculate relative flight path angle
     gamma_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(x_knots.shape[0]):
         h = x_knots[k, 2]
@@ -74,7 +82,7 @@ def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
         gamma = zhukovskii_glider.calc_rel_flight_path_angle(v_r)
         gamma_knots[k] = gamma
 
-    # Calculate corresponding heading angle
+    # Calculate heading angle
     psi_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(x_knots.shape[0]):
         h = x_knots[k, 2]
@@ -82,7 +90,7 @@ def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
         psi = zhukovskii_glider.calc_heading(h, v_r)
         psi_knots[k] = psi
 
-    # Calculate corresponding lift coeff
+    # Calculate lift coeff
     c_l_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
@@ -90,7 +98,7 @@ def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
         c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
         c_l_knots[k] = c_l
 
-    # Calculate corresponding load factor
+    # Calculate load factor
     n_knots = np.zeros((x_knots.shape[0], 1))
     for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
@@ -98,7 +106,16 @@ def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
         n = zhukovskii_glider.calc_load_factor(v_r, c, m, g, rho)
         n_knots[k] = n
 
-    return phi_knots, gamma_knots, psi_knots, c_l_knots, n_knots
+    return (
+        phi_knots,
+        gamma_knots,
+        psi_knots,
+        c_l_knots,
+        n_knots,
+    )
+
+
+
 
 # TODO OLD from here
 

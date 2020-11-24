@@ -56,7 +56,7 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 8 # seconds # TODO tune this?
+    end_time_guess = 4 # seconds # TODO tune this?
     avg_vel_guess = V_l * 0.5  # TODO tune this?
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 

@@ -10,10 +10,10 @@ h_0 = 0.03  # m
 # Linear wind model
 ########
 
+
 def linear_wind_model(z):
     w = w_ref / h_ref * z
     return w
-
 
 
 ########
@@ -49,13 +49,13 @@ def log_wind_model(z):
 
 def ddz_log_wind_model(z):
     dw_dz = w_ref / (np.log(h_ref / h_0) * z)
-    if z < h_0:
+    if (not type(z) == type(np.array(1))) and z < h_0:
         dw_dz = 0  # NOTE zero wind below ground
     return dw_dz
 
 
 def ddt_log_wind_model(z, z_dot):
-    dw_dz = ddz_log_wind_model
+    dw_dz = ddz_log_wind_model(z)
     dw_dt = dw_dz * z_dot
     return dw_dt
 

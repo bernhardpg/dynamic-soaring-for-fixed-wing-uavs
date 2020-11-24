@@ -10,7 +10,24 @@ from dynamics.wind_models import *
 plot_location = "./results/plots/"
 
 
-def plot_wind_profile(ax, wind_function, h_max=20):
+def plot_energies(times, E_tot, E_kin, E_pot):
+    max_energy = max(max(E_tot), max(E_kin), max(E_pot))
+    fig, axes = plt.subplots(3, 1)
+    axes[0].plot(times, E_tot)
+    axes[0].set_title("Total energy")
+    axes[0].set_ylim(0, max_energy)
+
+    axes[1].plot(times, E_kin)
+    axes[1].set_title("Kinetic energy")
+    axes[1].set_ylim(0, max_energy)
+
+    axes[2].plot(times, E_pot)
+    axes[2].set_title("Potential energy")
+    axes[2].set_ylim(0, max_energy)
+    return
+
+
+def _plot_wind_profile(ax, wind_function, h_max=20):
     dh_arrows = 2.5
 
     h = np.arange(0.03, h_max, 0.05)
@@ -45,7 +62,7 @@ def plot_wind_profiles():
     ]
     for i in range(len(wind_profiles)):
         ax = axs[i]
-        plot_wind_profile(ax, wind_profiles[i])
+        _plot_wind_profile(ax, wind_profiles[i])
         ax.set_title(wind_profile_names[i])
         if i == 0:
             ax.set_xlabel("Wind strength [m/s]")
