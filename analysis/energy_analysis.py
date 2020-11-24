@@ -42,8 +42,30 @@ def _calc_energy(h, v, m, g):
 
 def _calc_drag_param(v_r, c, c_Dp, A, AR):
     v_r_norm = np.sqrt(np.diag(v_r.dot(v_r.T)))
-    d = 0.5 * A * v_r_norm * c_Dp + (2 * c.T.dot(c)) / (np.pi * AR * A * v_r_norm)
+    c_squared = np.diag(c.dot(c.T))
+    d = 0.5 * A * v_r_norm * c_Dp + (2 * c_squared) / (np.pi * AR * A * v_r_norm)
     return d
+
+
+def _calc_dissipation_power(v_r, d, rho):
+    v_r_squared = np.diag(v_r.dot(v_r.T))
+    P_dissipated = -rho * d * v_r_squared
+    return P_dissipated
+
+
+def _calc_gained_power(v, w, ddt_w, D, m):
+    v_T_w = np.diag(v.dot(w.T))
+    S_dyn_passive = m * D.dot(v_T_w)
+    S_dyn_active = -m * np.diag(v.dot(ddt_w.T))
+
+    return S_dyn_passive, S_dyn_active
+
+
+def _calc_integral(graph, dt):
+    N = graph.shape[0]
+    Riemann_matrix = np.tril(np.ones(N)) * dt
+    integral = Riemann_matrix.dot(graph)  # Use Riemann sums to calculate integral
+    return integral
 
 
 def energy_analysis(times, x_traj, u_traj, phys_params):
@@ -65,36 +87,39 @@ def energy_analysis(times, x_traj, u_traj, phys_params):
     v = _calc_abs_vel(h, v_r, w)
     h_dot = v[:, 2]
     ddt_w = _calc_ddt_winds(h, h_dot)
+    d = _calc_drag_param(v_r, c, c_Dp, A, AR)
 
-    # Calculate energies and powers
+    # Calculate energies
     E_kin, E_pot = _calc_energy(h, v, m, g)
     E_tot = E_kin + E_pot
 
+    # Calculate powers
+    P_tot = D.dot(E_tot)
+    P_dissipated = _calc_dissipation_power(v_r, d, rho)
+    S_dyn_passive, S_dyn_active = _calc_gained_power(v, w, ddt_w, D, m)
+    P_gained = S_dyn_passive + S_dyn_active
+
+    # Integrate powers to look at energy
+    E_dissipated = _calc_integral(P_dissipated, dt)
+    E_dyn_active = _calc_integral(S_dyn_active, dt)
+    E_dyn_passive = _calc_integral(S_dyn_passive, dt)
+
     # PLOTTING
     plot_energies(times, E_tot, E_kin, E_pot)
+    plot_powers(times[:-3], P_tot[:-3], P_dissipated[:-3], P_gained[:-3])
+    plot_power_terms(
+        times[:-3],
+        P_dissipated[:-3],
+        S_dyn_active[:-3],
+        S_dyn_passive[:-3],
+        E_dissipated[:-3],
+        E_dyn_active[:-3],
+        E_dyn_passive[:-3],
+    )
     plt.show()
 
 
-    # TODO Old shit
-
-    axes[1].plot(times[:-3], third_order_finite_diff_matrix.dot(E_knots)[:-3, :])
-    axes[1].set_title("Total power")
-
-    breakpoint()
-    total_power_summed = D_knots[3:-1] + S_dyn_1_knots[3:-1] + S_dyn_2_knots[3:-1]
-    axes[2].plot(times[3:-1], total_power_summed)
-    axes[2].set_title("Total power summed")
-
-    axes[3].plot(times, D_knots)
-    axes[3].set_title("Dissipated energy")
-    axes[4].plot(times[3:-1], S_dyn_1_knots[3:-1])
-    axes[4].set_title("Dynamic soaring gained energy")
-    axes[5].plot(times, S_dyn_2_knots)
-    axes[5].set_title("Dynamic soaring gained energy")
-
-    plt.show()
-
-
+# TODO Old shit, remove!
 def _calc_energy_analysis(zhukovskii_glider, dt, phys_params, x_knots, u_knots):
     N = x_knots.shape[0]
     (m, c_Dp, A, b, rho, g, AR) = phys_params

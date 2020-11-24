@@ -7,24 +7,81 @@ import matplotlib.animation as animation
 
 from dynamics.wind_models import *
 
-plot_location = "./results/plots/"
+PLOT_LOCATION = "./results/plots/"
+GRAPH_MARGIN = 200  # Defines free space above/below curve and figure
+
+
+def plot_powers(times, P_tot, P_dissipated, P_gained):
+    max_power = max(max(P_tot), max(P_dissipated), max(P_gained))
+    min_power = min(min(P_tot), min(P_dissipated), min(P_gained))
+    fig, axes = plt.subplots(3, 1)
+
+    axes[0].plot(times, P_tot)
+    axes[0].set_title("Total power")
+    axes[0].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[0].grid()
+
+    axes[1].plot(times, P_dissipated)
+    axes[1].set_title("Power dissipated")
+    axes[1].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[1].grid()
+
+    axes[2].plot(times, P_gained)
+    axes[2].set_title("Power gained")
+    axes[2].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[2].grid()
+
+
+def plot_power_terms(
+    times,
+    P_dissipated,
+    S_dyn_active,
+    S_dyn_passive,
+    E_dissipated,
+    E_dyn_active,
+    E_dyn_passive,
+):
+    max_power = max(max(P_dissipated), max(S_dyn_active), max(S_dyn_passive))
+    min_power = min(min(P_dissipated), min(S_dyn_active), min(S_dyn_passive))
+    fig, axes = plt.subplots(3, 1)
+
+    axes[0].plot(times, P_dissipated)
+    axes[0].fill_between(times, 0, E_dissipated, color="tab:purple", alpha=0.5)
+    axes[0].set_title("Dissipated power")
+    axes[0].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[0].grid()
+
+    axes[1].plot(times, S_dyn_active)
+    axes[1].fill_between(times, 0, E_dyn_active, color="tab:purple", alpha=0.5)
+    axes[1].set_title("Active soaring power")
+    axes[1].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[1].grid()
+
+    axes[2].plot(times, S_dyn_passive)
+    axes[2].fill_between(times, 0, E_dyn_passive, color="tab:purple", alpha=0.5)
+    axes[2].set_title("Passive soaring power")
+    axes[2].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
+    axes[2].grid()
 
 
 def plot_energies(times, E_tot, E_kin, E_pot):
     max_energy = max(max(E_tot), max(E_kin), max(E_pot))
     fig, axes = plt.subplots(3, 1)
+
     axes[0].plot(times, E_tot)
     axes[0].set_title("Total energy")
-    axes[0].set_ylim(0, max_energy)
+    axes[0].set_ylim(0, max_energy + GRAPH_MARGIN)
+    axes[0].grid()
 
     axes[1].plot(times, E_kin)
     axes[1].set_title("Kinetic energy")
-    axes[1].set_ylim(0, max_energy)
+    axes[1].set_ylim(0, max_energy + GRAPH_MARGIN)
+    axes[1].grid()
 
     axes[2].plot(times, E_pot)
     axes[2].set_title("Potential energy")
-    axes[2].set_ylim(0, max_energy)
-    return
+    axes[2].set_ylim(0, max_energy + GRAPH_MARGIN)
+    axes[2].grid()
 
 
 def _plot_wind_profile(ax, wind_function, h_max=20):
@@ -68,7 +125,7 @@ def plot_wind_profiles():
             ax.set_xlabel("Wind strength [m/s]")
             ax.set_ylabel("Height [m]")
 
-    plt.savefig(plot_location + "wind_models.eps", bbox_inches="tight")
+    plt.savefig(PLOT_LOCATION + "wind_models.eps", bbox_inches="tight")
     return
 
 
@@ -93,7 +150,7 @@ def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):
     plt.title("Heading angle")
     plt.ylabel("deg")
 
-    plt.savefig(plot_location + "attitude.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig(PLOT_LOCATION + "attitude.pdf", bbox_inches="tight", pad_inches=0)
 
     return
 
@@ -119,7 +176,7 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     plt.title("Load factor")
     plt.ylabel("")
 
-    plt.savefig(plot_location + "input.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig(PLOT_LOCATION + "input.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
@@ -149,7 +206,7 @@ def plot_glider_pos(x_trj, u_trj, travel_angle):
 
     # ax.view_init(30, 50) # TODO change this to rotate plot
     fig.set_size_inches((13, 10))
-    plt.savefig(plot_location + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 

@@ -55,7 +55,7 @@ def calc_trajectory(travel_angle=0):
     plot_glider_pos(x_knots, u_knots, travel_angle)
     plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
     plot_glider_input(times, u_knots, c_l_knots, phi_knots, n_knots)
-
+    plt.close()
 
     energy_analysis(times, x_knots, u_knots, phys_params)
 

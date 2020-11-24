@@ -126,10 +126,6 @@ class RelativeZhukovskiiGlider:
         n = lift / weight
         return n
 
-    def calc_drag_param(self, v_r, c, c_Dp, A, AR):
-        v_r_norm = np.linalg.norm(v_r)
-        d = 0.5 * A * v_r_norm * c_Dp + (2 * c.T.dot(c)) / (np.pi * AR * A * v_r_norm)
-        return d
 
     # TODO currently unused
     def calc_drag_force(self, v_r, c, c_Dp, A, AR, rho):
