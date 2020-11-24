@@ -76,6 +76,8 @@ def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):
     plt.title("Heading angle")
     plt.ylabel("deg")
 
+    plt.savefig(plot_location + "attitude.pdf", bbox_inches="tight", pad_inches=0)
+
     return
 
 
@@ -100,29 +102,73 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     plt.title("Load factor")
     plt.ylabel("")
 
+    plt.savefig(plot_location + "input.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
-def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):
+def plot_glider_pos(x_trj, u_trj, travel_angle):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
 
     pos_trj = x_trj[:, 0:3]
-    draw_pos_trajectory(pos_trj, travel_angle, ax)
-    draw_gliders(zhukovskii_glider, x_trj, u_trj, ax)
+    axis_limits = np.array(
+        [
+            [min(pos_trj[:, 0]), max(pos_trj[:, 0])],
+            [min(pos_trj[:, 1]), max(pos_trj[:, 1])],
+            [min(pos_trj[:, 2]), max(pos_trj[:, 2])],
+        ]
+    )
+    # Draw projections on walls
+    # _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
+    _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="y")
+    _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="z")
+
+    # Draw trajectory
+    _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax)
+    _draw_direction_vector(x_trj[0, :], travel_angle, axis_limits, ax)
+    _draw_wind_field(axis_limits, ax)
+    _draw_gliders(x_trj, u_trj, ax)
+    _set_real_aspect_ratio(axis_limits, ax)
+
+    # ax.view_init(30, 50) # TODO change this to rotate plot
     fig.set_size_inches((13, 10))
-    # ax.view_init(30, 50)
-
-    #    plt.gca().set_axis_off()
-    #    plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
-    #    plt.margins(0, 0)
-    #    plt.gca().xaxis.set_major_locator(plt.NullLocator())
-    #    plt.gca().yaxis.set_major_locator(plt.NullLocator())
-
-    plt.margins(0, 0, 0)
-
     plt.savefig(plot_location + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
     return
+
+
+def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x"):
+    N = pos_trj.shape[0]
+    if axis == "x":
+        min_axis_value = axis_limits[0, 0]
+        traj_plot = ax.plot(
+            np.ones(N) * min_axis_value,
+            pos_trj[:, 1],
+            pos_trj[:, 2],
+            "--k",
+            alpha=0.5,
+            linewidth=0.7,
+        )
+
+    if axis == "y":
+        min_axis_value = axis_limits[1, 1]
+        traj_plot = ax.plot(
+            pos_trj[:, 0],
+            np.ones(N) * min_axis_value,
+            pos_trj[:, 2],
+            "--k",
+            alpha=0.5,
+            linewidth=0.7,
+        )
+    if axis == "z":
+        min_axis_value = np.zeros(N)
+        traj_plot = ax.plot(
+            pos_trj[:, 0],
+            pos_trj[:, 1],
+            np.ones(N) * min_axis_value,
+            "--k",
+            alpha=0.5,
+            linewidth=0.7,
+        )
 
 
 # Params:
@@ -130,48 +176,60 @@ def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):
 # x_trj = [x, y, z]
 # TODO continue with adding figure of glider
 # TODO continue with only plotting wind at one point
-def draw_pos_trajectory(pos_trj, travel_angle, ax):
-    # Plot trajectory
+def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
+    x_diff = np.abs(x_min - x_max)
+    y_diff = np.abs(y_min - y_max)
+    z_diff = np.abs(z_min - z_max)
+
     traj_plot = ax.plot(
         pos_trj[:, 0],
         pos_trj[:, 1],
         pos_trj[:, 2],
         color="tab:red",
         linewidth=1,
-        zorder=3,
     )
-
-    # Calculate axis properties
-    limits = np.array(
-        [
-            ax.get_xlim3d(),
-            ax.get_ylim3d(),
-            ax.get_zlim3d(),
-        ]
-    )
-    (x_min, x_max), (y_min, y_max), (z_min, z_max) = limits
-    x_diff = np.abs(x_min - x_max)
-    y_diff = np.abs(y_min - y_max)
-    z_diff = np.abs(z_min - z_max)
-
-    dz = 2.5
 
     # Plot start position
     x0 = pos_trj[0, :]
-    ax.scatter(x0[0], x0[1], x0[2], color="tab:green")
+    ax.scatter(x0[0], x0[1], 0, color="tab:green")
 
-    # Plot direction
-    #    line_xs = np.linspace(pos_trj[0, 0], pos_trj[-1, 0], 100)
-    #    line_ys = np.linspace(pos_trj[0, 1], pos_trj[-1, 1], 100)
-    #    ax.plot(line_xs, line_ys, np.zeros(100), "--k", alpha=0.5, linewidth=0.75)
+    # Set labels
+    ax.set_xlabel(
+        "East [m]", labelpad=40
+    )  # TODO these padds must be adjusted for each plot
+    ax.set_ylabel("North [m]", labelpad=0)
+    ax.set_zlabel("Height [m]")
 
-    # Plot direction vector
+    # Set ticks
+    x_ticks_spacing = 20 if x_diff >= 40 else 5
+    y_ticks_spacing = 20 if y_diff >= 40 else 5
+    z_ticks_spacing = 10 if z_diff >= 10 else 5
+
+    ax.xaxis.set_ticks(
+        np.arange(
+            np.ceil(x_min / x_ticks_spacing) * x_ticks_spacing, x_max, x_ticks_spacing
+        )
+    )
+    ax.yaxis.set_ticks(
+        np.arange(
+            np.ceil(y_min / y_ticks_spacing) * y_ticks_spacing, y_max, y_ticks_spacing
+        )
+    )
+    ax.zaxis.set_ticks(np.arange(0, z_max, z_ticks_spacing))
+
+
+def _draw_direction_vector(x0, travel_angle, axis_limits, ax):
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
+    x_diff = np.abs(x_min - x_max)
+    y_diff = np.abs(y_min - y_max)
+
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
-    dir_vector_length = np.sqrt(x_diff / 10 ** 2 + y_diff / 10 ** 2) * 10
+    dir_vector_length = np.sqrt(x_diff / 10 ** 2 + y_diff / 10 ** 2) * 15
     ax.quiver(
         x0[0],
         x0[1],
-        x0[2],
+        0,
         dir_vector[0],
         dir_vector[1],
         0,
@@ -181,6 +239,15 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
         linewidth=1,
         arrow_length_ratio=0.2,
     )
+
+
+def _draw_wind_field(axis_limits, ax):
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
+    x_diff = np.abs(x_min - x_max)
+    y_diff = np.abs(y_min - y_max)
+    z_diff = np.abs(z_min - z_max)
+
+    dz = 2.5
 
     # Plot wind field
     xs = np.arange(np.ceil(x_min / 20) * 20, x_max, 40)  # Arrows every 40 meters
@@ -198,38 +265,21 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
         v,
         w,
         length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
-        linewidth=0.5,
+        linewidth=0.3,
         arrow_length_ratio=0.1,
         color="tab:blue",
-        alpha=0.5,
+        alpha=0.7,
     )
 
-    # Set labels
-    ax.set_xlabel(
-        "East [m]", labelpad=40
-    )  # TODO these padds must be adjusted for each plot
-    ax.set_ylabel("North [m]", labelpad=0)
-    ax.set_zlabel("Height [m]")
 
-    # Set ticks
-    x_ticks_spacing = 20 if x_diff >= 40 else 5
-    y_ticks_spacing = 20 if y_diff >= 40 else 5
+def _set_real_aspect_ratio(axis_limits, ax):
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
+    x_diff = np.abs(x_min - x_max)
+    y_diff = np.abs(y_min - y_max)
+    z_diff = np.abs(z_min - z_max)
 
-    ax.xaxis.set_ticks(
-        np.arange(
-            np.ceil(x_min / x_ticks_spacing) * x_ticks_spacing, x_max, x_ticks_spacing
-        )
-    )
-    ax.yaxis.set_ticks(
-        np.arange(
-            np.ceil(y_min / y_ticks_spacing) * y_ticks_spacing, y_max, y_ticks_spacing
-        )
-    )
-    ax.zaxis.set_ticks(np.arange(0, z_max, 5))
-
-    # FIX ASPECT RATIO
-    origin = np.mean(limits, axis=1)
-    radius = 0.5 * np.max(np.abs(limits[:, 1] - limits[:, 0]))
+    origin = np.mean(axis_limits, axis=1)
+    radius = 0.5 * np.max(np.abs(axis_limits[:, 1] - axis_limits[:, 0]))
 
     x, y, z = origin
     ax.set_xlim3d([x - x_diff / 2, x + x_diff / 2])
@@ -237,18 +287,18 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
     ax.set_zlim3d([0, z_diff])
 
     ax.set_box_aspect([x_diff, y_diff, z_diff])
-    return
 
 
-def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
+def _draw_gliders(x_trj, u_trj, ax):
     N = x_trj.shape[0]
     N_gliders = 10
     indices = np.linspace(0, N - 1, N_gliders, dtype=int)
 
     for i in indices:
+        # if i == 0: continue # Do not plot first glider
         x = x_trj[i, :]
         c = u_trj[i, :]
-        F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
+        F, RF, RB, LF, LB = _get_glider_corners(x, c)
         vertices = np.vstack([F, RF, RB, LB, LF, F]).T
 
         # Draw polygons
@@ -264,8 +314,7 @@ def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
     return
 
 
-# TODO pass zhukovskii_glider somewhere else
-def get_glider_corners(zhukovskii_glider, x, c):
+def _get_glider_corners(x, c):
     sweep = 0.7
     tip_chord = 0.3
     b = 3.03
@@ -286,43 +335,20 @@ def get_glider_corners(zhukovskii_glider, x, c):
     com_to_LB = np.array([com_to_RB[0], -com_to_RB[1], com_to_RB[2]])
 
     # Calculate heading
-    psi = -zhukovskii_glider.calc_heading(h, v_r)
-    # Calculate bank angle
-    phi = zhukovskii_glider.calc_bank_angle(v_r, c)
-    # Calculate angle of attack from lift coeff
-    c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, 0.65)
-    alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)  # TODO fix this
-
-    # Create rotation matrix
-    # R_ned_to_body = np.array(
-    #    [
-    #        [
-    #            np.cos(psi) * np.cos(alpha),
-    #            np.cos(psi) * np.sin(alpha) * np.sin(phi) - np.sin(psi) * np.cos(phi),
-    #            np.cos(phi) * np.sin(alpha) * np.cos(phi) + np.sin(psi) * np.sin(phi),
-    #        ],
-    #        [
-    #            np.sin(psi) * np.cos(alpha),
-    #            np.sin(psi) * np.sin(alpha) * np.sin(phi) + np.cos(psi) * np.cos(phi),
-    #            np.sin(psi) * np.sin(alpha) * np.cos(phi) - np.cos(psi) * np.sin(phi),
-    #        ],
-    #        [-np.sin(alpha), np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi)],
-    #    ]
-    # )
+    # alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)  # TODO fix this
 
     j_body = c / np.linalg.norm(c)  # j unit vector in body frame
-
-    i_stability = v_r / np.linalg.norm(v_r)  # i unit vec in stability frame
-    i_body = np.array(
-        [
-            [np.cos(alpha), 0, np.sin(alpha)],
-            [0, 1, 0],
-            [-np.sin(alpha), 0, np.cos(alpha)],
-        ]
-    ).dot(
-        i_stability
-    )  # Rotate i_stab by alpha around y axis to get i_body
-    # TODO which way rotate by alpha here??
+    i_body = v_r / np.linalg.norm(v_r)  # i unit vec in stability frame
+    # TODO rotate by angle of attack??
+    #    i_body = np.array(
+    #        [
+    #            [np.cos(alpha), 0, np.sin(alpha)],
+    #            [0, 1, 0],
+    #            [-np.sin(alpha), 0, np.cos(alpha)],
+    #        ]
+    #    ).dot(
+    #        i_stability
+    #    )  # Rotate i_stab by alpha around y axis to get i_body
     k_body = np.cross(j_body, i_body)
     R_ned_to_body = np.stack((i_body, j_body, k_body), axis=1)
 
@@ -342,6 +368,9 @@ def get_glider_corners(zhukovskii_glider, x, c):
 
     # Plot all corners as vectors without arrowheads
     return F, RF, RB, LF, LB
+
+
+# TODO old from here
 
 
 def polar_plot_avg_velocities(avg_velocities):

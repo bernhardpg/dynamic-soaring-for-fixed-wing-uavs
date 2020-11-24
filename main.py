@@ -7,13 +7,11 @@ from dynamics.wind_models import *
 
 
 def main():
-    single_dircol_w_real_values_rel_formulation()
-    plot_wind_profiles()
-    # do_dircol()
+    calc_trajectory()
     return 0
 
 
-def single_dircol_w_real_values_rel_formulation():
+def calc_trajectory(travel_angle=0):
     PLOT_SOLUTION = True
     # Physical parameters
     m = 8.5
@@ -23,6 +21,8 @@ def single_dircol_w_real_values_rel_formulation():
     rho = 1.255  # g/m**3 Air density
     g = 9.81
     AR = b ** 2 / A
+
+    phys_params = (m, c_Dp, A, b, rho, g, AR)
 
     zhukovskii_glider = RelativeZhukovskiiGlider()
 
@@ -35,18 +35,32 @@ def single_dircol_w_real_values_rel_formulation():
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    travel_angle = np.pi * 0.9
+    travel_angle = np.pi * 0.4
 
     avg_speed, traj, curr_solution = direct_collocation_relative(
         zhukovskii_glider, travel_angle
     )
 
     times, x_knots, u_knots = traj
+    phi_knots, gamma_knots, psi_knots, c_l_knots, n_knots = _calc_values_from_traj(
+        zhukovskii_glider, phys_params, x_knots, u_knots
+    )
+
+    plot_glider_pos(x_knots, u_knots, travel_angle)
+    plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
+    plot_glider_input(times, u_knots, c_l_knots, phi_knots, n_knots)
+
+    #plt.show()
+    return
+
+
+def _calc_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):
+    (m, c_Dp, A, b, rho, g, AR) = phys_params
     c_knots = u_knots  # Circulation
 
     # Calculate corresponding bank angle
     phi_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
+    for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
         phi = zhukovskii_glider.calc_bank_angle(v_r, c)
@@ -54,7 +68,7 @@ def single_dircol_w_real_values_rel_formulation():
 
     # Calculate corresponding relative flight path angle
     gamma_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
+    for k in range(x_knots.shape[0]):
         h = x_knots[k, 2]
         v_r = x_knots[k, 3:6]
         gamma = zhukovskii_glider.calc_rel_flight_path_angle(v_r)
@@ -62,7 +76,7 @@ def single_dircol_w_real_values_rel_formulation():
 
     # Calculate corresponding heading angle
     psi_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
+    for k in range(x_knots.shape[0]):
         h = x_knots[k, 2]
         v_r = x_knots[k, 3:6]
         psi = zhukovskii_glider.calc_heading(h, v_r)
@@ -70,7 +84,7 @@ def single_dircol_w_real_values_rel_formulation():
 
     # Calculate corresponding lift coeff
     c_l_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
+    for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
         c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
@@ -78,19 +92,15 @@ def single_dircol_w_real_values_rel_formulation():
 
     # Calculate corresponding load factor
     n_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
+    for k in range(x_knots.shape[0]):
         v_r = x_knots[k, 3:6]
         c = u_knots[k, :]
         n = zhukovskii_glider.calc_load_factor(v_r, c, m, g, rho)
         n_knots[k] = n
 
-    if PLOT_SOLUTION:
-        plot_glider_pos(zhukovskii_glider, x_knots, u_knots, travel_angle)
-        plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
-        # plot_glider_input(times, c_knots, c_l_knots, phi_knots, n_knots)
-        # plt.show()
+    return phi_knots, gamma_knots, psi_knots, c_l_knots, n_knots
 
-    return
+# TODO OLD from here
 
 
 def single_dircol_w_real_values():

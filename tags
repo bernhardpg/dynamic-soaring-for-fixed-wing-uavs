@@ -126,13 +126,14 @@ discrete_dynamics	ilqr/ilqr.py	/^def discrete_dynamics(x, u):$/;"	f
 do_collocation_w_fourier	main.py	/^def do_collocation_w_fourier():$/;"	f
 do_sweep_dircol	main.py	/^def do_sweep_dircol():$/;"	f
 draw_gliders	plot/plot.py	/^def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):$/;"	f
-draw_pos_trajectory	plot/plot.py	/^def draw_pos_trajectory(pos_trj, travel_angle, ax):$/;"	f
+draw_pos_trajectory	plot/plot.py	/^def draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):$/;"	f
+draw_trajectory_proj	plot/plot.py	/^def draw_trajectory_proj(pos_trj, axis_limits, ax, axis="x"):$/;"	f
 dt	examples/trajopt_example.py	/^dt = 0.01;$/;"	v
 enable_brake_param	trajopt/direct_collocation (1).py	/^    enable_brake_param = u.shape[0] > 3$/;"	v
 enable_brake_param	trajopt/direct_collocation.py	/^    enable_brake_param = u.shape[0] > 3$/;"	v
 end_time_guess	trajopt/direct_collocation (1).py	/^    end_time_guess = 8  # seconds # TODO tune this?$/;"	v
 end_time_guess	trajopt/direct_collocation (1).py	/^    end_time_guess = N * max_dt$/;"	v
-end_time_guess	trajopt/direct_collocation.py	/^    end_time_guess = 8  # seconds # TODO tune this?$/;"	v
+end_time_guess	trajopt/direct_collocation.py	/^    end_time_guess = 8 # seconds # TODO tune this?$/;"	v
 end_time_guess	trajopt/direct_collocation.py	/^    end_time_guess = N * max_dt$/;"	v
 eq	dynamics/glider.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 eq	examples/trajopt_example.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable$/;"	i
@@ -310,7 +311,7 @@ u_traj_dimless	trajopt/direct_collocation (1).py	/^        u_traj_dimless = dirc
 u_traj_dimless	trajopt/direct_collocation.py	/^        u_traj_dimless = dircol.ReconstructInputTrajectory(result)$/;"	v
 update	plot/plot.py	/^    def update(frame):$/;"	f	function:save_trajectory_gif
 w_freestream	dynamics/wind_models.py	/^w_freestream = w_ref$/;"	v
-w_ref	dynamics/wind_models.py	/^w_ref = 15  # m\/s$/;"	v
+w_ref	dynamics/wind_models.py	/^w_ref = 10  # m\/s$/;"	v
 wind_model	dynamics/slotine_dynamics.py	/^from dynamics.wind_models import wind_model, ddt_wind_model$/;"	i
 wind_model	dynamics/wind_models.py	/^wind_model = log_wind_model$/;"	v
 x	examples/trajopt_example.py	/^x = np.empty((2, N), dtype=Variable)$/;"	v
