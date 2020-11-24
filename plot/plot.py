@@ -110,7 +110,7 @@ def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):
     pos_trj = x_trj[:, 0:3]
     draw_pos_trajectory(pos_trj, travel_angle, ax)
     draw_gliders(zhukovskii_glider, x_trj, u_trj, ax)
-    fig.set_size_inches((10, 10))
+    fig.set_size_inches((13, 10))
     # ax.view_init(30, 50)
 
     #    plt.gca().set_axis_off()

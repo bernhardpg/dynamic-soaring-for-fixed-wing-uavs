@@ -56,7 +56,7 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 8  # seconds # TODO tune this?
+    end_time_guess = 8 # seconds # TODO tune this?
     avg_vel_guess = V_l * 2  # TODO tune this?
     total_dist_travelled_guess = avg_vel_guess * end_time_guess
 
@@ -148,9 +148,9 @@ def direct_collocation_relative(
     dircol.AddLinearConstraint(dircol.final_state()[5] == dircol.initial_state()[5])
 
     # Periodic inputs
-#    dircol.AddLinearConstraint(dircol.input(0)[0] == dircol.input(N - 1)[0])
-#    dircol.AddLinearConstraint(dircol.input(0)[1] == dircol.input(N - 1)[1])
-#    dircol.AddLinearConstraint(dircol.input(0)[2] == dircol.input(N - 1)[2])
+    dircol.AddLinearConstraint(dircol.input(0)[0] == dircol.input(N - 1)[0])
+    dircol.AddLinearConstraint(dircol.input(0)[1] == dircol.input(N - 1)[1])
+    dircol.AddLinearConstraint(dircol.input(0)[2] == dircol.input(N - 1)[2])
 
     # Final position constraint in terms of travel angle
     if travel_angle % np.pi == 0:

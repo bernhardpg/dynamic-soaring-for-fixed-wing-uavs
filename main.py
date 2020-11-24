@@ -35,7 +35,7 @@ def single_dircol_w_real_values_rel_formulation():
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    travel_angle = np.pi * 0.95
+    travel_angle = np.pi * 0.9
 
     avg_speed, traj, curr_solution = direct_collocation_relative(
         zhukovskii_glider, travel_angle
