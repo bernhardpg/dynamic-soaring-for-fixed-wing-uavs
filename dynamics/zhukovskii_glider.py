@@ -126,26 +126,6 @@ class RelativeZhukovskiiGlider:
         n = lift / weight
         return n
 
-
-    # TODO currently unused
-    def calc_drag_force(self, v_r, c, c_Dp, A, AR, rho):
-        drag_param = self.calc_drag_param(v_r, c, c_Dp, A, AR)
-        d = -rho * drag_param * v_r
-        return d
-
-    def calc_dissipated_energy(self, v_r, c, c_Dp, A, AR, rho):
-        drag_param = self.calc_drag_param(v_r, c, c_Dp, A, AR)
-        dissipated_energy = -rho * drag_param * (v_r.T.dot(v_r))
-        return dissipated_energy
-
-    def calc_dynamic_soaring_energy_gain(self, h, v_r, m):
-        v = self.calc_abs_vel(h, v_r)
-        z_dot = v[2]
-        w_dot = np.array([0, ddt_wind_model(h, z_dot), 0])
-        temp = -m * v.T.dot(w_dot)
-        return temp
-
-
     def get_char_values(self):
         return (
             self.V_l,

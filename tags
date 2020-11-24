@@ -19,7 +19,7 @@ Expression	dynamics/glider.py	/^from pydrake.all import eq, MathematicalProgram,
 Expression	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 FourierCollocationProblem	trajopt/fourier_collocation.py	/^class FourierCollocationProblem:$/;"	c
 FuncAnimation	plot/plot.py	/^from matplotlib.animation import FuncAnimation$/;"	i
-GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 100  # Defines free space above\/below curve and figure$/;"	v
+GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 200  # Defines free space above\/below curve and figure$/;"	v
 Impl	dynamics/slotine_dynamics.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:SlotineGlider_
 Impl	dynamics/zhukovskii_glider.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:DrakeSysWrapper_
 Line3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
@@ -33,6 +33,7 @@ N_plot	trajopt/direct_collocation (1).py	/^        N_plot = 200$/;"	v
 N_plot	trajopt/direct_collocation.py	/^        N_plot = 200$/;"	v
 PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/"$/;"	v
 Poly3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
+PolyCollection	plot/plot.py	/^from matplotlib.collections import PolyCollection$/;"	i
 Q	trajopt/direct_collocation (1).py	/^    Q = 1$/;"	v
 Q	trajopt/direct_collocation (1).py	/^    Q = 2$/;"	v
 Q	trajopt/direct_collocation.py	/^    Q = 1$/;"	v
@@ -64,7 +65,6 @@ _calc_ddt_winds	analysis/energy_analysis.py	/^def _calc_ddt_winds(h, h_dot):$/;"
 _calc_dissipation_power	analysis/energy_analysis.py	/^def _calc_dissipation_power(v_r, d, rho):$/;"	f
 _calc_drag_param	analysis/energy_analysis.py	/^def _calc_drag_param(v_r, c, c_Dp, A, AR):$/;"	f
 _calc_energy	analysis/energy_analysis.py	/^def _calc_energy(h, v, m, g):$/;"	f
-_calc_energy_analysis	analysis/energy_analysis.py	/^def _calc_energy_analysis(zhukovskii_glider, dt, phys_params, x_knots, u_knots):$/;"	f
 _calc_gained_power	analysis/energy_analysis.py	/^def _calc_gained_power(v, w, ddt_w, D, m):$/;"	f
 _calc_integral	analysis/energy_analysis.py	/^def _calc_integral(graph, dt):$/;"	f
 _calc_phys_values_from_traj	main.py	/^def _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots):$/;"	f
@@ -76,11 +76,13 @@ _construct_copy	dynamics/zhukovskii_glider.py	/^        def _construct_copy(self
 _draw_direction_vector	plot/plot.py	/^def _draw_direction_vector(x0, travel_angle, axis_limits, ax):$/;"	f
 _draw_gliders	plot/plot.py	/^def _draw_gliders(x_trj, u_trj, ax):$/;"	f
 _draw_pos_trajectory	plot/plot.py	/^def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):$/;"	f
-_draw_trajectory_projection	plot/plot.py	/^def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x"):$/;"	f
+_draw_soaring_power_projection	plot/plot.py	/^def _draw_soaring_power_projection(pos_trj, soaring_power, axis_limits, ax, axis="x"):$/;"	f
+_draw_trajectory_projection	plot/plot.py	/^def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x", filled=False):$/;"	f
 _draw_wind_field	plot/plot.py	/^def _draw_wind_field(axis_limits, ax):$/;"	f
 _generate_finite_diff_matrix_third_order	analysis/energy_analysis.py	/^def _generate_finite_diff_matrix_third_order(N, dt):$/;"	f
 _get_glider_corners	plot/plot.py	/^def _get_glider_corners(x, c):$/;"	f
 _plot_wind_profile	plot/plot.py	/^def _plot_wind_profile(ax, wind_function, h_max=20):$/;"	f
+_polygon_under_graph	plot/plot.py	/^def _polygon_under_graph(xlist, ylist):$/;"	f
 _set_real_aspect_ratio	plot/plot.py	/^def _set_real_aspect_ratio(axis_limits, ax):$/;"	f
 animation	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 average_speed	trajopt/direct_collocation (1).py	/^    def average_speed(vars):$/;"	f
@@ -93,9 +95,6 @@ backward_pass	ilqr/ilqr.py	/^def backward_pass(x_trj, u_trj, regu, derivs):$/;"	
 calc_abs_vel	dynamics/zhukovskii_glider.py	/^    def calc_abs_vel(self, h, v_r):$/;"	m	class:RelativeZhukovskiiGlider
 calc_bank_angle	dynamics/zhukovskii_glider.py	/^    def calc_bank_angle():$/;"	m	class:ZhukovskiiGlider
 calc_bank_angle	dynamics/zhukovskii_glider.py	/^    def calc_bank_angle(self, v_r, c):$/;"	m	class:RelativeZhukovskiiGlider
-calc_dissipated_energy	dynamics/zhukovskii_glider.py	/^    def calc_dissipated_energy(self, v_r, c, c_Dp, A, AR, rho):$/;"	m	class:RelativeZhukovskiiGlider
-calc_drag_force	dynamics/zhukovskii_glider.py	/^    def calc_drag_force(self, v_r, c, c_Dp, A, AR, rho):$/;"	m	class:RelativeZhukovskiiGlider
-calc_dynamic_soaring_energy_gain	dynamics/zhukovskii_glider.py	/^    def calc_dynamic_soaring_energy_gain(self, h, v_r, m):$/;"	m	class:RelativeZhukovskiiGlider
 calc_heading	dynamics/zhukovskii_glider.py	/^    def calc_heading(self, h, v_r):$/;"	m	class:RelativeZhukovskiiGlider
 calc_lift_coeff	dynamics/zhukovskii_glider.py	/^    def calc_lift_coeff(self, v_r, c, A):$/;"	m	class:RelativeZhukovskiiGlider
 calc_lift_coeff	dynamics/zhukovskii_glider.py	/^    def calc_lift_coeff(self, x, c, A):$/;"	m	class:ZhukovskiiGlider
@@ -214,7 +213,7 @@ load_factor_squared	trajopt/direct_collocation (1).py	/^    load_factor_squared 
 load_factor_squared	trajopt/direct_collocation.py	/^    load_factor_squared = x[3:6].T.dot(x[3:6]) * u.T.dot(u)$/;"	v
 log_wind_model	dynamics/wind_models.py	/^def log_wind_model(z):$/;"	f
 logistic_wind_model	dynamics/wind_models.py	/^def logistic_wind_model(z):  # Taken from slotine$/;"	f
-main	main.py	/^def main():$/;"	f
+main	main.py	/^def main(argv):$/;"	f
 matplotlib	examples/trajopt_example.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.pyplot as plt$/;"	i
@@ -259,9 +258,9 @@ plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake
 plot_energies	plot/plot.py	/^def plot_energies(times, E_tot, E_kin, E_pot):$/;"	f
 plot_glider_angles	plot/plot.py	/^def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):$/;"	f
 plot_glider_input	plot/plot.py	/^def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):$/;"	f
-plot_glider_pos	plot/plot.py	/^def plot_glider_pos(x_trj, u_trj, travel_angle):$/;"	f
+plot_glider_pos	plot/plot.py	/^def plot_glider_pos($/;"	f
+plot_power_terms	plot/plot.py	/^def plot_power_terms($/;"	f
 plot_powers	plot/plot.py	/^def plot_powers(times, P_tot, P_dissipated, P_gained):$/;"	f
-plot_powers_details	plot/plot.py	/^def plot_powers_details(times, P_dissipated, S_dyn_active, S_dyn_passive):$/;"	f
 plot_trj_3_wind	test/test_dynamics.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_trj_3_wind	test/test_ilqr.py	/^from plot.plot import plot_trj_3_wind$/;"	i
 plot_wind_profiles	plot/plot.py	/^def plot_wind_profiles():$/;"	f
@@ -301,6 +300,7 @@ solution_period	trajopt/direct_collocation (1).py	/^        solution_period = x_
 solution_period	trajopt/direct_collocation.py	/^        solution_period = x_traj_dimless.end_time() * T$/;"	v
 solution_time	trajopt/direct_collocation (1).py	/^        solution_time = time.time()$/;"	v
 solution_time	trajopt/direct_collocation.py	/^        solution_time = time.time()$/;"	v
+solve_time	trajopt/direct_collocation.py	/^    solve_time= time.time()$/;"	v
 sqrt	dynamics/zhukovskii_glider.py	/^from math import sqrt$/;"	i
 stage	ilqr/ilqr.py	/^    def stage(self, x, u):$/;"	m	class:derivatives
 start_time	trajopt/direct_collocation (1).py	/^    start_time = time.time()$/;"	v
@@ -308,6 +308,7 @@ start_time	trajopt/direct_collocation.py	/^    start_time = time.time()$/;"	v
 sym	dynamics/slotine_dynamics.py	/^import pydrake.symbolic as sym$/;"	i
 sym	ilqr/ilqr.py	/^import pydrake.symbolic as sym$/;"	i
 sym	trajopt/fourier_collocation.py	/^import pydrake.symbolic as sym$/;"	i
+sys	main.py	/^import sys$/;"	i
 test_ilqr	test/test_ilqr.py	/^def test_ilqr():$/;"	f
 third_order_finite_diff_matrix	trajopt/direct_collocation (1).py	/^    third_order_finite_diff_matrix = ($/;"	v
 third_order_finite_diff_matrix	trajopt/direct_collocation.py	/^    third_order_finite_diff_matrix = ($/;"	v

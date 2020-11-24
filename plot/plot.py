@@ -202,7 +202,7 @@ def plot_glider_pos(
     _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="z")
     if draw_soaring_power == True:
         _draw_soaring_power_projection(
-            pos_trj, soaring_power, axis_limits, ax, axis="y"
+            pos_trj, soaring_power, axis_limits, ax, axis="x"
         )
 
     # Draw trajectory
@@ -235,7 +235,7 @@ def _draw_soaring_power_projection(pos_trj, soaring_power, axis_limits, ax, axis
         min_axis_value = axis_limits[0, 0]
         verts = [_polygon_under_graph(pos_trj[:, 1], soaring_power)]
         poly = PolyCollection(verts, facecolors='r', alpha=.3)
-        ax.add_collection3d(poly, zs=min_axis_value, zdir='y')
+        ax.add_collection3d(poly, zs=min_axis_value, zdir='x')
 
     if axis == "y":
         min_axis_value = axis_limits[1, 1]
@@ -432,7 +432,7 @@ def _get_glider_corners(x, c):
     h = p[2]
 
     # Define glider corners
-    scale = 2
+    scale = 1
     com_to_F = np.array([dist_cg_front, 0, 0]) * scale
     com_to_RF = np.array([dist_cg_front - sweep, b / 2, 0]) * scale
     com_to_RB = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0]) * scale

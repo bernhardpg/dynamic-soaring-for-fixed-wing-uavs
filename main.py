@@ -1,3 +1,5 @@
+import sys
+
 from dynamics.zhukovskii_glider import *
 from trajopt.nonlin_trajopt import *
 from trajopt.fourier_collocation import *
@@ -7,12 +9,16 @@ from dynamics.wind_models import *
 from analysis.energy_analysis import energy_analysis
 
 
-def main():
-    calc_trajectory()
+def main(argv):
+    travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else np.pi
+    period_guess = float(argv[2]) if len(argv) > 1 else 4
+    avg_vel_scale_guess = float(argv[3]) if len(argv) > 1 else 1
+
+    calc_trajectory(travel_angle, period_guess, avg_vel_scale_guess)
     return 0
 
 
-def calc_trajectory(travel_angle=0):
+def calc_trajectory(travel_angle=0, period_guess=4, avg_vel_scale_guess=1):
     PLOT_SOLUTION = True
     # Physical parameters
     m = 8.5
@@ -36,10 +42,11 @@ def calc_trajectory(travel_angle=0):
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    travel_angle = np.pi * 1.5
-
     avg_speed, traj, curr_solution = direct_collocation_relative(
-        zhukovskii_glider, travel_angle
+        zhukovskii_glider,
+        travel_angle,
+        period_guess=period_guess,
+        avg_vel_scale_guess=avg_vel_scale_guess,
     )
 
     times, x_knots, u_knots = traj
@@ -246,4 +253,4 @@ def do_collocation_w_fourier():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)

@@ -18,6 +18,8 @@ from pydrake.all import (
 def direct_collocation_relative(
     zhukovskii_glider,
     travel_angle,
+    period_guess=4,
+    avg_vel_scale_guess=1,
     initial_guess=None,
     PRINT_GLIDER_DETAILS=False,
     PLOT_INITIAL_GUESS=False,
@@ -41,8 +43,8 @@ def direct_collocation_relative(
     ) = zhukovskii_glider.get_constraints()
 
     print(
-        "*** Running DirCol for travel_angle: {0} deg".format(
-            travel_angle * 180 / np.pi
+        "*** Running DirCol for travel_angle: {0} deg\n\tperiod guess: {1}, avg_vel_guess: {2}".format(
+            travel_angle * 180 / np.pi, period_guess, avg_vel_scale_guess
         )
     )
 
@@ -56,9 +58,8 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    end_time_guess = 4 # seconds # TODO tune this?
-    avg_vel_guess = V_l * 0.5  # TODO tune this?
-    total_dist_travelled_guess = avg_vel_guess * end_time_guess
+    avg_vel_guess = V_l * avg_vel_scale_guess
+    total_dist_travelled_guess = avg_vel_guess * period_guess
 
     # Make all values dimless
     max_lift_coeff *= V_l / C
@@ -68,7 +69,7 @@ def direct_collocation_relative(
     h0 /= L
     total_dist_travelled_guess /= L
     avg_vel_guess /= V_l
-    end_time_guess /= T
+    period_guess /= T
 
     ######
     # DEFINE TRAJOPT PROBLEM
@@ -77,8 +78,8 @@ def direct_collocation_relative(
 
     # Optimization params
     N = 21  # Collocation points
-    min_dt = (end_time_guess / N) * 0.75
-    max_dt = (end_time_guess / N) * 1.25
+    min_dt = (period_guess / N) * 0.75
+    max_dt = (period_guess / N) * 1.25
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()
@@ -243,7 +244,7 @@ def direct_collocation_relative(
         )
         # Linear interpolation
         initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
-            [0.0, end_time_guess], np.column_stack((x0_guess, xf_guess))
+            [0.0, period_guess], np.column_stack((x0_guess, xf_guess))
         )
         dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
 
@@ -267,11 +268,11 @@ def direct_collocation_relative(
     formulate_time = time.time()
     print("Formulated trajopt in: {0} s".format(formulate_time - start_time))
     result = Solve(dircol)
+    solve_time = time.time()
+    print("Finished trajopt in: {0} s".format(solve_time - formulate_time))
     assert result.is_success()
 
     if result.is_success():
-        solution_time = time.time()
-        print("Found a solution in: {0} s".format(solution_time - formulate_time))
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
         sample_times = dircol.GetSampleTimes(result)
         time_step = sample_times[1] - sample_times[0]
@@ -357,8 +358,8 @@ def direct_collocation(
 
     # Initial guess
     avg_vel_guess = V_l * 0.5  # TODO tune this
-    end_time_guess = N * max_dt
-    total_dist_travelled_guess = avg_vel_guess * end_time_guess
+    period_guess = N * max_dt
+    total_dist_travelled_guess = avg_vel_guess * period_guess
 
     # Make all values dimless
     min_height /= L
@@ -369,7 +370,7 @@ def direct_collocation(
     min_vel /= V_l
     max_vel /= V_l
     avg_vel_guess /= V_l
-    end_time_guess /= T
+    period_guess /= T
 
     ######
     # DEFINE TRAJOPT PROBLEM
@@ -483,7 +484,7 @@ def direct_collocation(
         )
         # Linear interpolation
         initial_x_trajectory = PiecewisePolynomial.FirstOrderHold(
-            [0.0, end_time_guess], np.column_stack((x0_guess, xf_guess))
+            [0.0, period_guess], np.column_stack((x0_guess, xf_guess))
         )
         dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_x_trajectory)
 
