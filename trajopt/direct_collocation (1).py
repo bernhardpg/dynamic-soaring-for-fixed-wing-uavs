@@ -147,11 +147,6 @@ def direct_collocation_relative(
     dircol.AddLinearConstraint(dircol.final_state()[4] == dircol.initial_state()[4])
     dircol.AddLinearConstraint(dircol.final_state()[5] == dircol.initial_state()[5])
 
-    # Periodic inputs
-#    dircol.AddLinearConstraint(dircol.input(0)[0] == dircol.input(N - 1)[0])
-#    dircol.AddLinearConstraint(dircol.input(0)[1] == dircol.input(N - 1)[1])
-#    dircol.AddLinearConstraint(dircol.input(0)[2] == dircol.input(N - 1)[2])
-
     # Final position constraint in terms of travel angle
     if travel_angle % np.pi == 0:
         # Travel along y-axis, constrain x values to be equal
@@ -174,12 +169,11 @@ def direct_collocation_relative(
     ## Objective function
     # Maximize average velocity travelled in desired direction
     Q = 1
-
     def average_speed(vars):
         hor_pos_final = vars[0:2]
         time_step = vars[2]
         avg_speed = dir_vector.T.dot(hor_pos_final) / (time_step * N)
-        return -Q * avg_speed
+        return - Q * avg_speed
 
     time_step = dircol.timestep(0)[0]
     dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
@@ -189,8 +183,9 @@ def direct_collocation_relative(
 
     # Constrain input rates
     # Using 2nd order forward finite differences for first derivative
-    first_order_finite_diff_matrix = -1 * np.diag(np.ones(N), 0) + 1 * np.diag(
-        np.ones((N - 1)), 1
+    first_order_finite_diff_matrix = (
+        -1 * np.diag(np.ones(N), 0)
+        + 1 * np.diag(np.ones((N - 1)), 1)
     )
     second_order_finite_diff_matrix = (
         -3 / 2 * np.diag(np.ones(N), 0)

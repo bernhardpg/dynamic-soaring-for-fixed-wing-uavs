@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
 
@@ -105,11 +106,22 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
 def plot_glider_pos(zhukovskii_glider, x_trj, u_trj, travel_angle):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
-    ax.set_title("Glider position")
 
     pos_trj = x_trj[:, 0:3]
     draw_pos_trajectory(pos_trj, travel_angle, ax)
     draw_gliders(zhukovskii_glider, x_trj, u_trj, ax)
+    fig.set_size_inches((10, 10))
+    # ax.view_init(30, 50)
+
+    #    plt.gca().set_axis_off()
+    #    plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    #    plt.margins(0, 0)
+    #    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    #    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    plt.margins(0, 0, 0)
+
+    plt.savefig(plot_location + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
@@ -124,9 +136,9 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
         pos_trj[:, 0],
         pos_trj[:, 1],
         pos_trj[:, 2],
-        label="Flight path",
         color="tab:red",
         linewidth=1,
+        zorder=3,
     )
 
     # Calculate axis properties
@@ -142,17 +154,20 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
     y_diff = np.abs(y_min - y_max)
     z_diff = np.abs(z_min - z_max)
 
-    N_arrows = 3
-    dx = x_diff / N_arrows - 1
-    dy = y_diff / N_arrows - 1
-    dz = z_diff / N_arrows - 1
+    dz = 2.5
 
     # Plot start position
     x0 = pos_trj[0, :]
-    ax.scatter(x0[0], x0[1], x0[2], color="maroon")
+    ax.scatter(x0[0], x0[1], x0[2], color="tab:green")
+
+    # Plot direction
+    #    line_xs = np.linspace(pos_trj[0, 0], pos_trj[-1, 0], 100)
+    #    line_ys = np.linspace(pos_trj[0, 1], pos_trj[-1, 1], 100)
+    #    ax.plot(line_xs, line_ys, np.zeros(100), "--k", alpha=0.5, linewidth=0.75)
 
     # Plot direction vector
     dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])
+    dir_vector_length = np.sqrt(x_diff / 10 ** 2 + y_diff / 10 ** 2) * 10
     ax.quiver(
         x0[0],
         x0[1],
@@ -162,15 +177,16 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
         0,
         color="tab:green",
         label="Desired direction",
-        length=np.sqrt(dx ** 2 + dy ** 2) * 0.4,
+        length=dir_vector_length,
         linewidth=1,
         arrow_length_ratio=0.2,
     )
 
     # Plot wind field
-    xs = (np.arange(x_min, x_max, dx),)
-    ys = np.ones(N_arrows + 1) * y_max
-    zs = (np.arange(z_min, z_max, dz),)
+    xs = np.arange(np.ceil(x_min / 20) * 20, x_max, 40)  # Arrows every 40 meters
+    ys = np.ones(4) * y_max
+    zs = np.arange(0, z_max, dz)
+    zs[0] = z_min
 
     X, Y, Z = np.meshgrid(xs, ys, zs)
     u, v, w = get_wind_field(X, Y, Z)
@@ -185,11 +201,31 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
         linewidth=0.5,
         arrow_length_ratio=0.1,
         color="tab:blue",
+        alpha=0.5,
     )
 
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
-    ax.set_zlabel("z [m]")
+    # Set labels
+    ax.set_xlabel(
+        "East [m]", labelpad=40
+    )  # TODO these padds must be adjusted for each plot
+    ax.set_ylabel("North [m]", labelpad=0)
+    ax.set_zlabel("Height [m]")
+
+    # Set ticks
+    x_ticks_spacing = 20 if x_diff >= 40 else 5
+    y_ticks_spacing = 20 if y_diff >= 40 else 5
+
+    ax.xaxis.set_ticks(
+        np.arange(
+            np.ceil(x_min / x_ticks_spacing) * x_ticks_spacing, x_max, x_ticks_spacing
+        )
+    )
+    ax.yaxis.set_ticks(
+        np.arange(
+            np.ceil(y_min / y_ticks_spacing) * y_ticks_spacing, y_max, y_ticks_spacing
+        )
+    )
+    ax.zaxis.set_ticks(np.arange(0, z_max, 5))
 
     # FIX ASPECT RATIO
     origin = np.mean(limits, axis=1)
@@ -206,29 +242,25 @@ def draw_pos_trajectory(pos_trj, travel_angle, ax):
 
 def draw_gliders(zhukovskii_glider, x_trj, u_trj, ax):
     N = x_trj.shape[0]
-    N_gliders = 8
-    indices = np.linspace(0, N-1, N_gliders, dtype=int)
+    N_gliders = 10
+    indices = np.linspace(0, N - 1, N_gliders, dtype=int)
 
     for i in indices:
         x = x_trj[i, :]
         c = u_trj[i, :]
         F, RF, RB, LF, LB = get_glider_corners(zhukovskii_glider, x, c)
+        vertices = np.vstack([F, RF, RB, LB, LF, F]).T
 
-        # Create lines
-        origins = np.vstack([F, RF, RB, LB, LF]).T
-        temp = np.vstack([RF, RB, LB, LF, F]).T
-        lengths = temp - origins
-        ax.quiver(
-            origins[0, :],
-            origins[1, :],
-            origins[2, :],
-            lengths[0, :],
-            lengths[1, :],
-            lengths[2, :],
-            linewidth=2,
-            arrow_length_ratio=0.0,
-            color="black",
+        # Draw polygons
+        ax.add_collection3d(
+            Poly3DCollection(
+                [vertices.T.tolist()], linewidths=1, facecolors="orange", alpha=0.8
+            )
         )
+        ax.add_collection3d(
+            Line3DCollection([vertices.T.tolist()], linewidths=1, colors="k")
+        )
+
     return
 
 
@@ -246,7 +278,7 @@ def get_glider_corners(zhukovskii_glider, x, c):
     h = p[2]
 
     # Define glider corners
-    scale = 5
+    scale = 2
     com_to_F = np.array([dist_cg_front, 0, 0]) * scale
     com_to_RF = np.array([dist_cg_front - sweep, b / 2, 0]) * scale
     com_to_RB = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0]) * scale
