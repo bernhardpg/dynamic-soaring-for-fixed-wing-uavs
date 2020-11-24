@@ -116,5 +116,5 @@ def energy_analysis(times, x_traj, u_traj, phys_params):
         E_dyn_active[:-3],
         E_dyn_passive[:-3],
     )
-    plt.show()
 
+    return E_dyn_active - E_dissipated

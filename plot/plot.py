@@ -1,9 +1,11 @@
-import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.collections import PolyCollection
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
+
+import numpy as np
 
 from dynamics.wind_models import *
 
@@ -180,7 +182,9 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
     return
 
 
-def plot_glider_pos(x_trj, u_trj, travel_angle):
+def plot_glider_pos(
+    x_trj, u_trj, travel_angle, draw_soaring_power=False, soaring_power=None
+):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
 
@@ -196,6 +200,10 @@ def plot_glider_pos(x_trj, u_trj, travel_angle):
     # _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
     _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="y")
     _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="z")
+    if draw_soaring_power == True:
+        _draw_soaring_power_projection(
+            pos_trj, soaring_power, axis_limits, ax, axis="y"
+        )
 
     # Draw trajectory
     _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax)
@@ -210,9 +218,34 @@ def plot_glider_pos(x_trj, u_trj, travel_angle):
     return
 
 
-def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x"):
+def _polygon_under_graph(xlist, ylist):
+    """
+    Construct the vertex list which defines the polygon filling the space under
+    the (xlist, ylist) line graph.  Assumes the xs are in ascending order.
+    """
+    return [(xlist[0], 0.0), *zip(xlist, ylist), (xlist[-1], 0.0)]
+
+
+def _draw_soaring_power_projection(pos_trj, soaring_power, axis_limits, ax, axis="x"):
     N = pos_trj.shape[0]
+    max_value = 5
+    soaring_power *= max_value / max(soaring_power)
+
     if axis == "x":
+        min_axis_value = axis_limits[0, 0]
+        verts = [_polygon_under_graph(pos_trj[:, 1], soaring_power)]
+        poly = PolyCollection(verts, facecolors='r', alpha=.3)
+        ax.add_collection3d(poly, zs=min_axis_value, zdir='y')
+
+    if axis == "y":
+        min_axis_value = axis_limits[1, 1]
+        verts = [_polygon_under_graph(pos_trj[:, 0], soaring_power)]
+        poly = PolyCollection(verts, facecolors='r', alpha=.3)
+        ax.add_collection3d(poly, zs=min_axis_value, zdir='y')
+
+def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x", filled=False):
+    N = pos_trj.shape[0]
+    if axis == "x":  # TODO are the axes switched here?
         min_axis_value = axis_limits[0, 0]
         traj_plot = ax.plot(
             np.ones(N) * min_axis_value,
@@ -248,8 +281,6 @@ def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x"):
 # Params:
 # x_trj.shape = (N, 3)
 # x_trj = [x, y, z]
-# TODO continue with adding figure of glider
-# TODO continue with only plotting wind at one point
 def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):
     (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
     x_diff = np.abs(x_min - x_max)
@@ -339,7 +370,7 @@ def _draw_wind_field(axis_limits, ax):
         v,
         w,
         length=1,  # np.sqrt(dx ** 2 + dy ** 2) / 15,
-        linewidth=0.3,
+        linewidth=0.8,
         arrow_length_ratio=0.1,
         color="tab:blue",
         alpha=0.7,

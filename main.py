@@ -36,7 +36,7 @@ def calc_trajectory(travel_angle=0):
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    travel_angle = np.pi * 0.4
+    travel_angle = np.pi * 1.5
 
     avg_speed, traj, curr_solution = direct_collocation_relative(
         zhukovskii_glider, travel_angle
@@ -52,13 +52,20 @@ def calc_trajectory(travel_angle=0):
         n_knots,
     ) = _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots)
 
-    plot_glider_pos(x_knots, u_knots, travel_angle)
+    soaring_power = energy_analysis(times, x_knots, u_knots, phys_params)
+
+    plot_glider_pos(
+        x_knots,
+        u_knots,
+        travel_angle,
+        draw_soaring_power=True,
+        soaring_power=soaring_power,
+    )
+    plt.show()
     plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
     plot_glider_input(times, u_knots, c_l_knots, phi_knots, n_knots)
+
     plt.close()
-
-    energy_analysis(times, x_knots, u_knots, phys_params)
-
     return
 
 
@@ -113,8 +120,6 @@ def _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots
         c_l_knots,
         n_knots,
     )
-
-
 
 
 # TODO OLD from here
