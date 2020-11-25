@@ -10,16 +10,12 @@ from analysis.energy_analysis import energy_analysis
 
 
 def main(argv):
+    # Parse command line args
     travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else np.pi
     period_guess = float(argv[2]) if len(argv) > 1 else 4
     avg_vel_scale_guess = float(argv[3]) if len(argv) > 1 else 1
+    plot_axis = argv[4] if len(argv) > 1 else "x"
 
-    calc_trajectory(travel_angle, period_guess, avg_vel_scale_guess)
-    return 0
-
-
-def calc_trajectory(travel_angle=0, period_guess=4, avg_vel_scale_guess=1):
-    PLOT_SOLUTION = True
     # Physical parameters
     m = 8.5
     c_Dp = 0.033
@@ -28,10 +24,97 @@ def calc_trajectory(travel_angle=0, period_guess=4, avg_vel_scale_guess=1):
     rho = 1.255  # g/m**3 Air density
     g = 9.81
     AR = b ** 2 / A
-
     phys_params = (m, c_Dp, A, b, rho, g, AR)
 
-    zhukovskii_glider = RelativeZhukovskiiGlider()
+    #    calc_trajectory(
+    #        phys_params,
+    #        travel_angle,
+    #        period_guess,
+    #        avg_vel_scale_guess,
+    #        plot_axis,
+    #    )
+
+    sweep_calculation(phys_params)
+    return 0
+
+
+def sweep_calculation(phys_params):
+    (m, c_Dp, A, b, rho, g, AR) = phys_params
+    zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
+    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
+
+    n_angles = 20
+    angle_increment = 2 * np.pi / n_angles
+    psi_start = np.pi / 2
+
+    travel_angles = np.hstack(
+        [
+            np.arange(psi_start, 2 * np.pi, angle_increment),
+            np.arange(0, psi_start, angle_increment),
+        ]
+    )
+
+    solution_avg_speeds = dict()
+    solution_periods = dict()
+
+    # File handling
+    import json
+
+    # f.read(json.loads(all_avg_velocities))
+
+    # Obtain an initial guess
+    (
+        solution_details,
+        solution_trajectory,
+        next_initial_guess,
+    ) = direct_collocation_relative(
+        zhukovskii_glider,
+        travel_angles[0],
+        period_guess=4,
+        avg_vel_guess=2 * V_l,
+    )
+    avg_speed, period = solution_details
+    solution_avg_speeds[travel_angles[0]] = avg_speed
+    solution_periods[travel_angles[0]] = period
+
+    # Run a sweep search
+    for travel_angle in travel_angles[1:]:
+        (
+            solution_details,
+            solution_trajectory,
+            next_initial_guess,
+        ) = direct_collocation_relative(
+            zhukovskii_glider,
+            travel_angle,
+            period_guess=period,
+            avg_vel_guess=avg_speed,
+            initial_guess=next_initial_guess,
+        )
+        avg_speed, period = solution_details
+        solution_avg_speeds[travel_angle] = avg_speed
+        solution_periods[travel_angle] = period
+
+        with open("./results/sweep_results_speeds", "w+") as f:
+            f.write(json.dumps(solution_avg_speeds))
+            f.close()
+
+        with open("./results/sweep_results_periods", "w+") as f:
+            f.write(json.dumps(solution_periods))
+            f.close()
+
+    return
+
+
+def calc_trajectory(
+    phys_params,
+    travel_angle=0,
+    period_guess=4,
+    avg_vel_scale_guess=1,
+    plot_axis="x",
+):
+
+    (m, c_Dp, A, b, rho, g, AR) = phys_params
+    zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
 
     # Print performance params
     Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
@@ -42,7 +125,7 @@ def calc_trajectory(travel_angle=0, period_guess=4, avg_vel_scale_guess=1):
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    avg_speed, traj, curr_solution = direct_collocation_relative(
+    avg_speed, traj = direct_collocation_relative(
         zhukovskii_glider,
         travel_angle,
         period_guess=period_guess,
@@ -67,6 +150,7 @@ def calc_trajectory(travel_angle=0, period_guess=4, avg_vel_scale_guess=1):
         travel_angle,
         draw_soaring_power=True,
         soaring_power=soaring_power,
+        plot_axis=plot_axis,
     )
     plt.show()
     plot_glider_angles(times, gamma_knots, phi_knots, psi_knots)
@@ -130,50 +214,6 @@ def _calc_phys_values_from_traj(zhukovskii_glider, phys_params, x_knots, u_knots
 
 
 # TODO OLD from here
-
-
-def single_dircol_w_real_values():
-    PLOT_SOLUTION = True
-    # Physical parameters
-    m = 8.5
-    c_Dp = 0.033
-    A = 0.65
-    b = 3.306
-    rho = 1.255  # g/m**3 Air density
-    g = 9.81
-    AR = b ** 2 / A
-
-    zhukovskii_glider = ZhukovskiiGlider()
-
-    # Print performance params
-    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
-    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
-    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
-    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
-
-    print("Running dircol with:")
-    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
-
-    psi = np.pi * 0.85
-
-    avg_speed, traj, curr_solution = direct_collocation(
-        zhukovskii_glider, psi, PLOT_SOLUTION=False
-    )
-
-    times, x_knots, u_knots = traj
-
-    # Calculate corresponding lift coeff
-    c_l_knots = np.zeros((x_knots.shape[0], 1))
-    for k in range(len(times)):
-        c_l = zhukovskii_glider.calc_lift_coeff(x_knots[k, :], u_knots[k, :], A)
-        c_l_knots[k] = c_l
-
-    if PLOT_SOLUTION:
-        plot_glider_pos(x_knots[:, 0:3], psi)
-        plot_glider_input(times, u_knots, c_l_knots)
-        plt.show()
-
-    return
 
 
 def do_sweep_dircol():

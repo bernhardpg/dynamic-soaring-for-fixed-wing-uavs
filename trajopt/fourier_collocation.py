@@ -14,6 +14,7 @@ from pydrake.all import (
 )
 import pydrake.symbolic as sym
 
+# TODO this is unfinished.
 class FourierCollocationProblem:
     def __init__(self, system_dynamics, constraints):
         start_time = time.time()

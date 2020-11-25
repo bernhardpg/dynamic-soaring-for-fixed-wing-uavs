@@ -20,7 +20,7 @@ from dynamics.wind_models import (
 
 
 class RelativeZhukovskiiGlider:
-    def __init__(self, b=3.306, A=0.65, m=8.5, c_Dp=0.033, rho=1.255, g=9.81):
+    def __init__(self, m=8.5, c_Dp=0.033, A=0.65, b=3.306, rho=1.255, g=9.81):
         # Set model params
         self.set_params(b, A, m, c_Dp, rho, g)
         self.e_z = np.array([0, 0, 1])  # Unit vector along z axis

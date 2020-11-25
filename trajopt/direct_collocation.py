@@ -20,6 +20,7 @@ def direct_collocation_relative(
     travel_angle,
     period_guess=4,
     avg_vel_scale_guess=1,
+    avg_vel_guess=None,
     initial_guess=None,
     PRINT_GLIDER_DETAILS=False,
     PLOT_INITIAL_GUESS=False,
@@ -58,7 +59,8 @@ def direct_collocation_relative(
         )
 
     # Initial guess
-    avg_vel_guess = V_l * avg_vel_scale_guess
+    if avg_vel_guess == None:
+        avg_vel_guess = V_l * avg_vel_scale_guess
     total_dist_travelled_guess = avg_vel_guess * period_guess
 
     # Make all values dimless
@@ -251,7 +253,8 @@ def direct_collocation_relative(
     # Use provided initial_guess
     else:
         print("Running with provided initial guess")
-        dircol.SetInitialTrajectory(PiecewisePolynomial(), initial_guess)
+        initial_x_traj, initial_u_traj = initial_guess
+        dircol.SetInitialTrajectory(initial_u_traj, initial_x_traj)
 
     if PLOT_INITIAL_GUESS:
         times = np.linspace(
@@ -270,7 +273,7 @@ def direct_collocation_relative(
     result = Solve(dircol)
     solve_time = time.time()
     print("Finished trajopt in: {0} s".format(solve_time - formulate_time))
-    assert result.is_success()
+    # assert result.is_success()
 
     if result.is_success():
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
@@ -309,11 +312,19 @@ def direct_collocation_relative(
             )
         )
 
-        return solution_avg_vel, (times, x_knots, u_knots), x_traj_dimless
+        solution_details = (solution_avg_vel, solution_period)
+        solution_trajectory = (times, x_knots, u_knots)
+        next_initial_guess = (x_traj_dimless, u_traj_dimless)
+
+        return (
+            solution_details,
+            solution_trajectory,
+            next_initial_guess,
+        )
 
     else:  # No solution
         print("ERROR: Did not find a solution")
-        return -1, None, None
+        return (-1,-1), None, None
 
 
 # TODO this is the old dircol

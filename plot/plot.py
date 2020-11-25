@@ -183,7 +183,12 @@ def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
 
 
 def plot_glider_pos(
-    x_trj, u_trj, travel_angle, draw_soaring_power=False, soaring_power=None
+    x_trj,
+    u_trj,
+    travel_angle,
+    draw_soaring_power=False,
+    soaring_power=None,
+    plot_axis="x",
 ):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
@@ -197,12 +202,14 @@ def plot_glider_pos(
         ]
     )
     # Draw projections on walls
-    # _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
-    _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="y")
+    if "x" in plot_axis:
+        _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
+    if "y" in plot_axis:
+        _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="y")
     _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="z")
     if draw_soaring_power == True:
         _draw_soaring_power_projection(
-            pos_trj, soaring_power, axis_limits, ax, axis="x"
+            pos_trj, soaring_power, axis_limits, ax, axis=plot_axis
         )
 
     # Draw trajectory
@@ -296,9 +303,14 @@ def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):
         linewidth=1,
     )
 
-    # Plot start position
+    # plot start position
     x0 = pos_trj[0, :]
-    ax.scatter(x0[0], x0[1], 0, color="tab:green")
+    ax.scatter(x0[0], x0[1], 0, color="grey")
+
+    # plot end position
+    N = pos_trj.shape[0]
+    xf = pos_trj[N - 1, :]
+    ax.scatter(xf[0], xf[1], 0, color="grey")
 
     # Set labels
     ax.set_xlabel(
@@ -339,11 +351,11 @@ def _draw_direction_vector(x0, travel_angle, axis_limits, ax):
         dir_vector[0],
         dir_vector[1],
         0,
-        color="tab:green",
+        color="grey",
         label="Desired direction",
         length=dir_vector_length,
         linewidth=1,
-        arrow_length_ratio=0.2,
+        arrow_length_ratio=0.1,
     )
 
 
@@ -397,7 +409,7 @@ def _set_real_aspect_ratio(axis_limits, ax):
 
 def _draw_gliders(x_trj, u_trj, ax):
     N = x_trj.shape[0]
-    N_gliders = 14
+    N_gliders = 10
     scale = 1
     indices = np.linspace(0, N - 1, N_gliders, dtype=int)
 
@@ -420,11 +432,11 @@ def _draw_gliders(x_trj, u_trj, ax):
 
         _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="z")
 
-        #        # Draw red and green on wingtips
-        ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
-        #        # ax.scatter(RB[0], RB[1], RB[2], color="red")
-        ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
-    #        # ax.scatter(LB[0], LB[1], LB[2], color="green")
+        # Draw red and green on wingtips
+        # ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
+        ax.scatter(RB[0], RB[1], RB[2], color="red", s=6)
+        # ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
+        ax.scatter(LB[0], LB[1], LB[2], color="green", s=6)
 
     return
 
