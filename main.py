@@ -10,6 +10,9 @@ from analysis.energy_analysis import energy_analysis
 
 
 def main(argv):
+    show_sweep_result()
+    plt.show()
+
     # Parse command line args
     travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else np.pi
     period_guess = float(argv[2]) if len(argv) > 1 else 4
@@ -37,18 +40,20 @@ def main(argv):
     sweep_calculation(phys_params)
     return 0
 
-def plot_sweep_result():
+
+def show_sweep_result():
     # Load data from files
+    import json
     solution_avg_speeds = dict()
-    solution_periods= dict()
+    solution_periods = dict()
     with open("./results/sweep_results_speeds", "r") as f:
-        solution_avg_speeds = json.loads(f)
+        solution_avg_speeds = json.load(f)
         f.close()
     with open("./results/sweep_results_periods", "r") as f:
-        solution_periods = json.loads(f)
+        solution_periods = json.load(f)
         f.close()
 
-
+    plot_sweep_polar(solution_avg_speeds, solution_periods)
 
 
 def sweep_calculation(phys_params):

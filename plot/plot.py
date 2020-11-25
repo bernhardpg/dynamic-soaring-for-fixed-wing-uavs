@@ -18,13 +18,15 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
 
     avg_vel_lists = sorted(solution_avg_vel.items())
     avg_vel_x, avg_vel_y = zip(*avg_vel_lists)
+    avg_vel_x = [float(i) for i in avg_vel_x]
     axes[0].plot(avg_vel_x, avg_vel_y)
     axes[0].set_title("Average velocities")
 
     periods_lists = sorted(solution_periods.items())
     periods_x, avg_vel_y = zip(*periods_lists)
+    periods_x = [float(i) for i in periods_x]
     axes[1].plot(avg_vel_x, avg_vel_y)
-    axes[1].set_title("Average velocities")
+    axes[1].set_title("Periods")
 
     fig.savefig("./results/polar_plot.pdf")
     return
