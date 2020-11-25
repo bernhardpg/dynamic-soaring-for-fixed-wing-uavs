@@ -43,7 +43,7 @@ def sweep_calculation(phys_params):
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
 
-    n_angles = 20
+    n_angles = 360
     angle_increment = 2 * np.pi / n_angles
     psi_start = np.pi / 2
 
@@ -97,12 +97,12 @@ def sweep_calculation(phys_params):
             initial_guess=next_initial_guess,
         )
         if solution_details == None:
-            solution_avg_speeds[travel_angles[0]] = -1
-            solution_periods[travel_angles[0]] = -1
+            solution_avg_speeds[travel_angle] = -1
+            solution_periods[travel_angle] = -1
         else:
             avg_speed, period = solution_details
-            solution_avg_speeds[travel_angles[0]] = avg_speed
-            solution_periods[travel_angles[0]] = period
+            solution_avg_speeds[travel_angle] = avg_speed
+            solution_periods[travel_angle] = period
 
         with open("./results/sweep_results_speeds", "w+") as f:
             f.write(json.dumps(solution_avg_speeds))
