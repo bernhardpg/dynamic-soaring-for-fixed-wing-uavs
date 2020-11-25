@@ -37,13 +37,26 @@ def main(argv):
     sweep_calculation(phys_params)
     return 0
 
+def plot_sweep_result():
+    # Load data from files
+    solution_avg_speeds = dict()
+    solution_periods= dict()
+    with open("./results/sweep_results_speeds", "r") as f:
+        solution_avg_speeds = json.loads(f)
+        f.close()
+    with open("./results/sweep_results_periods", "r") as f:
+        solution_periods = json.loads(f)
+        f.close()
+
+
+
 
 def sweep_calculation(phys_params):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
 
-    n_angles = 360
+    n_angles = 20
     angle_increment = 2 * np.pi / n_angles
     psi_start = np.pi / 2
 
@@ -57,15 +70,11 @@ def sweep_calculation(phys_params):
     solution_avg_speeds = dict()
     solution_periods = dict()
 
-    # File handling
-    import json
-
-    # f.read(json.loads(all_avg_velocities))
-
     # Obtain an initial guess
     period = 4
     avg_speed = 2 * V_l
     (
+        found_solution,
         solution_details,
         solution_trajectory,
         next_initial_guess,
@@ -75,7 +84,7 @@ def sweep_calculation(phys_params):
         period_guess=period,
         avg_vel_guess=avg_speed,
     )
-    if solution_details == None:
+    if not found_solution:
         solution_avg_speeds[travel_angles[0]] = -1
         solution_periods[travel_angles[0]] = -1
     else:
@@ -86,20 +95,48 @@ def sweep_calculation(phys_params):
     # Run a sweep search
     for travel_angle in travel_angles[1:]:
         (
+            found_solution,
             solution_details,
             solution_trajectory,
             next_initial_guess,
         ) = direct_collocation_relative(
             zhukovskii_glider,
             travel_angle,
-            period_guess=period,
-            avg_vel_guess=avg_speed,
-            initial_guess=next_initial_guess,
+            initial_guess=initial_guess,
         )
-        if solution_details == None:
-            solution_avg_speeds[travel_angle] = -1
-            solution_periods[travel_angle] = -1
+
+        # Try with straight line until solution is found
+        if not found_solution:
+            # Reduce the period and avg_speed every time until solution is found
+            reduced_period = period
+            reduced_avg_vel = avg_speed
+
+            while not found_solution:
+                (
+                    found_solution,
+                    solution_details,
+                    solution_trajectory,
+                    next_initial_guess,
+                ) = direct_collocation_relative(
+                    zhukovskii_glider,
+                    travel_angle,
+                    period_guess=period,
+                    avg_vel_guess=avg_speed,
+                )
+
+                # Do a line search over period and avg velocity
+                if not found_solution:
+                    reduced_period *= 0.8
+                    reduced_avg_speed *= 0.8
+
+                # Stop searching and give up
+                if period <= 1:
+                    solution_avg_speeds[travel_angle] = -1
+                    solution_periods[travel_angle] = -1
+
+        # Save trajectory and values as initial guess for next travel_angle
         else:
+            initial_guess = next_initial_guess
             avg_speed, period = solution_details
             solution_avg_speeds[travel_angle] = avg_speed
             solution_periods[travel_angle] = period

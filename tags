@@ -94,8 +94,8 @@ average_speed	trajopt/direct_collocation (1).py	/^    def average_speed(vars):$/
 average_speed	trajopt/direct_collocation.py	/^    def average_speed(vars):$/;"	f
 avg_vel_guess	trajopt/direct_collocation (1).py	/^    avg_vel_guess = V_l * 0.5  # TODO tune this$/;"	v
 avg_vel_guess	trajopt/direct_collocation (1).py	/^    avg_vel_guess = V_l * 2  # TODO tune this?$/;"	v
+avg_vel_guess	trajopt/direct_collocation.py	/^        avg_vel_guess = V_l * avg_vel_scale_guess$/;"	v
 avg_vel_guess	trajopt/direct_collocation.py	/^    avg_vel_guess = V_l * 0.5  # TODO tune this$/;"	v
-avg_vel_guess	trajopt/direct_collocation.py	/^    avg_vel_guess = V_l * avg_vel_scale_guess$/;"	v
 avg_vel_scale_guess	main.py	/^        avg_vel_scale_guess=avg_vel_scale_guess,$/;"	v
 ax	plot/plot.py	/^    ax = fig.gca(projection="3d")$/;"	v
 axis_limits	plot/plot.py	/^    axis_limits = np.array($/;"	v

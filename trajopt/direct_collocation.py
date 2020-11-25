@@ -49,8 +49,8 @@ def direct_collocation_relative(
     total_dist_travelled_guess = avg_vel_guess * period_guess
 
     print(
-        "*** Running DirCol for travel_angle: {0} deg\n\tperiod_guess: {1}, avg_vel_guess: {2}".format(
-            travel_angle * 180 / np.pi, period_guess, avg_vel_guess 
+        "*** Running DirCol for travel_angle: {0} deg".format(
+            travel_angle * 180 / np.pi
         )
     )
 
@@ -222,6 +222,7 @@ def direct_collocation_relative(
     # If no initial guess provided, use a straight line
     if initial_guess == None:
         print("\tRunning with straight line as initial guess")
+        print("\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(period_guess, avg_vel_guess))
         x0_guess = np.array(
             [0, 0, h0, avg_vel_guess * dir_vector[0], avg_vel_guess * dir_vector[1], 0]
         )
@@ -309,14 +310,15 @@ def direct_collocation_relative(
         next_initial_guess = (x_traj_dimless, u_traj_dimless)
 
         return (
+            True,
             solution_details,
             solution_trajectory,
             next_initial_guess,
         )
 
     else:  # No solution
-        print("\t!!! ERROR: Did not find a solution")
-        return None, None, None
+        print("!!! ERROR: Did not find a solution")
+        return False, None, None, None
 
 
 # TODO this is the old dircol

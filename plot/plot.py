@@ -13,6 +13,23 @@ PLOT_LOCATION = "./results/plots/"
 GRAPH_MARGIN = 200  # Defines free space above/below curve and figure
 
 
+def plot_sweep_polar(solution_avg_vel, solution_periods):
+    fig, axes = plt.subplots(1, 2, subplot_kw={"projection": "polar"})
+
+    avg_vel_lists = sorted(solution_avg_vel.items())
+    avg_vel_x, avg_vel_y = zip(*avg_vel_lists)
+    axes[0].plot(avg_vel_x, avg_vel_y)
+    axes[0].set_title("Average velocities")
+
+    periods_lists = sorted(solution_periods.items())
+    periods_x, avg_vel_y = zip(*periods_lists)
+    axes[1].plot(avg_vel_x, avg_vel_y)
+    axes[1].set_title("Average velocities")
+
+    fig.savefig("./results/polar_plot.pdf")
+    return
+
+
 def plot_powers(times, P_tot, P_dissipated, P_gained):
     max_power = max(max(P_tot), max(P_dissipated), max(P_gained))
     min_power = min(min(P_tot), min(P_dissipated), min(P_gained))
@@ -540,19 +557,6 @@ def _get_glider_corners(x, c, scale):
 
 
 # TODO old from here
-
-
-def polar_plot_avg_velocities(avg_velocities):
-    lists = sorted(avg_velocities.items())
-    x, y = zip(*lists)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="polar")
-    ax.plot(x, y)
-    ax.set_title("Achievable speeds")
-    fig.savefig("./animations/polar_plot.png")
-
-    return
 
 
 # TODO OUTDATED with new relative model
