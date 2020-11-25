@@ -234,14 +234,15 @@ def _draw_soaring_power_projection(pos_trj, soaring_power, axis_limits, ax, axis
     if axis == "x":
         min_axis_value = axis_limits[0, 0]
         verts = [_polygon_under_graph(pos_trj[:, 1], soaring_power)]
-        poly = PolyCollection(verts, facecolors='r', alpha=.3)
-        ax.add_collection3d(poly, zs=min_axis_value, zdir='x')
+        poly = PolyCollection(verts, facecolors="r", alpha=0.3)
+        ax.add_collection3d(poly, zs=min_axis_value, zdir="x")
 
     if axis == "y":
         min_axis_value = axis_limits[1, 1]
         verts = [_polygon_under_graph(pos_trj[:, 0], soaring_power)]
-        poly = PolyCollection(verts, facecolors='r', alpha=.3)
-        ax.add_collection3d(poly, zs=min_axis_value, zdir='y')
+        poly = PolyCollection(verts, facecolors="r", alpha=0.3)
+        ax.add_collection3d(poly, zs=min_axis_value, zdir="y")
+
 
 def _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x", filled=False):
     N = pos_trj.shape[0]
@@ -396,30 +397,82 @@ def _set_real_aspect_ratio(axis_limits, ax):
 
 def _draw_gliders(x_trj, u_trj, ax):
     N = x_trj.shape[0]
-    N_gliders = 10
+    N_gliders = 14
+    scale = 1
     indices = np.linspace(0, N - 1, N_gliders, dtype=int)
 
     for i in indices:
         # if i == 0: continue # Do not plot first glider
         x = x_trj[i, :]
         c = u_trj[i, :]
-        F, RF, RB, LF, LB = _get_glider_corners(x, c)
+        F, RF, RB, LF, LB, i_body, j_body, k_body = _get_glider_corners(x, c, scale)
         vertices = np.vstack([F, RF, RB, LB, LF, F]).T
 
         # Draw polygons
         ax.add_collection3d(
             Poly3DCollection(
-                [vertices.T.tolist()], linewidths=1, facecolors="orange", alpha=0.8
+                [vertices.T.tolist()], linewidths=1, facecolors="orange", alpha=1
             )
         )
         ax.add_collection3d(
             Line3DCollection([vertices.T.tolist()], linewidths=1, colors="k")
         )
 
+        _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="z")
+
+        #        # Draw red and green on wingtips
+        ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
+        #        # ax.scatter(RB[0], RB[1], RB[2], color="red")
+        ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
+    #        # ax.scatter(LB[0], LB[1], LB[2], color="green")
+
     return
 
 
-def _get_glider_corners(x, c):
+def _plot_glider_axes(com, i_body, j_body, k_body, scale, ax, axes="xyz"):
+    if "x" in axes:
+        # Plot x axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            i_body[0],
+            i_body[1],
+            i_body[2],
+            linewidth=2,
+            color="red",
+            length=scale * 3,
+        )
+    if "y" in axes:
+        # Plot y axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            j_body[0],
+            j_body[1],
+            j_body[2],
+            linewidth=2,
+            color="yellow",
+            length=scale * 3,
+        )
+    if "z" in axes:
+        # Plot z axis
+        ax.quiver(
+            com[0],
+            com[1],
+            com[2],
+            -k_body[0],
+            -k_body[1],
+            -k_body[2],
+            linewidth=1,
+            color="black",
+            arrow_length_ratio=0.2,
+            length=scale * 2,
+        )
+
+
+def _get_glider_corners(x, c, scale):
     sweep = 0.7
     tip_chord = 0.3
     b = 3.03
@@ -432,7 +485,6 @@ def _get_glider_corners(x, c):
     h = p[2]
 
     # Define glider corners
-    scale = 1
     com_to_F = np.array([dist_cg_front, 0, 0]) * scale
     com_to_RF = np.array([dist_cg_front - sweep, b / 2, 0]) * scale
     com_to_RB = np.array([dist_cg_front - sweep - tip_chord, b / 2, 0]) * scale
@@ -472,7 +524,7 @@ def _get_glider_corners(x, c):
     LB = p + rotated_com_to_LB  # Left back
 
     # Plot all corners as vectors without arrowheads
-    return F, RF, RB, LF, LB
+    return F, RF, RB, LF, LB, i_body, j_body, k_body
 
 
 # TODO old from here
