@@ -43,25 +43,17 @@ def direct_collocation_relative(
         min_travelled_distance,
     ) = zhukovskii_glider.get_constraints()
 
-    print(
-        "*** Running DirCol for travel_angle: {0} deg\n\tperiod guess: {1}, avg_vel_guess: {2}".format(
-            travel_angle * 180 / np.pi, period_guess, avg_vel_scale_guess
-        )
-    )
-
-    if PRINT_GLIDER_DETAILS:
-        print("Running direct collocation with:")
-        print("Dimensionless Zhukovskii Glider")
-        print(
-            "Lambda: {0}\nV_l: {1} (m/s)\nL: {2} (m)\nT: {3} (s)\npsi: {4} (rad)".format(
-                Lambda, V_l, L, T, travel_angle
-            )
-        )
-
     # Initial guess
     if avg_vel_guess == None:
         avg_vel_guess = V_l * avg_vel_scale_guess
     total_dist_travelled_guess = avg_vel_guess * period_guess
+
+    print(
+        "*** Running DirCol for travel_angle: {0} deg\n\tperiod_guess: {1}, avg_vel_guess: {2}".format(
+            travel_angle * 180 / np.pi, period_guess, avg_vel_guess 
+        )
+    )
+
 
     # Make all values dimless
     max_lift_coeff *= V_l / C
@@ -229,7 +221,7 @@ def direct_collocation_relative(
 
     # If no initial guess provided, use a straight line
     if initial_guess == None:
-        print("Running with straight line as initial guess")
+        print("\tRunning with straight line as initial guess")
         x0_guess = np.array(
             [0, 0, h0, avg_vel_guess * dir_vector[0], avg_vel_guess * dir_vector[1], 0]
         )
@@ -252,7 +244,7 @@ def direct_collocation_relative(
 
     # Use provided initial_guess
     else:
-        print("Running with provided initial guess")
+        print("\tRunning with provided initial guess")
         initial_x_traj, initial_u_traj = initial_guess
         dircol.SetInitialTrajectory(initial_u_traj, initial_x_traj)
 
@@ -269,17 +261,15 @@ def direct_collocation_relative(
     #######
 
     formulate_time = time.time()
-    print("Formulated trajopt in: {0} s".format(formulate_time - start_time))
+    print("\tFormulated trajopt in: {0} s".format(formulate_time - start_time))
     result = Solve(dircol)
     solve_time = time.time()
-    print("Finished trajopt in: {0} s".format(solve_time - formulate_time))
+    print("\t! Finished trajopt in: {0} s".format(solve_time - formulate_time))
     # assert result.is_success()
 
     if result.is_success():
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
         sample_times = dircol.GetSampleTimes(result)
-        time_step = sample_times[1] - sample_times[0]
-        print("Time step: {0}, max time step: {1}".format(time_step, max_dt))
         N_plot = 200
 
         ## Reconstruct and re-scale trajectory
@@ -305,12 +295,14 @@ def direct_collocation_relative(
         solution_distance = dir_vector.T.dot(x_knots[-1, 0:2])
         solution_avg_vel = solution_distance / solution_period
 
-        print("Solution details:")
+        print("\t** Solution details:")
         print(
-            "\tperiod: {0} (s)\n\tcost: {1}\n\tdistance: {2} (m) \n\tavg. vel: {3} (m/s)".format(
+            "\t\tperiod: {0} (s)\n\t\tcost: {1}\n\t\tdistance: {2} (m) \n\t\tavg. vel: {3} (m/s)".format(
                 solution_period, solution_cost, solution_distance, solution_avg_vel
             )
         )
+        time_step = sample_times[1] - sample_times[0]
+        print("\t\tTime step: {0}, max time step: {1}".format(time_step, max_dt))
 
         solution_details = (solution_avg_vel, solution_period)
         solution_trajectory = (times, x_knots, u_knots)
@@ -323,8 +315,8 @@ def direct_collocation_relative(
         )
 
     else:  # No solution
-        print("ERROR: Did not find a solution")
-        return (-1,-1), None, None
+        print("\t!!! ERROR: Did not find a solution")
+        return None, None, None
 
 
 # TODO this is the old dircol

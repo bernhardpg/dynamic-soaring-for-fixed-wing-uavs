@@ -63,6 +63,8 @@ def sweep_calculation(phys_params):
     # f.read(json.loads(all_avg_velocities))
 
     # Obtain an initial guess
+    period = 4
+    avg_speed = 2 * V_l
     (
         solution_details,
         solution_trajectory,
@@ -70,12 +72,16 @@ def sweep_calculation(phys_params):
     ) = direct_collocation_relative(
         zhukovskii_glider,
         travel_angles[0],
-        period_guess=4,
-        avg_vel_guess=2 * V_l,
+        period_guess=period,
+        avg_vel_guess=avg_speed,
     )
-    avg_speed, period = solution_details
-    solution_avg_speeds[travel_angles[0]] = avg_speed
-    solution_periods[travel_angles[0]] = period
+    if solution_details == None:
+        solution_avg_speeds[travel_angles[0]] = -1
+        solution_periods[travel_angles[0]] = -1
+    else:
+        avg_speed, period = solution_details
+        solution_avg_speeds[travel_angles[0]] = avg_speed
+        solution_periods[travel_angles[0]] = period
 
     # Run a sweep search
     for travel_angle in travel_angles[1:]:
@@ -90,9 +96,13 @@ def sweep_calculation(phys_params):
             avg_vel_guess=avg_speed,
             initial_guess=next_initial_guess,
         )
-        avg_speed, period = solution_details
-        solution_avg_speeds[travel_angle] = avg_speed
-        solution_periods[travel_angle] = period
+        if solution_details == None:
+            solution_avg_speeds[travel_angles[0]] = -1
+            solution_periods[travel_angles[0]] = -1
+        else:
+            avg_speed, period = solution_details
+            solution_avg_speeds[travel_angles[0]] = avg_speed
+            solution_periods[travel_angles[0]] = period
 
         with open("./results/sweep_results_speeds", "w+") as f:
             f.write(json.dumps(solution_avg_speeds))
