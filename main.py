@@ -15,7 +15,7 @@ def main(argv):
     # TODO clean up command line parsing
     # Parse command line args
     travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else None
-    period_guess = float(argv[2]) if len(argv) > 2 else 4
+    period_guess = float(argv[2]) if len(argv) > 2 else 8
     avg_vel_scale_guess = float(argv[3]) if len(argv) > 3 else 1
     plot_axis = argv[4] if len(argv) > 4 else "x"
 
@@ -109,23 +109,55 @@ def sweep_calculation(phys_params):
     for travel_angle in travel_angles[1:]:
         # Obtain solution with previous solution as initial guess
         (
-            found_solution,
-            solution_details,
-            solution_trajectory,
-            next_initial_guess,
+            found_solution_from_prev,
+            solution_details_from_prev,
+            solution_trajectory_from_prev,
+            next_initial_guess_from_prev,
         ) = direct_collocation_relative(
             zhukovskii_glider,
             travel_angle,
             initial_guess=initial_guess,
         )
 
-        # Try with straight line until solution is found
+        # Obtain solution with straight line as initial guess
+        (
+            found_solution_from_line,
+            solution_details_from_line,
+            solution_trajectory_from_line,
+            next_initial_guess_from_line,
+        ) = direct_collocation_relative(
+            zhukovskii_glider,
+            travel_angle,
+            period_guess=period_initial_guess,
+            avg_vel_guess=avg_speed_initial_guess,
+        )
+
+        # Use the max solution
+        avg_speed_from_prev = solution_details_from_prev
+        avg_speed_from_line = solution_details_from_line
+        if avg_speed_from_prev > avg_speed_from_line:
+            found_solution = found_solution_from_prev
+            solution_details = solution_details_from_prev
+            solution_trajectory = solution_trajectory_from_prev
+            next_initial_guess = next_initial_guess_from_prev
+        else:
+            found_solution = found_solution_from_line
+            solution_details = solution_details_from_line
+            solution_trajectory = solution_trajectory_from_line
+            next_initial_guess = next_initial_guess_from_line
+
+        # Reduce the period and avg_speed every time until solution is found
         if not found_solution:
-            # Reduce the period and avg_speed every time until solution is found
             reduced_period = period_initial_guess
             reduced_avg_vel = avg_speed_initial_guess
 
             while not found_solution:
+                # TODO cleanup
+                # Do a line search over period and avg velocity
+                if not found_solution:
+                    reduced_period *= 1
+                    reduced_avg_vel *= 0.8
+
                 (
                     found_solution,
                     solution_details,
@@ -138,13 +170,8 @@ def sweep_calculation(phys_params):
                     avg_vel_guess=reduced_avg_vel,
                 )
 
-                # Do a line search over period and avg velocity
-                if not found_solution:
-                    reduced_period *= 1
-                    reduced_avg_vel *= 0.8
-
                 # Stop searching and give up
-                tol = 0.1
+                tol = 0.5
                 if reduced_avg_vel <= tol:
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
@@ -170,7 +197,7 @@ def sweep_calculation(phys_params):
 def calc_trajectory(
     phys_params,
     travel_angle=0,
-    period_guess=4,
+    period_guess=8,
     avg_vel_scale_guess=1,
     plot_axis="x",
 ):

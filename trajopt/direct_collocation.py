@@ -125,9 +125,10 @@ def direct_collocation_relative(
     dircol.AddConstraintToAllKnotPoints(
         sin_bank_angle_squared <= max_sin_bank_angle_squared
     )
-    dircol.AddConstraintToAllKnotPoints(
-        sin_bank_angle_squared >= -max_sin_bank_angle_squared
-    )
+# TODO remove, this is never active
+#    dircol.AddConstraintToAllKnotPoints(
+#        sin_bank_angle_squared >= -max_sin_bank_angle_squared
+#    )
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])
@@ -318,7 +319,7 @@ def direct_collocation_relative(
 
     else:  # No solution
         print("!!! ERROR: Did not find a solution")
-        return False, None, None, None
+        return False, (-1, -1), None, None
 
 
 # TODO this is the old dircol
