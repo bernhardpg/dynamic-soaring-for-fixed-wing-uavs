@@ -1,4 +1,5 @@
 import sys
+import json
 
 from dynamics.zhukovskii_glider import *
 from trajopt.nonlin_trajopt import *
@@ -10,14 +11,15 @@ from analysis.energy_analysis import energy_analysis
 
 
 def main(argv):
-    show_sweep_result()
-    plt.show()
 
+    # TODO clean up command line parsing
     # Parse command line args
-    travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else np.pi
-    period_guess = float(argv[2]) if len(argv) > 1 else 4
-    avg_vel_scale_guess = float(argv[3]) if len(argv) > 1 else 1
-    plot_axis = argv[4] if len(argv) > 1 else "x"
+    travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else None
+    period_guess = float(argv[2]) if len(argv) > 2 else 4
+    avg_vel_scale_guess = float(argv[3]) if len(argv) > 3 else 1
+    plot_axis = argv[4] if len(argv) > 4 else "x"
+
+    run_once = not travel_angle == None
 
     # Physical parameters
     m = 8.5
@@ -29,21 +31,25 @@ def main(argv):
     AR = b ** 2 / A
     phys_params = (m, c_Dp, A, b, rho, g, AR)
 
-    #    calc_trajectory(
-    #        phys_params,
-    #        travel_angle,
-    #        period_guess,
-    #        avg_vel_scale_guess,
-    #        plot_axis,
-    #    )
+    if run_once:
+        calc_trajectory(
+            phys_params,
+            travel_angle,
+            period_guess,
+            avg_vel_scale_guess,
+            plot_axis,
+        )
+    else:
+        sweep_calculation(phys_params)
 
-    sweep_calculation(phys_params)
+        show_sweep_result()
+        plt.show()
     return 0
 
 
 def show_sweep_result():
     # Load data from files
-    import json
+
     solution_avg_speeds = dict()
     solution_periods = dict()
     with open("./results/sweep_results_speeds", "r") as f:
@@ -61,7 +67,7 @@ def sweep_calculation(phys_params):
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
 
-    n_angles = 20
+    n_angles = 19
     angle_increment = 2 * np.pi / n_angles
     psi_start = np.pi / 2
 
@@ -76,8 +82,9 @@ def sweep_calculation(phys_params):
     solution_periods = dict()
 
     # Obtain an initial guess
-    period = 4
-    avg_speed = 2 * V_l
+    period_initial_guess = 8  # NOTE can be tuned
+    avg_speed_initial_guess = 2 * V_l  # NOTE can be tuned
+
     (
         found_solution,
         solution_details,
@@ -86,8 +93,8 @@ def sweep_calculation(phys_params):
     ) = direct_collocation_relative(
         zhukovskii_glider,
         travel_angles[0],
-        period_guess=period,
-        avg_vel_guess=avg_speed,
+        period_guess=period_initial_guess,
+        avg_vel_guess=avg_speed_initial_guess,
     )
     if not found_solution:
         solution_avg_speeds[travel_angles[0]] = -1
@@ -96,9 +103,11 @@ def sweep_calculation(phys_params):
         avg_speed, period = solution_details
         solution_avg_speeds[travel_angles[0]] = avg_speed
         solution_periods[travel_angles[0]] = period
+        initial_guess = next_initial_guess
 
     # Run a sweep search
     for travel_angle in travel_angles[1:]:
+        # Obtain solution with previous solution as initial guess
         (
             found_solution,
             solution_details,
@@ -113,8 +122,8 @@ def sweep_calculation(phys_params):
         # Try with straight line until solution is found
         if not found_solution:
             # Reduce the period and avg_speed every time until solution is found
-            reduced_period = period
-            reduced_avg_vel = avg_speed
+            reduced_period = period_initial_guess
+            reduced_avg_vel = avg_speed_initial_guess
 
             while not found_solution:
                 (
@@ -125,26 +134,27 @@ def sweep_calculation(phys_params):
                 ) = direct_collocation_relative(
                     zhukovskii_glider,
                     travel_angle,
-                    period_guess=period,
-                    avg_vel_guess=avg_speed,
+                    period_guess=reduced_period,
+                    avg_vel_guess=reduced_avg_vel,
                 )
 
                 # Do a line search over period and avg velocity
                 if not found_solution:
-                    reduced_period *= 0.8
-                    reduced_avg_speed *= 0.8
+                    reduced_period *= 1
+                    reduced_avg_vel *= 0.8
 
                 # Stop searching and give up
-                if period <= 1:
+                tol = 0.1
+                if reduced_avg_vel <= tol:
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
+                    break
 
         # Save trajectory and values as initial guess for next travel_angle
-        else:
-            initial_guess = next_initial_guess
-            avg_speed, period = solution_details
-            solution_avg_speeds[travel_angle] = avg_speed
-            solution_periods[travel_angle] = period
+        initial_guess = next_initial_guess
+        avg_speed, period = solution_details
+        solution_avg_speeds[travel_angle] = avg_speed
+        solution_periods[travel_angle] = period
 
         with open("./results/sweep_results_speeds", "w+") as f:
             f.write(json.dumps(solution_avg_speeds))
@@ -177,14 +187,20 @@ def calc_trajectory(
     print("Running dircol with:")
     print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
 
-    avg_speed, traj = direct_collocation_relative(
+    (
+        found_solution,
+        solution_details,
+        solution_trajectory,
+        _,
+    ) = direct_collocation_relative(
         zhukovskii_glider,
         travel_angle,
         period_guess=period_guess,
         avg_vel_scale_guess=avg_vel_scale_guess,
     )
 
-    times, x_knots, u_knots = traj
+    avg_speed, period = solution_details
+    times, x_knots, u_knots = solution_trajectory
 
     (
         phi_knots,

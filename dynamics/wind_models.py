@@ -1,6 +1,6 @@
 import numpy as np
 
-w_ref = 10  # m/s
+w_ref = 15 # m/s
 w_freestream = w_ref
 h_ref = 10  # m
 h_0 = 0.03  # m

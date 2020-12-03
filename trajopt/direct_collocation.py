@@ -222,7 +222,7 @@ def direct_collocation_relative(
     # If no initial guess provided, use a straight line
     if initial_guess == None:
         print("\tRunning with straight line as initial guess")
-        print("\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(period_guess, avg_vel_guess))
+        print("\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(period_guess * T, avg_vel_guess * V_l))
         x0_guess = np.array(
             [0, 0, h0, avg_vel_guess * dir_vector[0], avg_vel_guess * dir_vector[1], 0]
         )
