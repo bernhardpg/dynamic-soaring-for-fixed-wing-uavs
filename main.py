@@ -11,7 +11,6 @@ from analysis.energy_analysis import energy_analysis
 
 
 def main(argv):
-
     # TODO clean up command line parsing
     # Parse command line args
     travel_angle = float(argv[1]) * np.pi / 180 if len(argv) > 1 else None
@@ -40,7 +39,11 @@ def main(argv):
             plot_axis,
         )
     else:
-        sweep_calculation(phys_params)
+        # TODO increase max step length
+        # TODO increase number of collocation points
+        # TODO add cost on input rate
+        sweep_calculation_for_period(phys_params, 8, n_angles=9)
+        # sweep_calculation_old(phys_params)
 
         show_sweep_result()
         plt.show()
@@ -52,22 +55,107 @@ def show_sweep_result():
 
     solution_avg_speeds = dict()
     solution_periods = dict()
-    with open("./results/sweep_results_speeds", "r") as f:
+    with open("./results/plots/sweep_results_speeds", "r") as f:
         solution_avg_speeds = json.load(f)
         f.close()
-    with open("./results/sweep_results_periods", "r") as f:
+    with open("./results/plots/sweep_results_periods", "r") as f:
         solution_periods = json.load(f)
         f.close()
 
     plot_sweep_polar(solution_avg_speeds, solution_periods)
 
 
-def sweep_calculation(phys_params):
+def sweep_calculation_for_period(phys_params, period_guess, n_angles=9):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
 
-    n_angles = 19
+    angle_increment = 2 * np.pi / n_angles
+    psi_start = np.pi / 2
+
+    travel_angles = np.hstack(
+        [
+            np.arange(psi_start, 2 * np.pi, angle_increment),
+            np.arange(0, psi_start, angle_increment),
+        ]
+    )
+
+    solution_avg_speeds = dict()
+    solution_periods = dict()
+
+    # Initial guess
+    period_initial_guess = period_guess
+    avg_speed_initial_guess = 2 * V_l
+
+    # Run a sweep search
+    for travel_angle in travel_angles[0:]:
+        # Obtain solution with straight line as initial guess
+        (
+            found_solution,
+            solution_details,
+            solution_trajectory,
+            next_initial_guess,
+        ) = direct_collocation_relative(
+            zhukovskii_glider,
+            travel_angle,
+            period_guess=period_initial_guess,
+            avg_vel_guess=avg_speed_initial_guess,
+        )
+
+        # Reduce the avg_speed every time until solution is found
+        if not found_solution:
+            reduced_period = period_initial_guess
+            reduced_avg_vel = avg_speed_initial_guess
+
+            while not found_solution:
+                # TODO cleanup
+                # Do a line search over avg velocity
+                if not found_solution:
+                    reduced_period *= 1
+                    reduced_avg_vel *= 0.8
+
+                (
+                    found_solution,
+                    solution_details,
+                    solution_trajectory,
+                    next_initial_guess,
+                ) = direct_collocation_relative(
+                    zhukovskii_glider,
+                    travel_angle,
+                    period_guess=reduced_period,
+                    avg_vel_guess=reduced_avg_vel,
+                )
+
+                # Stop searching and give up
+                tol = 0.01
+                if reduced_avg_vel <= tol:
+                    solution_avg_speeds[travel_angle] = -1
+                    solution_periods[travel_angle] = -1
+                    break
+
+        # Save trajectory and values as initial guess for next travel_angle
+        initial_guess = next_initial_guess
+        avg_speed, period = solution_details
+        solution_avg_speeds[travel_angle] = avg_speed
+        solution_periods[travel_angle] = period
+
+        with open("./results/plots/sweep_results_speeds", "w+") as f:
+            f.write(json.dumps(solution_avg_speeds))
+            f.close()
+
+        with open("./results/plots/sweep_results_periods", "w+") as f:
+            f.write(json.dumps(solution_periods))
+            f.close()
+
+    return
+
+
+def sweep_calculation_old(phys_params):
+    (m, c_Dp, A, b, rho, g, AR) = phys_params
+    zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
+    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
+
+    n_angles = 9
     angle_increment = 2 * np.pi / n_angles
     psi_start = np.pi / 2
 

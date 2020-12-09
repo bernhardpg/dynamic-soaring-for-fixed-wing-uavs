@@ -54,7 +54,6 @@ def direct_collocation_relative(
         )
     )
 
-
     # Make all values dimless
     max_lift_coeff *= V_l / C
     min_height /= L
@@ -72,8 +71,10 @@ def direct_collocation_relative(
 
     # Optimization params
     N = 21  # Collocation points
-    min_dt = (period_guess / N) * 0.75
-    max_dt = (period_guess / N) * 1.25
+#    min_dt = (period_guess / N) * 0.9
+#    max_dt = (period_guess / N) * 1.1
+    min_dt = 0.05
+    max_dt = 0.5
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()
@@ -125,10 +126,6 @@ def direct_collocation_relative(
     dircol.AddConstraintToAllKnotPoints(
         sin_bank_angle_squared <= max_sin_bank_angle_squared
     )
-# TODO remove, this is never active
-#    dircol.AddConstraintToAllKnotPoints(
-#        sin_bank_angle_squared >= -max_sin_bank_angle_squared
-#    )
 
     # Initial state constraint
     x0_pos = np.array([0, 0, h0])
@@ -181,7 +178,7 @@ def direct_collocation_relative(
     dircol.AddCost(average_speed, vars=hor_pos_final.tolist() + [time_step])
 
     # Cost on input effort
-    R = 0.5
+    R = 0.01
 
     # Constrain input rates
     # Using 2nd order forward finite differences for first derivative
@@ -202,12 +199,12 @@ def direct_collocation_relative(
     finite_diff_matrix = first_order_finite_diff_matrix
 
     def input_rate(vars):
-        h = vars[0]
+        time_step = vars[0]
         u = np.array(vars[1:]).reshape(N, 3)
         u_change = finite_diff_matrix.dot(u)
         u_change_squared = np.sum(np.diag(u_change.T.dot(u_change)))
 
-        return R * u_change_squared / h
+        return R * u_change_squared / time_step
 
     input_vars = (
         np.vstack([dircol.input(i).reshape((3, 1)) for i in range(N)])
@@ -223,7 +220,11 @@ def direct_collocation_relative(
     # If no initial guess provided, use a straight line
     if initial_guess == None:
         print("\tRunning with straight line as initial guess")
-        print("\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(period_guess * T, avg_vel_guess * V_l))
+        print(
+            "\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(
+                period_guess * T, avg_vel_guess * V_l
+            )
+        )
         x0_guess = np.array(
             [0, 0, h0, avg_vel_guess * dir_vector[0], avg_vel_guess * dir_vector[1], 0]
         )
@@ -304,7 +305,8 @@ def direct_collocation_relative(
             )
         )
         time_step = sample_times[1] - sample_times[0]
-        print("\t\tTime step: {0}, max time step: {1}".format(time_step, max_dt))
+        print("\t\tTime step: {0}".format(time_step))
+        print("\t\tmin time step: {0}, max time step: {1}".format(min_dt, max_dt))
 
         solution_details = (solution_avg_vel, solution_period)
         solution_trajectory = (times, x_knots, u_knots)
