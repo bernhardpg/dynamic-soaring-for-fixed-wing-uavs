@@ -64,6 +64,9 @@ class RelativeZhukovskiiGlider:
         )  # Norm of circulation vector in steady flight
         return
 
+    def get_char_time(self):
+        return self.T
+
     def calc_opt_glide_ratio(self, AR, c_Dp):
         glide_ratio = 0.5 * sqrt(np.pi * AR / c_Dp)
         return glide_ratio

@@ -298,9 +298,11 @@ def calc_trajectory(
     Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
     V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
+    T = zhukovskii_glider.get_char_time()
+
 
     print("Running dircol with:")
-    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}".format(Lam, Th, V_opt, V_l))
+    print("\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(Lam, Th, V_opt, V_l, T))
 
     (
         found_solution,
