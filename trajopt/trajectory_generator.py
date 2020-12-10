@@ -3,6 +3,7 @@ from trajopt.direct_collocation import *
 from dynamics.zhukovskii_glider import *
 from plot.plot import *
 from trajopt.fourier_collocation import *
+import json
 
 
 def calc_and_plot_trajectory(
@@ -153,18 +154,30 @@ def show_sweep_result():
     plot_sweep_polar(solution_avg_speeds, solution_periods)
 
 
-def sweep_calculation_for_period(phys_params, period_guess, n_angles=9):
+def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angles=9):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
+
+    # Print performance params
+    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
+    Th = zhukovskii_glider.calc_opt_glide_angle(AR, c_Dp)
+    V_opt = zhukovskii_glider.calc_opt_glide_speed(AR, c_Dp, m, A, b, rho, g)
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
+    T = zhukovskii_glider.get_char_time()
+
+    print("Running dircol sweep with:")
+    print(
+        "\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(
+            Lam, Th, V_opt, V_l, T
+        )
+    )
 
     angle_increment = 2 * np.pi / n_angles
-    psi_start = np.pi / 2
 
     travel_angles = np.hstack(
         [
-            np.arange(psi_start, 2 * np.pi, angle_increment),
-            np.arange(0, psi_start, angle_increment),
+            np.arange(start_angle, 2 * np.pi, angle_increment),
+            np.arange(0, start_angle, angle_increment),
         ]
     )
 
@@ -221,7 +234,7 @@ def sweep_calculation_for_period(phys_params, period_guess, n_angles=9):
                     solution_periods[travel_angle] = -1
                     break
 
-        # Save trajectory and values as initial guess for next travel_angle
+        # Save trajectory and values as potential initial guess for next travel_angle
         initial_guess = next_initial_guess
         avg_speed, period = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
