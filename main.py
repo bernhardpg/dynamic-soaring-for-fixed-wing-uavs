@@ -8,15 +8,16 @@ def main(argv):
     period_guess = 8
     avg_vel_scale_guess = 2
     run_once = True
+    n_angles = 9
 
     # Command line parsing
     try:
         opts, args = getopt.getopt(
-            argv, "a:p:v:s", ["angle=", "period=", "velocity=", "sweep"]
+            argv, "a:p:v:sn:", ["angle=", "period=", "velocity=", "sweep", "n_angles="]
         )
     except getopt.GetoptError:
         print(
-            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?>"
+            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?> -n <n_sweep_angles>"
         )
         sys.exit(2)
 
@@ -34,6 +35,8 @@ def main(argv):
             avg_vel_scale_guess = float(arg)
         elif opt in ("-s", "--sweep"):
             run_once = False
+        elif opt in ("-n", "--n_angles"):
+            n_angles = int(arg)
 
     # Physical parameters
     m = 8.5
@@ -75,7 +78,7 @@ def main(argv):
 
     else:
         sweep_calculation_for_period(
-            phys_params, travel_angle, period_guess, n_angles=9
+            phys_params, travel_angle, period_guess, n_angles
         )
 
         show_sweep_result()
