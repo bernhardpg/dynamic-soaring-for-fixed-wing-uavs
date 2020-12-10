@@ -20,20 +20,35 @@ from dynamics.wind_models import (
 
 
 class RelativeZhukovskiiGlider:
-    def __init__(self, m=8.5, c_Dp=0.033, A=0.65, b=3.306, rho=1.255, g=9.81):
+    def __init__(
+        self,
+        m=8.5,
+        c_Dp=0.033,
+        A=0.65,
+        b=3.306,
+        rho=1.255,
+        g=9.81,
+        max_bank_angle=80 * np.pi / 180,
+        max_lift_coeff=1.5,
+        min_lift_coeff=0,
+        max_load_factor=3,
+        min_height=0.5,
+        max_height=100,
+        h0=5,
+    ):
         # Set model params
         self.set_params(b, A, m, c_Dp, rho, g)
         self.e_z = np.array([0, 0, 1])  # Unit vector along z axis
 
         # Optimization constraints
-        self.max_bank_angle = 80 * np.pi / 180  # radians
-        self.max_lift_coeff = 1.5
-        self.min_lift_coeff = 0
-        self.max_load_factor = 3
-        self.min_height = 0.5  # m
-        self.max_height = 100  # m
+        self.max_bank_angle = max_bank_angle
+        self.max_lift_coeff = max_lift_coeff
+        self.min_lift_coeff = min_lift_coeff
+        self.max_load_factor = max_load_factor
+        self.min_height = min_height
+        self.max_height = max_height
         self.min_travelled_distance = self.L * 0.67  # m TODO is this good?
-        self.h0 = 5  # m # TODO is this good?
+        self.h0 = h0
         return
 
     def set_params(self, b, A, m, c_Dp, rho, g):

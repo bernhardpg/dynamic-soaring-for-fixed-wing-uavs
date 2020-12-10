@@ -8,6 +8,7 @@ import json
 
 def calc_and_plot_trajectory(
     phys_params,
+    phys_constraints,
     travel_angle=0,
     period_guess=8,
     avg_vel_scale_guess=1,
@@ -15,7 +16,31 @@ def calc_and_plot_trajectory(
 ):
 
     (m, c_Dp, A, b, rho, g, AR) = phys_params
-    zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
+    (
+        max_bank_angle,
+        max_lift_coeff,
+        min_lift_coeff,
+        max_load_factor,
+        min_height,
+        max_height,
+        h0,
+    ) = phys_constraints
+
+    zhukovskii_glider = RelativeZhukovskiiGlider(
+        m,
+        c_Dp,
+        A,
+        b,
+        rho,
+        g,
+        max_bank_angle,
+        max_lift_coeff,
+        min_lift_coeff,
+        max_load_factor,
+        min_height,
+        max_height,
+        h0,
+    )
 
     # Print performance params
     Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)
@@ -90,7 +115,6 @@ def calc_and_plot_trajectory(
     )
     height_knots = x_knots_ENU[:, 2]
     abs_vel_knots = np.sqrt(np.diag(vel_knots.dot(vel_knots.T)))
-
 
     # Plotting
     plot_glider_pos(

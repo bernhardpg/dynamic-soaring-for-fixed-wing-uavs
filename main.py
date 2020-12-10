@@ -45,9 +45,28 @@ def main(argv):
     AR = b ** 2 / A
     phys_params = (m, c_Dp, A, b, rho, g, AR)
 
+    # Trajectory constraints
+    max_bank_angle = 80 * np.pi / 180
+    max_lift_coeff = 1.5
+    min_lift_coeff = 0
+    max_load_factor = 3
+    min_height = 0.5
+    max_height = 100
+    h0 = 5
+    phys_constraints = (
+        max_bank_angle,
+        max_lift_coeff,
+        min_lift_coeff,
+        max_load_factor,
+        min_height,
+        max_height,
+        h0,
+    )
+
     if run_once:
         calc_and_plot_trajectory(
             phys_params,
+            phys_constraints,
             travel_angle,
             period_guess,
             avg_vel_scale_guess,
@@ -55,7 +74,9 @@ def main(argv):
         )
 
     else:
-        sweep_calculation_for_period(phys_params, travel_angle, period_guess, n_angles=9)
+        sweep_calculation_for_period(
+            phys_params, travel_angle, period_guess, n_angles=9
+        )
 
         show_sweep_result()
         plt.show()
