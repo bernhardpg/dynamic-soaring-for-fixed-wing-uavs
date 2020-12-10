@@ -240,7 +240,7 @@ def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_hei
     plt.plot(t, height_knots)
     plt.title("Height")
     plt.ylabel("$h \, [m]$")
-    plt.ylim((0, max_height / 5))
+    plt.ylim((0, max_height / 7.5))
     plt.hlines(
         (min_height, max_height),
         t[0],
@@ -256,7 +256,7 @@ def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_hei
     plt.plot(t, speed_knots)
     plt.title("Inertial speed")
     plt.ylabel("$V [m/s]$")
-    plt.ylim((0, 40))
+    plt.ylim((0, 30))
     plt.xlabel("time [s]")
     plt.xticks(np.arange(min(t), max(t), 1.0))
     plt.tight_layout()

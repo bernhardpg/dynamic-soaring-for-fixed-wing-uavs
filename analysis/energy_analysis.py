@@ -11,14 +11,16 @@ def _calc_abs_vel(h, v_r, w):
 def _calc_winds(h):
     N = h.shape[0]
     w_value = wind_model(h)
-    w = np.vstack((np.zeros(N), -w_value, np.zeros(N))).T
+    # NOTE wind in NED frame
+    w = np.vstack((-w_value, np.zeros(N), np.zeros(N))).T
     return w
 
 
 def _calc_ddt_winds(h, h_dot):
     N = h.shape[0]
     ddt_w_value = ddt_wind_model(h, h_dot)
-    ddt_w = np.vstack((np.zeros(N), -ddt_w_value, np.zeros(N))).T
+    # NOTE wind in NED frame
+    ddt_w = np.vstack((-ddt_w_value, np.zeros(N), np.zeros(N))).T
     return ddt_w
 
 
@@ -68,6 +70,7 @@ def _calc_integral(graph, dt):
     return integral
 
 
+# Written to work with NED frame
 def do_energy_analysis(times, x_traj, u_traj, phys_params):
     print("### Running energy analysis")
 
