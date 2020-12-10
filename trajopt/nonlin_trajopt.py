@@ -15,31 +15,11 @@ from pydrake.all import (
 )
 import matplotlib.pyplot as plt
 
-from dynamics.slotine_dynamics import continuous_dynamics, SlotineGlider
-from dynamics.zhukovskii_glider import ZhukovskiiGlider
+from dynamics.zhao_dynamics import continuous_dynamics, ZhaoGlider
 
 
-# TODO DONE
-# * Use time scaled dynamics
-# * Redefine heading from wind angle
-# * Make opt problem work always
-# * Get period
-# * Plot input
-# * make sure right direction
-# * Get avg velocity in direction
-# * Discretize and get polar plot
-# * Better initial guess, use previous angle
-# * Rename wind models
-
-
-# TODO
-# * Find good max/min values for speed and height.
-# * Penalize too big cost changes
-# * Use Mortens wind model
-# * Constrain input difference
-# * Constrain AoA within +- 5 degrees
-
-def direct_collocation_slotine_glider():
+# TODO this is work in progress and will not be finished, as the Slotine glider was not used longer
+def direct_collocation_zhao_glider():
     print("Running direct collocation")
 
     plant = SlotineGlider()
@@ -154,7 +134,7 @@ def direct_collocation_slotine_glider():
     u_trajectory = dircol.ReconstructInputTrajectory(result)
     u_knots = np.hstack([u_trajectory.value(t) for t in times])
 
-    plot_input_slotine_glider(times, u_knots.T)
+    plot_input_zhao_glider(times, u_knots.T)
 
     plt.show()
     return 0

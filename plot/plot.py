@@ -93,7 +93,7 @@ def plot_power_terms(
     axes[0].plot(times, P_dissipated)
     axes[0].fill_between(times, 0, E_dissipated, color="tab:purple", alpha=0.5)
     axes[0].set_title("Dissipated power")
-    axes[0].set_ylim((-3200,3200))
+    axes[0].set_ylim((-3200, 3200))
     axes[0].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[0].set_ylabel("$\mathcal{D} \, [W]$")
     plt.tight_layout()
@@ -101,7 +101,7 @@ def plot_power_terms(
     axes[1].plot(times, S_dyn_active)
     axes[1].fill_between(times, 0, E_dyn_active, color="tab:purple", alpha=0.5)
     axes[1].set_title("Active soaring power")
-    axes[1].set_ylim((-3200,3200))
+    axes[1].set_ylim((-3200, 3200))
     axes[1].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[1].set_ylabel("$\mathcal{S}_{dyn, active} \, [W]$")
     plt.tight_layout()
@@ -109,7 +109,7 @@ def plot_power_terms(
     axes[2].plot(times, S_dyn_passive)
     axes[2].fill_between(times, 0, E_dyn_passive, color="tab:purple", alpha=0.5)
     axes[2].set_title("Passive soaring power")
-    axes[2].set_ylim((-3200,3200))
+    axes[2].set_ylim((-3200, 3200))
     axes[2].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[2].set_ylabel("$\mathcal{S}_{dyn, passive}$ \, [W]")
     axes[2].set_xlabel("time [s]")
@@ -233,8 +233,9 @@ def plot_glider_angles(
 
     return
 
+
 def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_height):
-    plt.subplots(figsize=(6,3))
+    plt.subplots(figsize=(6, 3))
 
     plt.subplot(2, 1, 1)
     plt.plot(t, height_knots)
@@ -263,6 +264,7 @@ def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_hei
 
     return
 
+
 def plot_glider_phys_quantities(
     t,
     u_trj,
@@ -276,7 +278,7 @@ def plot_glider_phys_quantities(
     max_height,
 ):
 
-    plt.subplots(figsize=(6,3))
+    plt.subplots(figsize=(6, 3))
 
     plt.subplot(2, 1, 1)
     plt.plot(t, c_l_trj)
@@ -336,7 +338,7 @@ def plot_glider_pos(
             [min(pos_trj[:, 2]), max(pos_trj[:, 2])],
         ]
     )
-    axis_limits[0,0] = -10
+    axis_limits[0, 0] = -10
     # Draw projections on walls
     if "x" in plot_axis:
         _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
@@ -356,8 +358,8 @@ def plot_glider_pos(
     _set_real_aspect_ratio(axis_limits, ax)
 
     # ax.view_init(30, 50) # TODO change this to rotate plot
-    #fig.set_size_inches((13, 10))
-    #plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
+    fig.set_size_inches((13, 10))
+    # plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
@@ -551,8 +553,8 @@ def _set_real_aspect_ratio(axis_limits, ax):
 
 
 def _draw_gliders(x_trj, u_trj, traj_time, ax):
-    glider_interval = 1 #s
-    scale = 2
+    glider_interval = 1  # s
+    scale = 1
 
     N = x_trj.shape[0]
     dt = int(N // traj_time)
@@ -579,13 +581,14 @@ def _draw_gliders(x_trj, u_trj, traj_time, ax):
             Line3DCollection([vertices.T.tolist()], linewidths=1, colors="k")
         )
 
-        _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="xyz")
+        if False:  # NOTE set to true to enable axes on the glider
+            _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="xyz")
 
-        # Draw red and green on wingtips
-        #ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
-        # ax.scatter(RB[0], RB[1], RB[2], color="red", s=6)
-        #ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
-        # ax.scatter(LB[0], LB[1], LB[2], color="green", s=6)
+        if False: # NOTE Set to true to enable red and green "lights" on the glider
+            ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
+            ax.scatter(RB[0], RB[1], RB[2], color="red", s=6)
+            ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
+            ax.scatter(LB[0], LB[1], LB[2], color="green", s=6)
 
     return
 

@@ -13,12 +13,14 @@ from pydrake.all import (
 
 from dynamics.wind_models import wind_model, ddt_wind_model
 
+# NOTE not used for final results. Left simply as a reference
+
 # See this example for example implementation:
 # https://github.com/RussTedrake/underactuated/blob/master/underactuated/quadrotor2d.py#L44
 
 # Drake system for slotine dynamics
-@TemplateSystem.define("SlotineGlider_")
-def SlotineGlider_(T):
+@TemplateSystem.define("ZhaoGlider_")
+def ZhaoGlider_(T):
     class Impl(LeafSystem_[T]):
         def _construct(self, converter=None):
             LeafSystem_[T].__init__(self, converter)
@@ -99,7 +101,7 @@ def SlotineGlider_(T):
     return Impl
 
 
-SlotineGlider = SlotineGlider_[None]
+ZhaoGlider = ZhaoGlider_[None]
 
 
 # TODO remove this
@@ -166,4 +168,3 @@ def continuous_dynamics(state, u):
     return state_dot
 
 
-# TODO refactor
