@@ -4,8 +4,9 @@ import pydrake.symbolic as sym
 
 from dynamics.slotine_dynamics import continuous_dynamics
 
+# NOTE Left only for a reference. iLQR was not used for the final thesis work, altough it was experimented quite a bit with
 
-# Inspired by this homework from Underactuated Robotics by Russ Tedrake
+# Inspired by this homework from Underactuated Robotics taught by Russ Tedrake
 # https://colab.research.google.com/github/RussTedrake/underactuated/blob/master/exercises/trajopt/ilqr_driving/ilqr_driving.ipynb#scrollTo=4IbLDqg7D
 
 # Discretize using forward Euler
@@ -35,7 +36,7 @@ def rollout(x0, u_trj):
 def cost_stage(x, u):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    #c_height = (x[3] - 5) ** 2
+    # c_height = (x[3] - 5) ** 2
     c_control = u[1] ** 2 * 0.1
     return c_control
 
@@ -43,7 +44,7 @@ def cost_stage(x, u):
 def cost_final(x):
     m = sym if x.dtype == object else np  # Check type for autodiff
 
-    goal = np.array([5, -15, -5]) #z, x, y
+    goal = np.array([5, -15, -5])  # z, x, y
     c_dist = (x[3:6] - goal).dot(x[3:6] - goal) * 100
     return c_dist
 

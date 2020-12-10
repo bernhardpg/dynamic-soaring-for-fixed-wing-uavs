@@ -110,7 +110,7 @@ def do_energy_analysis(times, x_traj, u_traj, phys_params):
     # TODO should these be moved somewhere else?
     # PLOTTING
     plot_energies(times, E_tot, E_kin, E_pot)
-    #plot_powers(times[:-3], P_tot[:-3], P_dissipated[:-3], P_gained[:-3])
+    # plot_powers(times[:-3], P_tot[:-3], P_dissipated[:-3], P_gained[:-3])
     plot_power_terms(
         times[:-3],
         P_dissipated[:-3],
@@ -122,3 +122,57 @@ def do_energy_analysis(times, x_traj, u_traj, phys_params):
     )
 
     return E_dyn_active - E_dissipated, v
+
+
+def calc_phys_values_from_traj(
+    zhukovskii_glider, phys_params, x_knots_NED, u_knots_NED
+):
+    (m, c_Dp, A, b, rho, g, AR) = phys_params
+    c_knots = u_knots_NED  # Circulation
+
+    # Calculate bank angle
+    phi_knots = np.zeros((x_knots_NED.shape[0], 1))
+    for k in range(x_knots_NED.shape[0]):
+        v_r = x_knots_NED[k, 3:6]
+        c = u_knots_NED[k, :]
+        phi = zhukovskii_glider.calc_bank_angle(v_r, c)
+        phi_knots[k] = phi
+
+    # Calculate relative flight path angle
+    gamma_knots = np.zeros((x_knots_NED.shape[0], 1))
+    for k in range(x_knots_NED.shape[0]):
+        v_r = x_knots_NED[k, 3:6]
+        gamma = zhukovskii_glider.calc_rel_flight_path_angle(v_r)
+        gamma_knots[k] = gamma
+
+    # Calculate heading angle
+    psi_knots = np.zeros((x_knots_NED.shape[0], 1))
+    for k in range(x_knots_NED.shape[0]):
+        h = -x_knots_NED[k, 2]
+        v_r = x_knots_NED[k, 3:6]
+        psi = zhukovskii_glider.calc_heading(h, v_r)
+        psi_knots[k] = psi
+
+    # Calculate lift coeff
+    c_l_knots = np.zeros((x_knots_NED.shape[0], 1))
+    for k in range(x_knots_NED.shape[0]):
+        v_r = x_knots_NED[k, 3:6]
+        c = u_knots_NED[k, :]
+        c_l = zhukovskii_glider.calc_lift_coeff(v_r, c, A)
+        c_l_knots[k] = c_l
+
+    # Calculate load factor
+    n_knots = np.zeros((x_knots_NED.shape[0], 1))
+    for k in range(x_knots_NED.shape[0]):
+        v_r = x_knots_NED[k, 3:6]
+        c = u_knots_NED[k, :]
+        n = zhukovskii_glider.calc_load_factor(v_r, c, m, g, rho)
+        n_knots[k] = n
+
+    return (
+        phi_knots,
+        gamma_knots,
+        psi_knots,
+        c_l_knots,
+        n_knots,
+    )
