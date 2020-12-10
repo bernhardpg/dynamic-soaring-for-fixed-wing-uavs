@@ -73,8 +73,8 @@ def direct_collocation_relative(
     N = 21  # Collocation points
     min_dt = (period_guess / N) * 0.5
     max_dt = (period_guess / N) * 1.5
-    #min_dt = 0.1
-    #max_dt = 0.7
+    # min_dt = 0.1
+    # max_dt = 0.7
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()
@@ -269,8 +269,9 @@ def direct_collocation_relative(
     solve_time = time.time()
     print("\t! Finished trajopt in: {0} s".format(solve_time - formulate_time))
     # assert result.is_success()
+    found_solution = result.is_success()
 
-    if result.is_success():
+    if found_solution:
         x_traj_dimless = dircol.ReconstructStateTrajectory(result)
         sample_times = dircol.GetSampleTimes(result)
         N_plot = 200
@@ -304,16 +305,25 @@ def direct_collocation_relative(
                 solution_period, solution_cost, solution_distance, solution_avg_vel
             )
         )
+
+        # Check time step
         time_step = sample_times[1] - sample_times[0]
         print("\t\tTime step: {0}".format(time_step))
         print("\t\tmin time step: {0}, max time step: {1}".format(min_dt, max_dt))
 
-        solution_details = (solution_avg_vel, solution_period)
+        tol = 0.0001
+        limited_by_time_step = "false"
+        if abs(time_step - min_dt) < tol:
+            limited_by_time_step = "lower"
+        if abs(time_step - max_dt) < tol:
+            limited_by_time_step = "upper"
+
+        solution_details = (solution_avg_vel, solution_period, limited_by_time_step)
         solution_trajectory = (times, x_knots, u_knots)
         next_initial_guess = (x_traj_dimless, u_traj_dimless)
 
         return (
-            True,
+            found_solution,
             solution_details,
             solution_trajectory,
             next_initial_guess,
@@ -321,7 +331,7 @@ def direct_collocation_relative(
 
     else:  # No solution
         print("!!! ERROR: Did not find a solution")
-        return False, (-1, -1), None, None
+        return found_solution, (-1, -1, -1), None, None
 
 
 # TODO this is the old dircol
