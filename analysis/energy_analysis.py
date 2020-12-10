@@ -68,7 +68,7 @@ def _calc_integral(graph, dt):
     return integral
 
 
-def energy_analysis(times, x_traj, u_traj, phys_params):
+def do_energy_analysis(times, x_traj, u_traj, phys_params):
     print("### Running energy analysis")
 
     (m, c_Dp, A, b, rho, g, AR) = phys_params
@@ -79,13 +79,13 @@ def energy_analysis(times, x_traj, u_traj, phys_params):
     D = _generate_finite_diff_matrix_third_order(N, dt)
 
     # Generate all needed trajectories
-    h = x_traj[:, 2]
+    h = -x_traj[:, 2]
     v_r = x_traj[:, 3:6]
     c = u_traj
 
     w = _calc_winds(h)
     v = _calc_abs_vel(h, v_r, w)
-    h_dot = v[:, 2]
+    h_dot = -v[:, 2]
     ddt_w = _calc_ddt_winds(h, h_dot)
     d = _calc_drag_param(v_r, c, c_Dp, A, AR)
 
@@ -104,9 +104,10 @@ def energy_analysis(times, x_traj, u_traj, phys_params):
     E_dyn_active = _calc_integral(S_dyn_active, dt)
     E_dyn_passive = _calc_integral(S_dyn_passive, dt)
 
+    # TODO should these be moved somewhere else?
     # PLOTTING
     plot_energies(times, E_tot, E_kin, E_pot)
-    plot_powers(times[:-3], P_tot[:-3], P_dissipated[:-3], P_gained[:-3])
+    #plot_powers(times[:-3], P_tot[:-3], P_dissipated[:-3], P_gained[:-3])
     plot_power_terms(
         times[:-3],
         P_dissipated[:-3],
@@ -117,4 +118,4 @@ def energy_analysis(times, x_traj, u_traj, phys_params):
         E_dyn_passive[:-3],
     )
 
-    return E_dyn_active - E_dissipated
+    return E_dyn_active - E_dissipated, v

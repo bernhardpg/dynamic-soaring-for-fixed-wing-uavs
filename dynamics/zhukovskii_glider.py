@@ -98,7 +98,8 @@ class RelativeZhukovskiiGlider:
 
     # NOTE This is meant to be used for dimensionalized inputs and outputs
     def calc_heading(self, h, v_r):
-        psi = np.arctan2(v_r[0], v_r[1])
+        # Assumes psi meaured from x-axis in NED frame (i.e. heading is measured from the north)
+        psi = np.arctan2(v_r[1], v_r[0])
         return psi
 
     def calc_rel_flight_path_angle(self, v_r):
@@ -173,9 +174,10 @@ class RelativeZhukovskiiGlider:
         return DrakeSysWrapper(3, self.continuous_dynamics_dimless)
 
     def continuous_dynamics_dimless(self, x, u):
-        # This actually uses normal ENU frame, not NED
+        # NOTE This actually uses ENU frame, not NED. i.e., z is positive upwards
+        # somehow this is better for numerics
         # x = [x, y, h, [v_r]]
-        # h = -z NOTE somehow this is better for numerics
+        # h = -z
         # u = c
         c = u
         p = x[0:3]
@@ -192,7 +194,7 @@ class RelativeZhukovskiiGlider:
         l_term = (v_r.T.dot(v_r) + c.T.dot(c)) / (2 * np.sqrt(v_r.T.dot(v_r) + epsilon))
 
         v_r_dot = -self.e_z - (
-            1 / self.Lam * l_term * np.eye(3) + dw_dx + skew_matrix(c)
+            1 / self.Lam * l_term * np.eye(3) + dw_dx - skew_matrix(c)
         ).dot(v_r)
         p_dot = v_r + w
 
@@ -321,7 +323,6 @@ class ZhukovskiiGlider:
         return c_l
 
     def calc_rel_flight_path_angle(self, x):
-        # TODO unused
         v_r = self.get_vel_rel(x)
         v_rz = v_r[2]
         v_r_norm = sqrt(v_r.T.dot(v_r))

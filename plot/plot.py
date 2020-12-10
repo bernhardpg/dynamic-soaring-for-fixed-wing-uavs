@@ -3,6 +3,7 @@ from matplotlib.collections import PolyCollection
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from matplotlib.animation import FuncAnimation
+import matplotlib.ticker as ticker
 import matplotlib.animation as animation
 
 import numpy as np
@@ -54,21 +55,25 @@ def plot_powers(times, P_tot, P_dissipated, P_gained):
     max_power = max(max(P_tot), max(P_dissipated), max(P_gained))
     min_power = min(min(P_tot), min(P_dissipated), min(P_gained))
     fig, axes = plt.subplots(3, 1)
+    tick_spacing = 1
 
     axes[0].plot(times, P_tot)
     axes[0].set_title("Total power")
     axes[0].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
     axes[0].grid()
+    axes[0].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
     axes[1].plot(times, P_dissipated)
     axes[1].set_title("Power dissipated")
     axes[1].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
     axes[1].grid()
+    axes[1].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
     axes[2].plot(times, P_gained)
     axes[2].set_title("Power gained")
     axes[2].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
     axes[2].grid()
+    axes[2].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
 
 def plot_power_terms(
@@ -83,24 +88,32 @@ def plot_power_terms(
     max_power = max(max(P_dissipated), max(S_dyn_active), max(S_dyn_passive))
     min_power = min(min(P_dissipated), min(S_dyn_active), min(S_dyn_passive))
     fig, axes = plt.subplots(3, 1)
+    tick_spacing = 1
 
     axes[0].plot(times, P_dissipated)
     axes[0].fill_between(times, 0, E_dissipated, color="tab:purple", alpha=0.5)
     axes[0].set_title("Dissipated power")
-    axes[0].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
-    axes[0].grid()
+    axes[0].set_ylim((-3200,3200))
+    axes[0].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+    axes[0].set_ylabel("$\mathcal{D} \, [W]$")
+    plt.tight_layout()
 
     axes[1].plot(times, S_dyn_active)
     axes[1].fill_between(times, 0, E_dyn_active, color="tab:purple", alpha=0.5)
     axes[1].set_title("Active soaring power")
-    axes[1].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
-    axes[1].grid()
+    axes[1].set_ylim((-3200,3200))
+    axes[1].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+    axes[1].set_ylabel("$\mathcal{S}_{dyn, active} \, [W]$")
+    plt.tight_layout()
 
     axes[2].plot(times, S_dyn_passive)
     axes[2].fill_between(times, 0, E_dyn_passive, color="tab:purple", alpha=0.5)
     axes[2].set_title("Passive soaring power")
-    axes[2].set_ylim(min_power - GRAPH_MARGIN, max_power + GRAPH_MARGIN)
-    axes[2].grid()
+    axes[2].set_ylim((-3200,3200))
+    axes[2].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+    axes[2].set_ylabel("$\mathcal{S}_{dyn, passive}$ \, [W]")
+    axes[2].set_xlabel("time [s]")
+    plt.tight_layout()
 
 
 def plot_energies(times, E_tot, E_kin, E_pot):
@@ -110,17 +123,24 @@ def plot_energies(times, E_tot, E_kin, E_pot):
     axes[0].plot(times, E_tot)
     axes[0].set_title("Total energy")
     axes[0].set_ylim(0, max_energy + GRAPH_MARGIN)
-    axes[0].grid()
+    axes[0].xaxis.set_major_locator(ticker.MultipleLocator(1))
+    axes[0].set_ylabel("$E \, [J]$")
+    plt.tight_layout()
 
     axes[1].plot(times, E_kin)
     axes[1].set_title("Kinetic energy")
     axes[1].set_ylim(0, max_energy + GRAPH_MARGIN)
-    axes[1].grid()
+    axes[1].xaxis.set_major_locator(ticker.MultipleLocator(1))
+    axes[1].set_ylabel("$E_{kin} \, [J]$")
+    plt.tight_layout()
 
     axes[2].plot(times, E_pot)
     axes[2].set_title("Potential energy")
     axes[2].set_ylim(0, max_energy + GRAPH_MARGIN)
-    axes[2].grid()
+    axes[2].set_ylabel("$E_{pot} \, [J]$")
+    axes[2].xaxis.set_major_locator(ticker.MultipleLocator(1))
+    axes[2].set_xlabel("time [s]")
+    plt.tight_layout()
 
 
 def _plot_wind_profile(ax, wind_function, h_max=20):
@@ -168,64 +188,142 @@ def plot_wind_profiles():
     return
 
 
-def plot_glider_angles(t, gamma_trj, phi_trj, psi_trj):
-    plt.subplots(figsize=(5, 4))
+def plot_glider_angles(
+    t,
+    gamma_trj,
+    psi_trj,
+    phi_trj,
+    max_bank_angle,
+):
+    plt.subplots()
 
     plt.subplot(3, 1, 1)
-    plt.plot(t, gamma_trj * 180 / np.pi)
-    plt.xlabel("time [s]")
-    plt.ylabel("deg")
-    plt.title("Rel flight path angle")
+    plt.plot(t, phi_trj * 180 / np.pi)
+    # plt.xlabel("time [s]")
+    plt.title("Bank angle")
+    plt.ylabel("$\phi \, [^\circ]$")
+    plt.ylim((-100, 100))
+    plt.hlines(
+        (-max_bank_angle * 180 / np.pi, max_bank_angle * 180 / np.pi),
+        t[0],
+        t[-1],
+        color="tab:red",
+        linestyles="dashed",
+        linewidth=1,
+    )
+    plt.xticks(np.arange(min(t), max(t), 1.0))
 
     plt.subplot(3, 1, 2)
-    plt.plot(t, phi_trj * 180 / np.pi)
-    plt.xlabel("time [s]")
-    plt.title("Bank angle")
-    plt.ylabel("deg")
+    plt.plot(t, gamma_trj * 180 / np.pi)
+    plt.title("Rel. flight path angle")
+    plt.ylabel("$\gamma \, [^\circ]$")
+    plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.ylim((-40, 40))
 
     plt.subplot(3, 1, 3)
     plt.plot(t, psi_trj * 180 / np.pi)
-    plt.xlabel("time [s]")
     plt.title("Heading angle")
-    plt.ylabel("deg")
+    plt.ylabel("$\psi \, [^\circ]$")
+    plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.ylim((-180, 180))
 
-    plt.savefig(PLOT_LOCATION + "attitude.pdf", bbox_inches="tight", pad_inches=0)
+    plt.tight_layout()
+
+    # plt.savefig(PLOT_LOCATION + "attitude.pdf", bbox_inches="tight", pad_inches=0)
 
     return
 
+def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_height):
+    plt.subplots(figsize=(6,3))
 
-def plot_glider_input(t, u_trj, c_l_trj, phi_trj, n_trj):
-    plt.subplots(figsize=(5, 4))
+    plt.subplot(2, 1, 1)
+    plt.plot(t, height_knots)
+    plt.title("Height")
+    plt.ylabel("$h \, [m]$")
+    plt.ylim((0, max_height / 5))
+    plt.hlines(
+        (min_height, max_height),
+        t[0],
+        t[-1],
+        color="tab:red",
+        linestyles="dashed",
+        linewidth=1,
+    )
+    plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.tight_layout()
 
-    plt.subplot(3, 1, 1)
+    plt.subplot(2, 1, 2)
+    plt.plot(t, speed_knots)
+    plt.title("Inertial speed")
+    plt.ylabel("$V [m/s]$")
+    plt.ylim((0, 40))
+    plt.xlabel("time [s]")
+    plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.tight_layout()
+
+    return
+
+def plot_glider_phys_quantities(
+    t,
+    u_trj,
+    c_l_trj,
+    n_trj,
+    height_knots,
+    max_lift_coeff,
+    min_lift_coeff,
+    max_load_factor,
+    min_height,
+    max_height,
+):
+
+    plt.subplots(figsize=(6,3))
+
+    plt.subplot(2, 1, 1)
     plt.plot(t, c_l_trj)
-    plt.xlabel("time [s]")
-    plt.title("Lift coeff")
-    plt.ylabel("c_L")
+    # plt.xlabel("time [s]")
+    plt.title("Lift coefficient")
+    plt.ylabel("$c_L$")
+    plt.hlines(
+        (min_lift_coeff, max_lift_coeff),
+        t[0],
+        t[-1],
+        color="tab:red",
+        linestyles="dashed",
+        linewidth=1,
+    )
+    plt.ylim((0, 2))
+    plt.tight_layout()
+    plt.xticks(np.arange(min(t), max(t), 1.0))
 
-    plt.subplot(3, 1, 2)
-    plt.plot(t, phi_trj * 180 / np.pi)
-    plt.xlabel("time [s]")
-    plt.title("Bank angle")
-    plt.ylabel("deg")
-
-    plt.subplot(3, 1, 3)
+    plt.subplot(2, 1, 2)
     plt.plot(t, n_trj)
     plt.xlabel("time [s]")
     plt.title("Load factor")
-    plt.ylabel("")
+    plt.ylabel("n")
+    plt.ylim((0, max_load_factor * 1.25))
+    plt.hlines(
+        (0, max_load_factor),
+        t[0],
+        t[-1],
+        color="tab:red",
+        linestyles="dashed",
+        linewidth=1,
+    )
+    plt.tight_layout()
+    plt.xticks(np.arange(min(t), max(t), 1.0))
 
-    plt.savefig(PLOT_LOCATION + "input.pdf", bbox_inches="tight", pad_inches=0)
+    # plt.savefig(PLOT_LOCATION + "phys_quantities.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
 def plot_glider_pos(
     x_trj,
     u_trj,
+    traj_time,
     travel_angle,
     draw_soaring_power=False,
     soaring_power=None,
-    plot_axis="x",
+    plot_axis="",
 ):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
@@ -238,6 +336,7 @@ def plot_glider_pos(
             [min(pos_trj[:, 2]), max(pos_trj[:, 2])],
         ]
     )
+    axis_limits[0,0] = -10
     # Draw projections on walls
     if "x" in plot_axis:
         _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
@@ -253,12 +352,12 @@ def plot_glider_pos(
     _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax)
     _draw_direction_vector(x_trj[0, :], travel_angle, axis_limits, ax)
     _draw_wind_field(axis_limits, ax)
-    _draw_gliders(x_trj, u_trj, ax)
+    _draw_gliders(x_trj, u_trj, traj_time, ax)
     _set_real_aspect_ratio(axis_limits, ax)
 
     # ax.view_init(30, 50) # TODO change this to rotate plot
-    fig.set_size_inches((13, 10))
-    plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
+    #fig.set_size_inches((13, 10))
+    #plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
     return
 
 
@@ -351,9 +450,9 @@ def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):
 
     # Set labels
     ax.set_xlabel(
-        "East [m]", labelpad=40
+        "East [m]", labelpad=20
     )  # TODO these padds must be adjusted for each plot
-    ax.set_ylabel("North [m]", labelpad=0)
+    ax.set_ylabel("North [m]", labelpad=20)
     ax.set_zlabel("Height [m]")
 
     # Set ticks
@@ -405,7 +504,7 @@ def _draw_wind_field(axis_limits, ax):
     dz = 2.5
 
     # Plot wind field
-    xs = np.arange(np.ceil(x_min / 20) * 20, x_max, 40)  # Arrows every 40 meters
+    xs = np.ones(1) * np.ceil(x_min)
     ys = np.ones(4) * y_max
     zs = np.arange(0, z_max, dz)
     zs[0] = z_min
@@ -426,6 +525,13 @@ def _draw_wind_field(axis_limits, ax):
         alpha=0.7,
     )
 
+    # Plot wind field graph
+    xs = np.ones(100) * np.ceil(x_min)
+    zs = np.linspace(0, z_max, 100)
+    zs[0] = z_min
+    ys = np.ones(100) * y_max - wind_model(zs)
+    ax.plot(xs, ys, zs, color="tab:blue", alpha=0.7)
+
 
 def _set_real_aspect_ratio(axis_limits, ax):
     (x_min, x_max), (y_min, y_max), (z_min, z_max) = axis_limits
@@ -444,16 +550,22 @@ def _set_real_aspect_ratio(axis_limits, ax):
     ax.set_box_aspect([x_diff, y_diff, z_diff])
 
 
-def _draw_gliders(x_trj, u_trj, ax):
-    N = x_trj.shape[0]
-    N_gliders = 10
-    scale = 1
-    indices = np.linspace(0, N - 1, N_gliders, dtype=int)
+def _draw_gliders(x_trj, u_trj, traj_time, ax):
+    glider_interval = 1 #s
+    scale = 2
 
-    for i in indices:
-        # if i == 0: continue # Do not plot first glider
+    N = x_trj.shape[0]
+    dt = int(N // traj_time)
+    times = np.arange(0, traj_time, glider_interval)
+
+    for t in times:
+        i = int(t * dt)
+
         x = x_trj[i, :]
         c = u_trj[i, :]
+        # Draw time in glider
+        ax.text(x[0], x[1], x[2], "  {0}s".format(t))
+
         F, RF, RB, LF, LB, i_body, j_body, k_body = _get_glider_corners(x, c, scale)
         vertices = np.vstack([F, RF, RB, LB, LF, F]).T
 
@@ -467,12 +579,12 @@ def _draw_gliders(x_trj, u_trj, ax):
             Line3DCollection([vertices.T.tolist()], linewidths=1, colors="k")
         )
 
-        # _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="z")
+        _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="xyz")
 
         # Draw red and green on wingtips
-        # ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
+        #ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
         # ax.scatter(RB[0], RB[1], RB[2], color="red", s=6)
-        # ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
+        #ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)
         # ax.scatter(LB[0], LB[1], LB[2], color="green", s=6)
 
     return
@@ -502,7 +614,7 @@ def _plot_glider_axes(com, i_body, j_body, k_body, scale, ax, axes="xyz"):
             j_body[1],
             j_body[2],
             linewidth=2,
-            color="yellow",
+            color="green",
             length=scale * 3,
         )
     if "z" in axes:
@@ -511,13 +623,12 @@ def _plot_glider_axes(com, i_body, j_body, k_body, scale, ax, axes="xyz"):
             com[0],
             com[1],
             com[2],
-            -k_body[0],
-            -k_body[1],
-            -k_body[2],
-            linewidth=1,
-            color="black",
-            arrow_length_ratio=0.2,
-            length=scale * 2,
+            k_body[0],
+            k_body[1],
+            k_body[2],
+            linewidth=2,
+            color="blue",
+            length=scale * 3,
         )
 
 
@@ -543,8 +654,6 @@ def _get_glider_corners(x, c, scale):
     # Calculate heading
     # alpha = zhukovskii_glider.calc_rel_flight_path_angle(v_r)  # TODO fix this
 
-    j_body = c / np.linalg.norm(c)  # j unit vector in body frame
-    i_body = v_r / np.linalg.norm(v_r)  # i unit vec in stability frame
     # TODO rotate by angle of attack??
     #    i_body = np.array(
     #        [
@@ -555,7 +664,10 @@ def _get_glider_corners(x, c, scale):
     #    ).dot(
     #        i_stability
     #    )  # Rotate i_stab by alpha around y axis to get i_body
-    k_body = np.cross(j_body, i_body)
+
+    i_body = v_r / np.linalg.norm(v_r)  # i unit vec in stability frame
+    j_body = -c / np.linalg.norm(c)  # j unit vector in body frame
+    k_body = np.cross(i_body, j_body)
     R_ned_to_body = np.stack((i_body, j_body, k_body), axis=1)
 
     # Rotate glider vectors by rotation matrix
