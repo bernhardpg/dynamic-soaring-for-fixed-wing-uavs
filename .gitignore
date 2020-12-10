@@ -1,6 +1,9 @@
 # vim swp
 *.swp
+*.swo
+*.swn
 *.DS_STORE
+*.pyc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
