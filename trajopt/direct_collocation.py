@@ -18,7 +18,7 @@ from pydrake.all import (
 def direct_collocation_relative(
     zhukovskii_glider,
     travel_angle,
-    period_guess=4, # TODO a warning should be given when no period guess is given
+    period_guess=4,  # TODO a warning should be given when no period guess is given
     avg_vel_scale_guess=1,
     avg_vel_guess=None,
     initial_guess=None,
@@ -248,6 +248,7 @@ def direct_collocation_relative(
     # Use provided initial_guess
     else:
         print("\tRunning with provided initial guess")
+        print("\t\tperiod_guess: {0}".format(period_guess * T))
         initial_x_traj, initial_u_traj = initial_guess
         dircol.SetInitialTrajectory(initial_u_traj, initial_x_traj)
 

@@ -211,33 +211,54 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
     # Initial guess
     period_initial_guess = period_guess
     avg_speed_initial_guess = 2 * V_l
+    next_initial_guess = None
 
     # Run a sweep search
     for travel_angle in travel_angles[0:]:
         found_solution = False
+        use_straight_line_guess = False
         reduced_period = period_initial_guess
         reduced_avg_vel = avg_speed_initial_guess
 
         # Decrease the avg vel every iteration until a solution is found
         while not found_solution:
+            # Try first to obtain solution with previous solution
+            if not use_straight_line_guess:
+                (
+                    found_solution,
+                    solution_details,
+                    solution_trajectory,
+                    next_initial_guess,
+                ) = direct_collocation_relative(
+                    zhukovskii_glider,
+                    travel_angle,
+                    period_guess=reduced_period,
+                    avg_vel_guess=reduced_avg_vel,
+                    initial_guess=next_initial_guess,
+                )
+
+                # Use straight line from now on if not found
+                if not found_solution:
+                    use_straight_line_guess = True
             # Obtain solution with straight line as initial guess
-            (
-                found_solution,
-                solution_details,
-                solution_trajectory,
-                next_initial_guess,
-            ) = direct_collocation_relative(
-                zhukovskii_glider,
-                travel_angle,
-                period_guess=reduced_period,
-                avg_vel_guess=reduced_avg_vel,
-            )
+            else:
+                (
+                    found_solution,
+                    solution_details,
+                    solution_trajectory,
+                    next_initial_guess,
+                ) = direct_collocation_relative(
+                    zhukovskii_glider,
+                    travel_angle,
+                    period_guess=reduced_period,
+                    avg_vel_guess=reduced_avg_vel,
+                )
 
             # Solution not found
             if not found_solution:
-                print("! No solution found, decreasing avg_vel")
                 # Reduce avg_vel
                 reduced_avg_vel *= 0.8
+                print("! No solution found, decreasing avg_vel")
 
                 # Stop searching and give up
                 tol = 0.3
@@ -245,23 +266,29 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
                     print("ERROR!! Could not find a solution with avg_vel reduction")
-                    continue
+                continue
 
             # Found a solution
             avg_speed, period, limited_by_time_step = solution_details
 
-            # Check if it was limited by step size
+            # Success
+            if found_solution and limited_by_time_step == "false":
+                # Found a solution
+                continue
+
+            # Solution found, but not acceptable because it was limited by step size
             if not limited_by_time_step == "false":
                 reduced_avg_vel = avg_speed_initial_guess
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     print("! Time step at max, increasing period")
-                    reduced_period *= 1.2
+                    reduced_period *= 1.1
                 elif limited_by_time_step == "lower":
                     print("! Time step at min, decreasing period")
-                    reduced_period *= 0.8
-                # Do a rerun
+                    reduced_period *= 0.9
+                # Do a rerun with this solution but with changed stepsize
                 found_solution = False
+                use_straight_line_guess = False
                 continue
 
         # Found solution and it is not limited by step size
@@ -399,7 +426,7 @@ def sweep_calculation_naive(phys_params):
 
         # Save trajectory and values as initial guess for next travel_angle
 
-        #initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
+        # initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
         # TODO, first check previous trajectory!
         avg_speed, period = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
