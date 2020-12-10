@@ -13,18 +13,18 @@ def main(argv):
     # Command line parsing
     try:
         opts, args = getopt.getopt(
-            argv, "a:p:v:sn:", ["angle=", "period=", "velocity=", "sweep", "n_angles="]
+                argv, "a:p:v:s:", ["angle=", "period=", "velocity=", "sweep="]
         )
     except getopt.GetoptError:
         print(
-            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?> -n <n_sweep_angles>"
+            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?>"
         )
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == "-h":
             print(
-                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?>"
+                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_angles>"
             )
             sys.exit()
         elif opt in ("-a", "--angle"):
@@ -35,7 +35,6 @@ def main(argv):
             avg_vel_scale_guess = float(arg)
         elif opt in ("-s", "--sweep"):
             run_once = False
-        elif opt in ("-n", "--n_angles"):
             n_angles = int(arg)
 
     # Physical parameters

@@ -214,123 +214,68 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
 
     # Run a sweep search
     for travel_angle in travel_angles[0:]:
-        # Obtain solution with straight line as initial guess
-        (
-            found_solution,
-            solution_details,
-            solution_trajectory,
-            next_initial_guess,
-        ) = direct_collocation_relative(
-            zhukovskii_glider,
-            travel_angle,
-            period_guess=period_initial_guess,
-            avg_vel_guess=avg_speed_initial_guess,
-        )
+        found_solution = False
+        reduced_period = period_initial_guess
+        reduced_avg_vel = avg_speed_initial_guess
 
-        avg_speed, period, limited_by_time_step = solution_details
+        # Decrease the avg vel every iteration until a solution is found
+        while not found_solution:
+            # Obtain solution with straight line as initial guess
+            (
+                found_solution,
+                solution_details,
+                solution_trajectory,
+                next_initial_guess,
+            ) = direct_collocation_relative(
+                zhukovskii_glider,
+                travel_angle,
+                period_guess=reduced_period,
+                avg_vel_guess=reduced_avg_vel,
+            )
 
-        # Increase or decrease time step limits if time step maxed out
-        if not limited_by_time_step == "false":
-            reduced_period = period_initial_guess
-
-            while not limited_by_time_step == "false":
-                # Do a line search over period
-                if not limited_by_time_step == "false":
-                    if limited_by_time_step == "upper":
-                        print("! Time step at max, increasing period")
-                        reduced_period *= 1.2
-                    elif limited_by_time_step == "lower":
-                        print("! Time step at min, decreasing period")
-                        reduced_period *= 0.8
-
-                    (
-                        found_solution,
-                        solution_details,
-                        solution_trajectory,
-                        next_initial_guess,
-                    ) = direct_collocation_relative(
-                        zhukovskii_glider,
-                        travel_angle,
-                        period_guess=reduced_period,
-                        avg_vel_guess=avg_speed_initial_guess,
-                    )
-
-                    avg_speed, period, limited_by_time_step = solution_details
-
-                    # Reduce the avg_speed every time until solution is found
-                    if not found_solution:
-                        reduced_avg_vel = avg_speed_initial_guess
-
-                        while not found_solution:
-                            # TODO cleanup
-                            # Do a line search over avg velocity
-                            if not found_solution:
-                                #reduced_period *= 1
-                                reduced_avg_vel *= 0.8
-
-                            (
-                                found_solution,
-                                solution_details,
-                                solution_trajectory,
-                                next_initial_guess,
-                            ) = direct_collocation_relative(
-                                zhukovskii_glider,
-                                travel_angle,
-                                period_guess=reduced_period,
-                                avg_vel_guess=reduced_avg_vel,
-                            )
-
-                            # Stop searching and give up
-                            tol = 0.3
-                            if reduced_avg_vel <= tol:
-                                solution_avg_speeds[travel_angle] = -1
-                                solution_periods[travel_angle] = -1
-                                break
-
-
-        # TODO this should be done after every period increase/decrease too
-        # TODO what if it doesnt find a solution, then finds a solution, but then it is maxed out?
-        # Reduce the avg_speed every time until solution is found
-        if not found_solution:
-            reduced_avg_vel = avg_speed_initial_guess
-
-            while not found_solution:
-                # TODO cleanup
-                # Do a line search over avg velocity
-                if not found_solution:
-                    #reduced_period *= 1
-                    reduced_avg_vel *= 0.8
-
-                (
-                    found_solution,
-                    solution_details,
-                    solution_trajectory,
-                    next_initial_guess,
-                ) = direct_collocation_relative(
-                    zhukovskii_glider,
-                    travel_angle,
-                    period_guess=period_initial_guess,
-                    avg_vel_guess=reduced_avg_vel,
-                )
+            # Solution not found
+            if not found_solution:
+                print("! No solution found, decreasing avg_vel")
+                # Reduce avg_vel
+                reduced_avg_vel *= 0.8
 
                 # Stop searching and give up
                 tol = 0.3
                 if reduced_avg_vel <= tol:
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
-                    break
+                    print("ERROR!! Could not find a solution with avg_vel reduction")
+                    continue
 
-        # Save trajectory and values as potential initial guess for next travel_angle
+            # Found a solution
+            avg_speed, period, limited_by_time_step = solution_details
+
+            # Check if it was limited by step size
+            if not limited_by_time_step == "false":
+                reduced_avg_vel = avg_speed_initial_guess
+                # Increase or decrease period if limited by step size
+                if limited_by_time_step == "upper":
+                    print("! Time step at max, increasing period")
+                    reduced_period *= 1.2
+                elif limited_by_time_step == "lower":
+                    print("! Time step at min, decreasing period")
+                    reduced_period *= 0.8
+                # Do a rerun
+                found_solution = False
+                continue
+
+        # Found solution and it is not limited by step size
+        # then save values
         initial_guess = next_initial_guess
         avg_speed, period, _ = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
         solution_periods[travel_angle] = period
 
-        with open("./results/plots/sweep_results_speeds", "w+") as f:
+        with open("./results/plots/sweep_results_speeds", "w") as f:
             f.write(json.dumps(solution_avg_speeds))
             f.close()
 
-        with open("./results/plots/sweep_results_periods", "w+") as f:
+        with open("./results/plots/sweep_results_periods", "w") as f:
             f.write(json.dumps(solution_periods))
             f.close()
 
@@ -453,7 +398,9 @@ def sweep_calculation_naive(phys_params):
                     break
 
         # Save trajectory and values as initial guess for next travel_angle
-        initial_guess = next_initial_guess
+
+        #initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
+        # TODO, first check previous trajectory!
         avg_speed, period = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
         solution_periods[travel_angle] = period

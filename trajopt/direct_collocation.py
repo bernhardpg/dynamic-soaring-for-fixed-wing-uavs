@@ -18,7 +18,7 @@ from pydrake.all import (
 def direct_collocation_relative(
     zhukovskii_glider,
     travel_angle,
-    period_guess=4,
+    period_guess=4, # TODO a warning should be given when no period guess is given
     avg_vel_scale_guess=1,
     avg_vel_guess=None,
     initial_guess=None,
