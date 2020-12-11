@@ -170,10 +170,10 @@ def show_sweep_result():
 
     solution_avg_speeds = dict()
     solution_periods = dict()
-    with open("./results/plots/sweep_results_speeds", "r") as f:
+    with open("./results/plots/sweep_results_speeds.txt", "r") as f:
         solution_avg_speeds = json.load(f)
         f.close()
-    with open("./results/plots/sweep_results_periods", "r") as f:
+    with open("./results/plots/sweep_results_periods.txt", "r") as f:
         solution_periods = json.load(f)
         f.close()
 
@@ -289,11 +289,11 @@ def sweep_calculation(
         solution_avg_speeds[travel_angle] = avg_speed
         solution_periods[travel_angle] = period
 
-        with open("./results/plots/sweep_results_speeds", "w") as f:
+        with open("./results/plots/sweep_results_speeds.txt", "w") as f:
             f.write(json.dumps(solution_avg_speeds))
             f.close()
 
-        with open("./results/plots/sweep_results_periods", "w") as f:
+        with open("./results/plots/sweep_results_periods.txt", "w") as f:
             f.write(json.dumps(solution_periods))
             f.close()
 
