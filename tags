@@ -22,6 +22,7 @@ Lam	trajopt/trajectory_generator.py	/^    Lam = zhukovskii_glider.calc_opt_glide
 Line3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 MathematicalProgram	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 N	trajopt/direct_collocation.py	/^    N = 21  # Collocation points$/;"	v
+N	trajopt/direct_collocation.py	/^    N = 31  # Collocation points$/;"	v
 N_plot	trajopt/direct_collocation.py	/^        N_plot = 200$/;"	v
 PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/"$/;"	v
 Poly3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
@@ -179,7 +180,7 @@ matplotlib	plot/plot.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.ticker as ticker$/;"	i
 matplotlib	test/test_ilqr.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	trajopt/nonlin_trajopt.py	/^import matplotlib.pyplot as plt$/;"	i
-max_dt	trajopt/direct_collocation.py	/^    max_dt = (period_guess \/ N) * 1.5$/;"	v
+max_dt	trajopt/direct_collocation.py	/^    max_dt = (period_guess \/ N) * 3$/;"	v
 max_dt	trajopt/direct_collocation.py	/^    max_dt = 0.5$/;"	v
 max_sin_bank_angle_squared	trajopt/direct_collocation.py	/^    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2$/;"	v
 max_vel	trajopt/direct_collocation.py	/^    max_vel = 40  # m\/s$/;"	v

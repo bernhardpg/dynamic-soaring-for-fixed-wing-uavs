@@ -249,20 +249,20 @@ def sweep_calculation(
             )
 
             # NOTE Disable all this crap
-            if False:
-                if changing_step_size:
-                    # If we changed the step size and did not find a solution,
-                    # use previous solution
-                    if not found_solution:
-                        log.warning(" Changed stepsize, but did not find a solution. Using previous one")
-                        break
-
-                    # If we found a new solution, but the avg_vel has changed too much
-                    # use the previous solution
-                    avg_vel_change = np.abs(avg_speed - unchanged_avg_vel)
-                    if avg_vel_change > 1:
-                        log.warning(" Changed stepsize, but the new solution diverged too much. Using previous one")
-                        break
+#            if False:
+#                if changing_step_size:
+#                    # If we changed the step size and did not find a solution,
+#                    # use previous solution
+#                    if not found_solution:
+#                        log.warning(" Changed stepsize, but did not find a solution. Using previous one")
+#                        break
+#
+#                    # If we found a new solution, but the avg_vel has changed too much
+#                    # use the previous solution
+#                    avg_vel_change = np.abs(avg_speed - unchanged_avg_vel)
+#                    if avg_vel_change > 1:
+#                        log.warning(" Changed stepsize, but the new solution diverged too much. Using previous one")
+#                        break
 
             # Solution not found
             if not found_solution:
