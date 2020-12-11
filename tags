@@ -245,7 +245,7 @@ solve_time	trajopt/direct_collocation.py	/^    solve_time = time.time()$/;"	v
 sqrt	dynamics/zhukovskii_glider.py	/^from math import sqrt$/;"	i
 stage	ilqr/ilqr.py	/^    def stage(self, x, u):$/;"	m	class:derivatives
 start_time	trajopt/direct_collocation.py	/^    start_time = time.time()$/;"	v
-sweep_calculation_for_period	trajopt/trajectory_generator.py	/^def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angles=9):$/;"	f
+sweep_calculation	trajopt/trajectory_generator.py	/^def sweep_calculation($/;"	f
 sweep_calculation_naive	trajopt/trajectory_generator.py	/^def sweep_calculation_naive(phys_params):$/;"	f
 sym	dynamics/zhao_dynamics.py	/^import pydrake.symbolic as sym$/;"	i
 sym	ilqr/ilqr.py	/^import pydrake.symbolic as sym$/;"	i

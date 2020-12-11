@@ -33,21 +33,37 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
     avg_vel_x, avg_vel_y = zip(*avg_vel_lists)
     avg_vel_x = [float(i) * np.pi / 180 for i in avg_vel_x]
     avg_vel_y = [float(i) for i in avg_vel_y]
+    max_vel = max(avg_vel_y)
     avg_vel_x.append(avg_vel_x[0])
     avg_vel_y.append(avg_vel_y[0])
     axes[0].plot(avg_vel_x, avg_vel_y)
     axes[0].set_title("Average velocities")
     axes[0].set_theta_zero_location("N")
+    # Wind direction
+    axes[0].annotate(
+        "",
+        xy=(0, max_vel / 2),
+        xytext=(0, max_vel),
+        arrowprops=dict(color="tab:blue", width=1, headlength=5, headwidth=5),
+    )
 
     periods_lists = sorted(solution_periods.items())
     periods_x, periods_y = zip(*periods_lists)
     periods_x = [float(i) * np.pi / 180 for i in periods_x]
     periods_y = [float(i) for i in periods_y]
+    max_period = max(periods_y)
     periods_x.append(periods_x[0])
     periods_y.append(periods_y[0])
     axes[1].plot(periods_x, periods_y)
     axes[1].set_title("Periods")
     axes[1].set_theta_zero_location("N")
+    # Wind direction
+    axes[1].annotate(
+        "",
+        xy=(0, max_period / 2),
+        xytext=(0, max_period),
+        arrowprops=dict(color="tab:blue", width=1, headlength=5, headwidth=5),
+    )
 
     fig.savefig("./results/plots/polar_plot.pdf")
     return

@@ -20,14 +20,14 @@ def main(argv):
         )
     except getopt.GetoptError:
         print(
-            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep")
+            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep"
         )
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == "-h":
             print(
-                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep")
+                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep"
             )
             sys.exit()
         elif opt in ("-a", "--angle"):
