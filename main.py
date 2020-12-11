@@ -1,6 +1,8 @@
-import sys, getopt
-from trajopt.trajectory_generator import *
+#!/usr/bin/env python3
 
+import sys, getopt
+import logging as log
+from trajopt.trajectory_generator import *
 
 def main(argv):
     # Default program arguments
@@ -13,7 +15,7 @@ def main(argv):
     # Command line parsing
     try:
         opts, args = getopt.getopt(
-                argv, "a:p:v:s:", ["angle=", "period=", "velocity=", "sweep="]
+            argv, "a:p:v:s:", ["angle=", "period=", "velocity=", "sweep="]
         )
     except getopt.GetoptError:
         print(
@@ -66,6 +68,13 @@ def main(argv):
     )
 
     if run_once:
+        # Set logging
+        log.basicConfig(
+            format="%(levelname)s:%(message)s",
+            filename="single_log.log",
+            filemode="w",
+            level=log.DEBUG,
+        )
         calc_and_plot_trajectory(
             phys_params,
             phys_constraints,
@@ -76,9 +85,14 @@ def main(argv):
         )
 
     else:
-        sweep_calculation_for_period(
-            phys_params, travel_angle, period_guess, n_angles
+        # Set logging
+        log.basicConfig(
+            format="%(levelname)s:%(message)s",
+            filename="sweep_run.log",
+            filemode="w",
+            level=log.DEBUG,
         )
+        sweep_calculation_for_period(phys_params, travel_angle, period_guess, n_angles)
 
         show_sweep_result()
         plt.show()

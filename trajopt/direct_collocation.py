@@ -1,4 +1,5 @@
 import time
+import logging as log
 import numpy as np
 from pydrake.all import (
     eq,
@@ -18,7 +19,7 @@ from pydrake.all import (
 def direct_collocation_relative(
     zhukovskii_glider,
     travel_angle,
-    period_guess=4, # TODO a warning should be given when no period guess is given
+    period_guess=4,  # TODO a warning should be given when no period guess is given
     avg_vel_scale_guess=1,
     avg_vel_guess=None,
     initial_guess=None,
@@ -48,10 +49,8 @@ def direct_collocation_relative(
         avg_vel_guess = V_l * avg_vel_scale_guess
     total_dist_travelled_guess = avg_vel_guess * period_guess
 
-    print(
-        "*** Running DirCol for travel_angle: {0} deg".format(
-            travel_angle * 180 / np.pi
-        )
+    log.info(
+        " *** Running DirCol for travel_angle: {0} deg".format(travel_angle * 180 / np.pi)
     )
 
     # Make all values dimless
@@ -219,9 +218,9 @@ def direct_collocation_relative(
 
     # If no initial guess provided, use a straight line
     if initial_guess == None:
-        print("\tRunning with straight line as initial guess")
-        print(
-            "\t\tperiod_guess: {0}, avg_vel_guess: {1}".format(
+        log.debug("\tRunning with straight line as initial guess")
+        log.debug(
+            "\tperiod_guess: {0}, avg_vel_guess: {1}".format(
                 period_guess * T, avg_vel_guess * V_l
             )
         )
@@ -247,7 +246,10 @@ def direct_collocation_relative(
 
     # Use provided initial_guess
     else:
-        print("\tRunning with provided initial guess")
+        log.debug(
+            "\tRunning with provided initial guess\n"
+            + "\t\tperiod_guess: {0}".format(period_guess * T)
+        )
         initial_x_traj, initial_u_traj = initial_guess
         dircol.SetInitialTrajectory(initial_u_traj, initial_x_traj)
 
@@ -264,10 +266,10 @@ def direct_collocation_relative(
     #######
 
     formulate_time = time.time()
-    print("\tFormulated trajopt in: {0} s".format(formulate_time - start_time))
+    log.debug("\tFormulated trajopt in: {0} s".format(formulate_time - start_time))
     result = Solve(dircol)
     solve_time = time.time()
-    print("\t! Finished trajopt in: {0} s".format(solve_time - formulate_time))
+    log.debug("\t! Finished trajopt in: {0} s".format(solve_time - formulate_time))
     # assert result.is_success()
     found_solution = result.is_success()
 
@@ -299,17 +301,17 @@ def direct_collocation_relative(
         solution_distance = dir_vector.T.dot(x_knots[-1, 0:2])
         solution_avg_vel = solution_distance / solution_period
 
-        print("\t** Solution details:")
-        print(
-            "\t\tperiod: {0} (s)\n\t\tcost: {1}\n\t\tdistance: {2} (m) \n\t\tavg. vel: {3} (m/s)".format(
+        log.info(
+            "\t** Solution details:\n"
+            + "\t\tperiod: {0} (s)\n\t\tcost: {1}\n\t\tdistance: {2} (m) \n\t\tavg. vel: {3} (m/s)".format(
                 solution_period, solution_cost, solution_distance, solution_avg_vel
             )
         )
 
         # Check time step
         time_step = sample_times[1] - sample_times[0]
-        print("\t\tTime step: {0}".format(time_step))
-        print("\t\tmin time step: {0}, max time step: {1}".format(min_dt, max_dt))
+        log.debug("\tTime step: {0}".format(time_step))
+        log.debug("\tmin_dt: {0}, max_dt: {1}".format(min_dt, max_dt))
 
         tol = 0.0001
         limited_by_time_step = "false"
@@ -330,7 +332,7 @@ def direct_collocation_relative(
         )
 
     else:  # No solution
-        print("!!! ERROR: Did not find a solution")
+        log.warning("Did not find a solution")
         return found_solution, (-1, -1, -1), None, None
 
 

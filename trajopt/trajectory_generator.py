@@ -4,6 +4,7 @@ from dynamics.zhukovskii_glider import *
 from plot.plot import *
 from trajopt.fourier_collocation import *
 import json
+import logging as log
 
 
 def calc_and_plot_trajectory(
@@ -49,9 +50,10 @@ def calc_and_plot_trajectory(
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
     T = zhukovskii_glider.get_char_time()
 
-    print("Running dircol with:")
-    print(
-        "\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(
+    log.info(
+        " ### Running dircol with:"
+        + "\n"
+        + "\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(
             Lam, Th, V_opt, V_l, T
         )
     )
@@ -189,9 +191,9 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
     V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
     T = zhukovskii_glider.get_char_time()
 
-    print("Running dircol sweep with:")
-    print(
-        "\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(
+    log.info(
+        " ### Running dircol sweep with:\n"
+        + "\tLam: {0}\n\tTh: {1}\n\tV_opt: {2}\n\tV_l: {3}\n\tT: {4}".format(
             Lam, Th, V_opt, V_l, T
         )
     )
@@ -235,17 +237,17 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
 
             # Solution not found
             if not found_solution:
-                print("! No solution found, decreasing avg_vel")
                 # Reduce avg_vel
                 reduced_avg_vel *= 0.8
+                log.warning(" No solution found, decreasing avg_vel")
 
                 # Stop searching and give up
                 tol = 0.3
                 if reduced_avg_vel <= tol:
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
-                    print("ERROR!! Could not find a solution with avg_vel reduction")
-                    continue
+                    log.error(" Could not find a solution with avg_vel reduction")
+                continue
 
             # Found a solution
             avg_speed, period, limited_by_time_step = solution_details
@@ -255,10 +257,10 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                 reduced_avg_vel = avg_speed_initial_guess
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
-                    print("! Time step at max, increasing period")
+                    log.warning(" Time step at max, increasing period")
                     reduced_period *= 1.2
                 elif limited_by_time_step == "lower":
-                    print("! Time step at min, decreasing period")
+                    log.warning(" Time step at min, decreasing period")
                     reduced_period *= 0.8
                 # Do a rerun
                 found_solution = False
@@ -399,7 +401,7 @@ def sweep_calculation_naive(phys_params):
 
         # Save trajectory and values as initial guess for next travel_angle
 
-        #initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
+        # initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
         # TODO, first check previous trajectory!
         avg_speed, period = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
