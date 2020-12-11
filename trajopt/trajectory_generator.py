@@ -65,7 +65,7 @@ def calc_and_plot_trajectory(
         _,
     ) = direct_collocation_relative(
         zhukovskii_glider,
-        travel_angle,
+        travel_angle * np.pi / 180,
         period_guess=period_guess,
         avg_vel_scale_guess=avg_vel_scale_guess,
     )
@@ -181,7 +181,7 @@ def show_sweep_result():
     plt.show()
 
 
-def sweep_calculation_for_period(
+def sweep_calculation(
     phys_params, start_angle, period_guess, avg_vel_scale_guess=1, n_angles=9
 ):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
@@ -201,12 +201,12 @@ def sweep_calculation_for_period(
         )
     )
 
-    angle_increment = 2 * np.pi / n_angles
+    angle_increment = 360 / n_angles
 
     travel_angles = np.hstack(
         [
-            np.arange(start_angle, 2 * np.pi, angle_increment),
-            np.arange(0, start_angle, angle_increment),
+            np.arange(start_angle, 360, angle_increment),
+            np.arange(0, start_angle - angle_increment, angle_increment),
         ]
     )
 
@@ -219,7 +219,7 @@ def sweep_calculation_for_period(
     next_initial_guess = None
 
     # Run a sweep search
-    for travel_angle in travel_angles[0:]:
+    for travel_angle in travel_angles:
         found_solution = False
         reduced_period = period_initial_guess
         reduced_avg_vel = avg_speed_initial_guess
@@ -234,7 +234,7 @@ def sweep_calculation_for_period(
                 potential_initial_guess,
             ) = direct_collocation_relative(
                 zhukovskii_glider,
-                travel_angle,
+                travel_angle * np.pi / 180,
                 period_guess=reduced_period,
                 avg_vel_guess=reduced_avg_vel,
                 initial_guess=next_initial_guess,

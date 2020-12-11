@@ -31,21 +31,23 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
 
     avg_vel_lists = sorted(solution_avg_vel.items())
     avg_vel_x, avg_vel_y = zip(*avg_vel_lists)
-    avg_vel_x = [float(i) for i in avg_vel_x]
+    avg_vel_x = [float(i) * np.pi / 180 for i in avg_vel_x]
     avg_vel_y = [float(i) for i in avg_vel_y]
     avg_vel_x.append(avg_vel_x[0])
     avg_vel_y.append(avg_vel_y[0])
     axes[0].plot(avg_vel_x, avg_vel_y)
     axes[0].set_title("Average velocities")
+    axes[0].set_theta_zero_location("N")
 
     periods_lists = sorted(solution_periods.items())
     periods_x, periods_y = zip(*periods_lists)
-    periods_x = [float(i) for i in periods_x]
+    periods_x = [float(i) * np.pi / 180 for i in periods_x]
     periods_y = [float(i) for i in periods_y]
     periods_x.append(periods_x[0])
     periods_y.append(periods_y[0])
     axes[1].plot(periods_x, periods_y)
     axes[1].set_title("Periods")
+    axes[1].set_theta_zero_location("N")
 
     fig.savefig("./results/plots/polar_plot.pdf")
     return
@@ -584,7 +586,7 @@ def _draw_gliders(x_trj, u_trj, traj_time, ax):
         if False:  # NOTE set to true to enable axes on the glider
             _plot_glider_axes(x[0:3], i_body, j_body, k_body, scale, ax, axes="xyz")
 
-        if False: # NOTE Set to true to enable red and green "lights" on the glider
+        if False:  # NOTE Set to true to enable red and green "lights" on the glider
             ax.scatter(RF[0], RF[1], RF[2], color="red", s=6)
             ax.scatter(RB[0], RB[1], RB[2], color="red", s=6)
             ax.scatter(LF[0], LF[1], LF[2], color="green", s=6)

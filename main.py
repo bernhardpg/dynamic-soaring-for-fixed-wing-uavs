@@ -7,7 +7,7 @@ from trajopt.trajectory_generator import *
 
 def main(argv):
     # Default program arguments
-    travel_angle = np.pi / 2
+    travel_angle = 90
     period_guess = 8
     avg_vel_scale_guess = 2
     run_once = True
@@ -20,18 +20,18 @@ def main(argv):
         )
     except getopt.GetoptError:
         print(
-            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <do_a_sweep?>"
+            "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep")
         )
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == "-h":
             print(
-                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_angles>"
+                "main.py -a <travel_angle> -p <period_guess> -v <velocity_guess> -s <n_sweep_angles> --show_sweep")
             )
             sys.exit()
         elif opt in ("-a", "--angle"):
-            travel_angle = float(arg) * np.pi / 180
+            travel_angle = float(arg)
         elif opt in ("-p", "--period"):
             period_guess = float(arg)
         elif opt in ("-v", "--velocity"):
@@ -96,7 +96,7 @@ def main(argv):
             filemode="w",
             level=log.DEBUG,
         )
-        sweep_calculation_for_period(
+        sweep_calculation(
             phys_params, travel_angle, period_guess, avg_vel_scale_guess, n_angles
         )
 
