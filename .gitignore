@@ -1,9 +1,10 @@
-# vim swp
+# Custom
 *.swp
 *.swo
 *.swn
 *.DS_STORE
 *.pyc
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
