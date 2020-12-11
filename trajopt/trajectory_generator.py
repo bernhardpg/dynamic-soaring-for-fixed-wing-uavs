@@ -181,7 +181,9 @@ def show_sweep_result():
     plt.show()
 
 
-def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angles=9):
+def sweep_calculation_for_period(
+    phys_params, start_angle, period_guess, avg_vel_scale_guess=1, n_angles=9
+):
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
 
@@ -213,7 +215,7 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
 
     # Initial guess
     period_initial_guess = period_guess
-    avg_speed_initial_guess = 2.5 * V_l
+    avg_speed_initial_guess = avg_vel_scale_guess * V_l
     next_initial_guess = None
 
     # Run a sweep search
@@ -229,7 +231,7 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                 found_solution,
                 solution_details,
                 solution_trajectory,
-                next_initial_guess,
+                potential_initial_guess,
             ) = direct_collocation_relative(
                 zhukovskii_glider,
                 travel_angle,
@@ -240,26 +242,31 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
 
             # Solution not found
             if not found_solution:
-            #    # Reduce avg_vel
-            #    reduced_avg_vel *= 0.95
-            #    log.warning(" No solution found, decreasing avg_vel")
-            #    next_initial_guess = None
+                #    # Reduce avg_vel
+                #    reduced_avg_vel *= 0.95
+                #    log.warning(" No solution found, decreasing avg_vel")
+                #    next_initial_guess = None
 
-                # Reduce avg_vel
-                reduced_period *= 0.975
-                log.warning(" No solution found, decreasing avg_vel")
+                # Reduce period
+                reduced_period *= 0.95
+                log.warning(" No solution found, decreasing period")
+
+                # Start using straight line if initial guess fails too many times
+                if reduced_period < 4.0:
+                    next_initial_guess = None
+                    reduced_period = period_initial_guess
+                continue
 
                 # Stop searching and give up
-                tol = 0.3
-                if reduced_avg_vel <= tol:
+                if reduced_avg_vel <= 0.3:
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
                     log.error(" Could not find a solution with avg_vel reduction")
                     break
-                continue
 
             # Found a solution
             avg_speed, period, limited_by_time_step = solution_details
+            next_initial_guess = potential_initial_guess
 
             # Check if it was limited by step size
             if not limited_by_time_step == "false":
@@ -267,10 +274,10 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     log.warning(" Time step at max, increasing period")
-                    reduced_period *= 1.05
+                    reduced_period *= 1.1
                 elif limited_by_time_step == "lower":
                     log.warning(" Time step at min, decreasing period")
-                    reduced_period *= 0.95
+                    reduced_period *= 0.9
                 # Do a rerun
                 found_solution = False
                 continue

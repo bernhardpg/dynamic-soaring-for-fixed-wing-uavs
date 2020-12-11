@@ -4,6 +4,7 @@ import sys, getopt
 import logging as log
 from trajopt.trajectory_generator import *
 
+
 def main(argv):
     # Default program arguments
     travel_angle = np.pi / 2
@@ -95,7 +96,9 @@ def main(argv):
             filemode="w",
             level=log.DEBUG,
         )
-        sweep_calculation_for_period(phys_params, travel_angle, period_guess, n_angles)
+        sweep_calculation_for_period(
+            phys_params, travel_angle, period_guess, avg_vel_scale_guess, n_angles
+        )
 
         show_sweep_result()
         plt.show()
