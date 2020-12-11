@@ -220,10 +220,15 @@ def sweep_calculation(
     reduced_period = period_initial_guess
     reduced_avg_vel = avg_speed_initial_guess
 
+    # NOTE PLAN
+    # 1. Try turning up max_dt more
+    # 3. If work: try turning off increase of period
+    # 2. Try more collocation points with higher period (e.g. 8 or 9, maybe that captures all periods)
+
     # Run a sweep search
     for travel_angle in travel_angles:
         found_solution = False
-        #reduced_period = period_initial_guess
+        reduced_period = period_initial_guess
         reduced_avg_vel = avg_speed_initial_guess
         changing_step_size = False
 
@@ -243,16 +248,24 @@ def sweep_calculation(
                 initial_guess=next_initial_guess,
             )
 
+            # NOTE Disable all this crap
+            if False:
+                if changing_step_size:
+                    # If we changed the step size and did not find a solution,
+                    # use previous solution
+                    if not found_solution:
+                        log.warning(" Changed stepsize, but did not find a solution. Using previous one")
+                        break
+
+                    # If we found a new solution, but the avg_vel has changed too much
+                    # use the previous solution
+                    avg_vel_change = np.abs(avg_speed - unchanged_avg_vel)
+                    if avg_vel_change > 1:
+                        log.warning(" Changed stepsize, but the new solution diverged too much. Using previous one")
+                        break
 
             # Solution not found
             if not found_solution:
-
-                # If we changed the step size and did not find a solution,
-                # use previous solution
-                if changing_step_size:
-                    log.warning(" Changed stepsize, but did not find a solution. Using previous one")
-                    break
-
                 # If we did not find a solution, reduce period
                 log.warning(" No solution found, decreasing period")
                 reduced_period *= 0.99
@@ -264,18 +277,23 @@ def sweep_calculation(
 
             # Check if it was limited by step size
             if not limited_by_time_step == "false":
-                changing_step_size = True
+                # First time changing step size
+                #if not changing_step_size:
+                    #changing_step_size = True
+                    #unchanged_avg_vel = avg_speed
 
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
-                    log.warning(" Time step at max, increasing period")
-                    reduced_period *= 1.025
+                    log.warning(" Time step at max")
+                    #log.warning(" Time step at max, increasing period")
+                    #reduced_period *= 1.025
                 elif limited_by_time_step == "lower":
-                    log.warning(" Time step at min, decreasing period")
-                    reduced_period *= 0.975
+                    log.warning(" Time step at min")
+                    #log.warning(" Time step at min, decreasing period")
+                    #reduced_period *= 0.975
 
                 # Do a rerun
-                found_solution = False
+                #found_solution = False
                 continue
 
 

@@ -70,6 +70,7 @@ _plot_wind_profile	plot/plot.py	/^def _plot_wind_profile(ax, wind_function, h_ma
 _polygon_under_graph	plot/plot.py	/^def _polygon_under_graph(xlist, ylist):$/;"	f
 _set_real_aspect_ratio	plot/plot.py	/^def _set_real_aspect_ratio(axis_limits, ax):$/;"	f
 abs_vel_knots	trajopt/trajectory_generator.py	/^    abs_vel_knots = np.sqrt(np.diag(vel_knots.dot(vel_knots.T)))$/;"	v
+airspeed_squared	trajopt/direct_collocation.py	/^    airspeed_squared = x[3:6].T.dot(x[3:6])$/;"	v
 animation	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 average_speed	trajopt/direct_collocation.py	/^    def average_speed(vars):$/;"	f
 avg_vel_guess	trajopt/direct_collocation.py	/^        avg_vel_guess = V_l * avg_vel_scale_guess$/;"	v
@@ -181,6 +182,7 @@ matplotlib	trajopt/nonlin_trajopt.py	/^import matplotlib.pyplot as plt$/;"	i
 max_dt	trajopt/direct_collocation.py	/^    max_dt = (period_guess \/ N) * 1.5$/;"	v
 max_dt	trajopt/direct_collocation.py	/^    max_dt = 0.5$/;"	v
 max_sin_bank_angle_squared	trajopt/direct_collocation.py	/^    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2$/;"	v
+max_vel	trajopt/direct_collocation.py	/^    max_vel = 40  # m\/s$/;"	v
 maximum_timestep	trajopt/direct_collocation.py	/^        maximum_timestep=max_dt,$/;"	v
 min_dt	trajopt/direct_collocation.py	/^    min_dt = (period_guess \/ N) * 0.5$/;"	v
 min_dt	trajopt/direct_collocation.py	/^    min_dt = 0.05$/;"	v

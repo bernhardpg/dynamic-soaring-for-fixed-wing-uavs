@@ -71,9 +71,9 @@ def direct_collocation_relative(
     ######
 
     # Optimization params
-    N = 21  # Collocation points
+    N = 31  # Collocation points
     min_dt = (period_guess / N) * 0.5
-    max_dt = (period_guess / N) * 1.5
+    max_dt = (period_guess / N) * 2
     # min_dt = 0.1
     # max_dt = 0.7
 
