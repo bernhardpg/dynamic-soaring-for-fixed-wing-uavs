@@ -50,7 +50,9 @@ def direct_collocation_relative(
     total_dist_travelled_guess = avg_vel_guess * period_guess
 
     log.info(
-        " *** Running DirCol for travel_angle: {0} deg".format(travel_angle * 180 / np.pi)
+        " *** Running DirCol for travel_angle: {0} deg".format(
+            travel_angle * 180 / np.pi
+        )
     )
 
     # Make all values dimless
@@ -103,6 +105,12 @@ def direct_collocation_relative(
 
     ## Add state constraints
     x = dircol.state()
+
+    # Max velocity constraint
+    max_vel = 40  # m/s
+    max_vel /= V_l
+    airspeed_squared = x[3:6].T.dot(x[3:6])
+    dircol.AddConstraintToAllKnotPoints(airspeed_squared <= max_vel ** 2)
 
     # Lift coefficient constraint
     lift_coeff_squared = u.T.dot(u) / ((0.5 * A) ** 2 * x[3:6].T.dot(x[3:6]))

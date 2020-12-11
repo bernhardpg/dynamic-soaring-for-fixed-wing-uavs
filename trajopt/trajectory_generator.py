@@ -217,12 +217,15 @@ def sweep_calculation(
     period_initial_guess = period_guess
     avg_speed_initial_guess = avg_vel_scale_guess * V_l
     next_initial_guess = None
+    reduced_period = period_initial_guess
+    reduced_avg_vel = avg_speed_initial_guess
 
     # Run a sweep search
     for travel_angle in travel_angles:
         found_solution = False
-        reduced_period = period_initial_guess
+        #reduced_period = period_initial_guess
         reduced_avg_vel = avg_speed_initial_guess
+        changing_step_size = False
 
         # Decrease the avg vel every iteration until a solution is found
         while not found_solution:
@@ -240,29 +243,20 @@ def sweep_calculation(
                 initial_guess=next_initial_guess,
             )
 
+
             # Solution not found
             if not found_solution:
-                #    # Reduce avg_vel
-                #    reduced_avg_vel *= 0.95
-                #    log.warning(" No solution found, decreasing avg_vel")
-                #    next_initial_guess = None
 
-                # Reduce period
-                reduced_period *= 0.95
-                log.warning(" No solution found, decreasing period")
-
-                # Start using straight line if initial guess fails too many times
-                if reduced_period < 4.0:
-                    next_initial_guess = None
-                    reduced_period = period_initial_guess
-                continue
-
-                # Stop searching and give up
-                if reduced_avg_vel <= 0.3:
-                    solution_avg_speeds[travel_angle] = -1
-                    solution_periods[travel_angle] = -1
-                    log.error(" Could not find a solution with avg_vel reduction")
+                # If we changed the step size and did not find a solution,
+                # use previous solution
+                if changing_step_size:
+                    log.warning(" Changed stepsize, but did not find a solution. Using previous one")
                     break
+
+                # If we did not find a solution, reduce period
+                log.warning(" No solution found, decreasing period")
+                reduced_period *= 0.99
+                continue
 
             # Found a solution
             avg_speed, period, limited_by_time_step = solution_details
@@ -270,22 +264,25 @@ def sweep_calculation(
 
             # Check if it was limited by step size
             if not limited_by_time_step == "false":
-                reduced_avg_vel = avg_speed_initial_guess
+                changing_step_size = True
+
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     log.warning(" Time step at max, increasing period")
-                    reduced_period *= 1.1
+                    reduced_period *= 1.025
                 elif limited_by_time_step == "lower":
                     log.warning(" Time step at min, decreasing period")
-                    reduced_period *= 0.9
+                    reduced_period *= 0.975
+
                 # Do a rerun
                 found_solution = False
                 continue
 
+
+
         # Found solution and it is not limited by step size
         # then save values
         initial_guess = next_initial_guess
-        avg_speed, period, _ = solution_details
         solution_avg_speeds[travel_angle] = avg_speed
         solution_periods[travel_angle] = period
 
