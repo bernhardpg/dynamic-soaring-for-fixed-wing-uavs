@@ -178,6 +178,7 @@ def show_sweep_result():
         f.close()
 
     plot_sweep_polar(solution_avg_speeds, solution_periods)
+    plt.show()
 
 
 def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angles=9):
@@ -212,7 +213,8 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
 
     # Initial guess
     period_initial_guess = period_guess
-    avg_speed_initial_guess = 2 * V_l
+    avg_speed_initial_guess = 2.5 * V_l
+    next_initial_guess = None
 
     # Run a sweep search
     for travel_angle in travel_angles[0:]:
@@ -233,12 +235,18 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                 travel_angle,
                 period_guess=reduced_period,
                 avg_vel_guess=reduced_avg_vel,
+                initial_guess=next_initial_guess,
             )
 
             # Solution not found
             if not found_solution:
+            #    # Reduce avg_vel
+            #    reduced_avg_vel *= 0.95
+            #    log.warning(" No solution found, decreasing avg_vel")
+            #    next_initial_guess = None
+
                 # Reduce avg_vel
-                reduced_avg_vel *= 0.8
+                reduced_period *= 0.975
                 log.warning(" No solution found, decreasing avg_vel")
 
                 # Stop searching and give up
@@ -247,6 +255,7 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                     solution_avg_speeds[travel_angle] = -1
                     solution_periods[travel_angle] = -1
                     log.error(" Could not find a solution with avg_vel reduction")
+                    break
                 continue
 
             # Found a solution
@@ -258,10 +267,10 @@ def sweep_calculation_for_period(phys_params, start_angle, period_guess, n_angle
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     log.warning(" Time step at max, increasing period")
-                    reduced_period *= 1.2
+                    reduced_period *= 1.05
                 elif limited_by_time_step == "lower":
                     log.warning(" Time step at min, decreasing period")
-                    reduced_period *= 0.8
+                    reduced_period *= 0.95
                 # Do a rerun
                 found_solution = False
                 continue

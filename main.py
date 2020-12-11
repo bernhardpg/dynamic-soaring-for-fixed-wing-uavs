@@ -15,7 +15,7 @@ def main(argv):
     # Command line parsing
     try:
         opts, args = getopt.getopt(
-            argv, "a:p:v:s:", ["angle=", "period=", "velocity=", "sweep="]
+            argv, "a:p:v:s:", ["angle=", "period=", "velocity=", "sweep=", "show_sweep"]
         )
     except getopt.GetoptError:
         print(
@@ -38,6 +38,9 @@ def main(argv):
         elif opt in ("-s", "--sweep"):
             run_once = False
             n_angles = int(arg)
+        elif opt in ("--show_sweep"):
+            show_sweep_result()
+            return
 
     # Physical parameters
     m = 8.5

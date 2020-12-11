@@ -332,7 +332,7 @@ def direct_collocation_relative(
         )
 
     else:  # No solution
-        log.warning("Did not find a solution")
+        log.error(" Did not find a solution")
         return found_solution, (-1, -1, -1), None, None
 
 
