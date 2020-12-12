@@ -21,17 +21,13 @@ Impl	dynamics/zhukovskii_glider.py	/^    class Impl(LeafSystem_[T]):$/;"	c	funct
 Lam	trajopt/trajectory_generator.py	/^    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)$/;"	v
 Line3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 MathematicalProgram	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
-N	trajopt/direct_collocation.py	/^    N = 21  # Collocation points$/;"	v
 N	trajopt/direct_collocation.py	/^    N = 31  # Collocation points$/;"	v
-N_plot	trajopt/direct_collocation.py	/^        N_plot = 200$/;"	v
 PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/"$/;"	v
 Poly3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 PolyCollection	plot/plot.py	/^from matplotlib.collections import PolyCollection$/;"	i
 Q	trajopt/direct_collocation.py	/^    Q = 1$/;"	v
-Q	trajopt/direct_collocation.py	/^    Q = 2$/;"	v
 Q_terms	ilqr/ilqr.py	/^def Q_terms(l_x, l_u, l_xx, l_ux, l_uu, f_x, f_u, V_x, V_xx):$/;"	f
 R	trajopt/direct_collocation.py	/^    R = 0.01$/;"	v
-R	trajopt/direct_collocation.py	/^    R = 5$/;"	v
 RelativeZhukovskiiGlider	dynamics/zhukovskii_glider.py	/^class RelativeZhukovskiiGlider:$/;"	c
 Solve	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 T	trajopt/trajectory_generator.py	/^    T = zhukovskii_glider.get_char_time()$/;"	v
@@ -76,11 +72,11 @@ alpha	dynamics/wind_models.py	/^alpha = 0.143$/;"	v
 animation	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 average_speed	trajopt/direct_collocation.py	/^    def average_speed(vars):$/;"	f
 avg_vel_guess	trajopt/direct_collocation.py	/^        avg_vel_guess = V_l * avg_vel_scale_guess$/;"	v
-avg_vel_guess	trajopt/direct_collocation.py	/^    avg_vel_guess = V_l * 0.5  # TODO tune this$/;"	v
 avg_vel_scale_guess	trajopt/trajectory_generator.py	/^        avg_vel_scale_guess=avg_vel_scale_guess,$/;"	v
 ax	plot/plot.py	/^    ax = fig.gca(projection="3d")$/;"	v
 axis_limits	plot/plot.py	/^    axis_limits = np.array($/;"	v
 backward_pass	ilqr/ilqr.py	/^def backward_pass(x_trj, u_trj, regu, derivs):$/;"	f
+bbox_inches	plot/plot.py	/^            bbox_inches="tight",$/;"	v
 calc_abs_vel	dynamics/zhukovskii_glider.py	/^    def calc_abs_vel(self, h, v_r):$/;"	m	class:RelativeZhukovskiiGlider
 calc_and_plot_trajectory	trajopt/trajectory_generator.py	/^def calc_and_plot_trajectory($/;"	f
 calc_bank_angle	dynamics/zhukovskii_glider.py	/^    def calc_bank_angle(self, v_r, c):$/;"	m	class:RelativeZhukovskiiGlider
@@ -118,7 +114,6 @@ ddz_wind_model	dynamics/wind_models.py	/^ddz_wind_model = ddz_log_wind_model$/;"
 derivatives	ilqr/ilqr.py	/^class derivatives:$/;"	c
 dir_vector	trajopt/direct_collocation.py	/^    dir_vector = np.array([np.sin(travel_angle), np.cos(travel_angle)])$/;"	v
 dircol	trajopt/direct_collocation.py	/^    dircol = DirectCollocation($/;"	v
-direct_collocation	trajopt/direct_collocation.py	/^def direct_collocation($/;"	f
 direct_collocation_relative	trajopt/direct_collocation.py	/^def direct_collocation_relative($/;"	f
 direct_collocation_zhao_glider	trajopt/nonlin_trajopt.py	/^def direct_collocation_zhao_glider():$/;"	f
 direct_transcription	trajopt/nonlin_trajopt.py	/^def direct_transcription():$/;"	f
@@ -126,7 +121,6 @@ discrete_dynamics	ilqr/ilqr.py	/^def discrete_dynamics(x, u):$/;"	f
 do_collocation_w_fourier	trajopt/trajectory_generator.py	/^def do_collocation_w_fourier():$/;"	f
 do_energy_analysis	analysis/traj_analyzer.py	/^def do_energy_analysis(times, x_traj, u_traj, phys_params):$/;"	f
 do_energy_analysis	trajopt/trajectory_generator.py	/^from analysis.traj_analyzer import do_energy_analysis, calc_phys_values_from_traj$/;"	i
-draw_soaring_power	trajopt/trajectory_generator.py	/^        draw_soaring_power=False,$/;"	v
 enable_brake_param	trajopt/direct_collocation.py	/^    enable_brake_param = u.shape[0] > 3$/;"	v
 eq	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 evaluate_pos_traj	trajopt/fourier_collocation.py	/^    def evaluate_pos_traj(self, coeffs, phase_delays, t_f, avg_vel, t):$/;"	m	class:FourierCollocationProblem
@@ -163,7 +157,6 @@ h_ref	dynamics/wind_models.py	/^h_ref = 10  # m$/;"	v
 height_knots	trajopt/trajectory_generator.py	/^    height_knots = x_knots_ENU[:, 2]$/;"	v
 hor_pos_final	trajopt/direct_collocation.py	/^    hor_pos_final = dircol.final_state()[0:2]$/;"	v
 init	plot/plot.py	/^    def init():$/;"	f	function:save_trajectory_gif
-initial_x_trajectory	trajopt/direct_collocation.py	/^        initial_x_trajectory = PiecewisePolynomial.FirstOrderHold($/;"	v
 input_rate	trajopt/direct_collocation.py	/^    def input_rate(vars):$/;"	f
 input_vars	trajopt/direct_collocation.py	/^    input_vars = ($/;"	v
 json	trajopt/trajectory_generator.py	/^import json$/;"	i
@@ -171,7 +164,6 @@ lift_coeff_squared	trajopt/direct_collocation.py	/^    lift_coeff_squared = u.T.
 linear_wind_model	dynamics/wind_models.py	/^def linear_wind_model(z):$/;"	f
 load_factor_squared	trajopt/direct_collocation.py	/^    load_factor_squared = x[3:6].T.dot(x[3:6]) * u.T.dot(u)$/;"	v
 log	main.py	/^import logging as log$/;"	i
-log	plot/plot.py	/^import logging as log$/;"	i
 log	trajopt/direct_collocation.py	/^import logging as log$/;"	i
 log	trajopt/trajectory_generator.py	/^import logging as log$/;"	i
 log_wind_model	dynamics/wind_models.py	/^def log_wind_model(z):$/;"	f
@@ -183,12 +175,10 @@ matplotlib	plot/plot.py	/^import matplotlib.ticker as ticker$/;"	i
 matplotlib	test/test_ilqr.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	trajopt/nonlin_trajopt.py	/^import matplotlib.pyplot as plt$/;"	i
 max_dt	trajopt/direct_collocation.py	/^    max_dt = (period_guess \/ N) * 3$/;"	v
-max_dt	trajopt/direct_collocation.py	/^    max_dt = 0.5$/;"	v
 max_sin_bank_angle_squared	trajopt/direct_collocation.py	/^    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2$/;"	v
 max_vel	trajopt/direct_collocation.py	/^    max_vel = 40  # m\/s$/;"	v
 maximum_timestep	trajopt/direct_collocation.py	/^        maximum_timestep=max_dt,$/;"	v
 min_dt	trajopt/direct_collocation.py	/^    min_dt = (period_guess \/ N) * 0.5$/;"	v
-min_dt	trajopt/direct_collocation.py	/^    min_dt = 0.05$/;"	v
 minimum_timestep	trajopt/direct_collocation.py	/^        minimum_timestep=min_dt,$/;"	v
 np	analysis/traj_analyzer.py	/^import numpy as np$/;"	i
 np	dynamics/wind_models.py	/^import numpy as np$/;"	i
@@ -202,12 +192,11 @@ np	trajopt/direct_collocation.py	/^import numpy as np$/;"	i
 np	trajopt/fourier_collocation.py	/^import numpy as np$/;"	i
 np	trajopt/nonlin_trajopt.py	/^import numpy as np$/;"	i
 num_time_samples	trajopt/direct_collocation.py	/^        num_time_samples=N,$/;"	v
+pad_inches	plot/plot.py	/^            pad_inches=0,$/;"	v
 pdb	test/test_ilqr.py	/^import pdb$/;"	i
 pdb	trajopt/nonlin_trajopt.py	/^import pdb$/;"	i
-period_guess	trajopt/direct_collocation.py	/^    period_guess = N * max_dt$/;"	v
 period_guess	trajopt/trajectory_generator.py	/^        period_guess=period_guess,$/;"	v
 plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant()$/;"	v
-plant	trajopt/direct_collocation.py	/^    plant = zhukovskii_glider.create_drake_plant(diff_flat=False)$/;"	v
 plot_axis	trajopt/trajectory_generator.py	/^        plot_axis=plot_axis,$/;"	v
 plot_energies	plot/plot.py	/^def plot_energies(times, E_tot, E_kin, E_pot):$/;"	f
 plot_function_from_thesis	plot/plot.py	/^def plot_function_from_thesis():$/;"	f
@@ -240,18 +229,11 @@ show_sweep_result	trajopt/trajectory_generator.py	/^def show_sweep_result():$/;"
 simulate_drake_system	trajopt/nonlin_trajopt.py	/^def simulate_drake_system(plant):$/;"	f
 sin_bank_angle_squared	trajopt/direct_collocation.py	/^    sin_bank_angle_squared = u[2] ** 2 \/ ($/;"	v
 skew_matrix	dynamics/zhukovskii_glider.py	/^def skew_matrix(v):$/;"	f
-soaring_power	trajopt/trajectory_generator.py	/^        soaring_power=soaring_power,$/;"	v
-solution_avg_vel	trajopt/direct_collocation.py	/^        solution_avg_vel = solution_distance \/ solution_period$/;"	v
-solution_cost	trajopt/direct_collocation.py	/^        solution_cost = result.get_optimal_cost()$/;"	v
-solution_distance	trajopt/direct_collocation.py	/^        solution_distance = dir_vector.T.dot(x_knots[-1, 0:2])$/;"	v
-solution_period	trajopt/direct_collocation.py	/^        solution_period = x_traj_dimless.end_time() * T$/;"	v
-solution_time	trajopt/direct_collocation.py	/^        solution_time = time.time()$/;"	v
 solve_time	trajopt/direct_collocation.py	/^    solve_time = time.time()$/;"	v
 sqrt	dynamics/zhukovskii_glider.py	/^from math import sqrt$/;"	i
 stage	ilqr/ilqr.py	/^    def stage(self, x, u):$/;"	m	class:derivatives
 start_time	trajopt/direct_collocation.py	/^    start_time = time.time()$/;"	v
 sweep_calculation	trajopt/trajectory_generator.py	/^def sweep_calculation($/;"	f
-sweep_calculation_naive	trajopt/trajectory_generator.py	/^def sweep_calculation_naive(phys_params):$/;"	f
 sym	dynamics/zhao_dynamics.py	/^import pydrake.symbolic as sym$/;"	i
 sym	ilqr/ilqr.py	/^import pydrake.symbolic as sym$/;"	i
 sym	trajopt/fourier_collocation.py	/^import pydrake.symbolic as sym$/;"	i
@@ -262,16 +244,9 @@ ticker	plot/plot.py	/^import matplotlib.ticker as ticker$/;"	i
 time	trajopt/direct_collocation.py	/^import time$/;"	i
 time	trajopt/fourier_collocation.py	/^import time$/;"	i
 time_step	trajopt/direct_collocation.py	/^    time_step = dircol.timestep(0)[0]$/;"	v
-times	trajopt/direct_collocation.py	/^        times = np.linspace($/;"	v
-times	trajopt/direct_collocation.py	/^        times = times_dimless * T$/;"	v
-times_dimless	trajopt/direct_collocation.py	/^        times_dimless = np.linspace($/;"	v
 total_dist_travelled_guess	trajopt/direct_collocation.py	/^    total_dist_travelled_guess = avg_vel_guess * period_guess$/;"	v
-traj_plt	trajopt/direct_collocation.py	/^        traj_plt = plot_trj_3_wind(x0_knots[:, 0:3], dir_vector)$/;"	v
 u	trajopt/direct_collocation.py	/^    u = dircol.input()$/;"	v
-u_knots	trajopt/direct_collocation.py	/^        u_knots = u_knots_dimless * C$/;"	v
 u_knots_NED	trajopt/trajectory_generator.py	/^    u_knots_NED = np.zeros(u_knots_ENU.shape)$/;"	v
-u_knots_dimless	trajopt/direct_collocation.py	/^        u_knots_dimless = np.hstack([u_traj_dimless.value(t) for t in times_dimless]).T$/;"	v
-u_traj_dimless	trajopt/direct_collocation.py	/^        u_traj_dimless = dircol.ReconstructInputTrajectory(result)$/;"	v
 update	plot/plot.py	/^    def update(frame):$/;"	f	function:save_trajectory_gif
 w_freestream	dynamics/wind_models.py	/^w_freestream = w_ref$/;"	v
 w_ref	dynamics/wind_models.py	/^w_ref = 15  # m\/s$/;"	v
@@ -279,12 +254,6 @@ wind_model	analysis/traj_analyzer.py	/^from dynamics.wind_models import wind_mod
 wind_model	dynamics/wind_models.py	/^wind_model = log_wind_model$/;"	v
 wind_model	dynamics/zhao_dynamics.py	/^from dynamics.wind_models import wind_model, ddt_wind_model$/;"	i
 x	trajopt/direct_collocation.py	/^    x = dircol.state()$/;"	v
-x0_guess	trajopt/direct_collocation.py	/^        x0_guess = np.array($/;"	v
-x0_knots	trajopt/direct_collocation.py	/^        x0_knots = np.hstack([initial_x_trajectory.value(t) for t in times]).T$/;"	v
 x0_pos	trajopt/direct_collocation.py	/^    x0_pos = np.array([0, 0, h0])$/;"	v
-x_knots	trajopt/direct_collocation.py	/^        x_knots = x_knots_dimless * L$/;"	v
 x_knots_NED	trajopt/trajectory_generator.py	/^    x_knots_NED = np.zeros(x_knots_ENU.shape)$/;"	v
-x_knots_dimless	trajopt/direct_collocation.py	/^        x_knots_dimless = np.hstack([x_traj_dimless.value(t) for t in times_dimless]).T$/;"	v
-x_traj_dimless	trajopt/direct_collocation.py	/^        x_traj_dimless = dircol.ReconstructStateTrajectory(result)$/;"	v
-xf_guess	trajopt/direct_collocation.py	/^        xf_guess = np.array($/;"	v
 zhukovskii_glider	trajopt/trajectory_generator.py	/^    zhukovskii_glider = RelativeZhukovskiiGlider($/;"	v

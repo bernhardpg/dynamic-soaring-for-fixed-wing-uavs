@@ -124,8 +124,6 @@ def calc_and_plot_trajectory(
         u_knots_ENU,
         period,
         travel_angle,
-        draw_soaring_power=False,
-        soaring_power=soaring_power,
         plot_axis=plot_axis,
     )
     plot_glider_angles(
@@ -182,8 +180,10 @@ def show_sweep_result():
 
 
 def sweep_calculation(
-    phys_params, start_angle, period_guess, avg_vel_scale_guess=1, n_angles=9
+    phys_params, start_angle, period_guess=7, avg_vel_scale_guess=2, n_angles=9
 ):
+    SAVE_SOLUTION_EVERY_N_ANGLE = 1
+
     (m, c_Dp, A, b, rho, g, AR) = phys_params
     zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
 
@@ -203,19 +203,25 @@ def sweep_calculation(
 
     angle_increment = 360 / n_angles
 
-    travel_angles = np.hstack(
-        [
-            np.arange(start_angle, 360, angle_increment),
-            np.arange(0, start_angle - angle_increment, angle_increment),
-        ]
-    )
+    # travel_angles = np.hstack(
+    #    [
+    #        np.arange(start_angle, 360, angle_increment),
+    #        np.arange(0, start_angle - angle_increment, angle_increment),
+    #    ]
+    # )
+    #    travel_angles = np.hstack(
+    #        [
+    #            np.arange(0, 180, angle_increment),
+    #            np.flip(np.arange(180, 360, angle_increment)),
+    #        ]
+    #    )
 
 #    travel_angles = np.hstack(
 #        [
-#            np.flig(np.arange(0, 90, angle_increment)),
-#            np.arange(90, 180, angle_increment),
-#            np.arange(270, 360, angle_increment),
-#            np.arange(180, 270, angle_increment),
+#            np.flip(np.arange(0, 80, angle_increment)),
+#            np.arange(80, 180, angle_increment),
+#            np.arange(280, 360, angle_increment),
+#            np.flip(np.arange(180, 280, angle_increment)),
 #        ]
 #    )
 
@@ -224,17 +230,22 @@ def sweep_calculation(
 
     # Initial guess
     period_initial_guess = period_guess
-    avg_speed_initial_guess = avg_vel_scale_guess * V_l
+    avg_speed_initial_guess = 2 * V_l
+    avg_speed_start_guess = avg_vel_scale_guess * V_l
     next_initial_guess = None
     reduced_period = period_initial_guess
     reduced_avg_vel = avg_speed_initial_guess
 
     # Run a sweep search
-    for travel_angle in travel_angles:
+    for index, travel_angle in enumerate(travel_angles):
         found_solution = False
         reduced_period = period_initial_guess
         reduced_avg_vel = avg_speed_initial_guess
         changing_step_size = False
+
+        # Let the user supply initial guess for first trajectory
+        if index == 0:
+            reduced_avg_vel = avg_speed_start_guess
 
         # Decrease the avg vel every iteration until a solution is found
         while not found_solution:
@@ -255,9 +266,11 @@ def sweep_calculation(
             # Solution not found
             if not found_solution:
                 # If we did not find a solution, reduce period
-                log.warning(" No solution found, using straight line and reducing avg_vel")
+                log.warning(
+                    " No solution found, using straight line and reducing avg_vel"
+                )
                 next_initial_guess = None
-                reduced_avg_vel *= 0.95
+                reduced_avg_vel *= 0.90
                 continue
 
             # Found a solution
@@ -285,5 +298,18 @@ def sweep_calculation(
         with open("./results/plots/sweep_results_periods.txt", "w") as f:
             f.write(json.dumps(solution_periods))
             f.close()
+
+        # Save plot of every Nth trajectory
+        if travel_angle % SAVE_SOLUTION_EVERY_N_ANGLE < 0.001:
+            log.debug("Saving trajectory plot")
+            times, x_knots_ENU, u_knots_ENU = solution_trajectory
+            plot_glider_pos(
+                x_knots_ENU,
+                u_knots_ENU,
+                period,
+                travel_angle * np.pi / 180,
+                save_traj=True,
+            )
+            plt.close()
 
     return

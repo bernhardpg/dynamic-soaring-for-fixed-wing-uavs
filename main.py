@@ -8,7 +8,7 @@ from trajopt.trajectory_generator import *
 def main(argv):
     # Default program arguments
     travel_angle = 90
-    period_guess = 8
+    period_guess = 7
     avg_vel_scale_guess = 2
     run_once = True
     n_angles = 9

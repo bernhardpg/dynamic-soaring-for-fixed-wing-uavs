@@ -355,9 +355,8 @@ def plot_glider_pos(
     u_trj,
     traj_time,
     travel_angle,
-    draw_soaring_power=False,
-    soaring_power=None,
     plot_axis="",
+    save_traj=False,
 ):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
@@ -377,10 +376,10 @@ def plot_glider_pos(
     if "y" in plot_axis:
         _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="y")
     _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="z")
-    if draw_soaring_power == True:
-        _draw_soaring_power_projection(
-            pos_trj, soaring_power, axis_limits, ax, axis=plot_axis
-        )
+    #    if draw_soaring_power == True:
+    #        _draw_soaring_power_projection(
+    #            pos_trj, soaring_power, axis_limits, ax, axis=plot_axis
+    #        )
 
     # Draw trajectory
     _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax)
@@ -391,7 +390,20 @@ def plot_glider_pos(
 
     # ax.view_init(30, 50) # TODO change this to rotate plot
     fig.set_size_inches((13, 10))
-    # plt.savefig(PLOT_LOCATION + "trajectory.pdf", bbox_inches="tight", pad_inches=0)
+
+    if save_traj:
+        plt.savefig(
+            PLOT_LOCATION
+            + "trajectory_{:.1f}.pdf".format(travel_angle * 180 / np.pi),
+            bbox_inches="tight",
+            pad_inches=0,
+        )
+        plt.savefig(
+            PLOT_LOCATION
+            + "trajectory_{:.1f}.jpg".format(travel_angle * 180 / np.pi),
+            bbox_inches="tight",
+            pad_inches=0,
+        )
     return
 
 
