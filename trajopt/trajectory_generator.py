@@ -216,14 +216,14 @@ def sweep_calculation(
     #        ]
     #    )
 
-#    travel_angles = np.hstack(
-#        [
-#            np.flip(np.arange(0, 80, angle_increment)),
-#            np.arange(80, 180, angle_increment),
-#            np.arange(280, 360, angle_increment),
-#            np.flip(np.arange(180, 280, angle_increment)),
-#        ]
-#    )
+    travel_angles = np.hstack(
+        [
+            np.flip(np.arange(0, 80, angle_increment)),
+            np.arange(80, 180, angle_increment),
+            np.arange(280, 360, angle_increment),
+            np.flip(np.arange(180, 280, angle_increment)),
+        ]
+    )
 
     solution_avg_speeds = dict()
     solution_periods = dict()
