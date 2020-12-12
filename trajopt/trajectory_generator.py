@@ -203,18 +203,21 @@ def sweep_calculation(
 
     angle_increment = 360 / n_angles
 
-    #travel_angles = np.hstack(
-    #    [
-    #        np.arange(start_angle, 360, angle_increment),
-    #        np.arange(0, start_angle - angle_increment, angle_increment),
-    #    ]
-    #)
     travel_angles = np.hstack(
         [
-            np.arange(0, 180, angle_increment),
-            np.flip(np.arange(180, 360, angle_increment)),
+            np.arange(start_angle, 360, angle_increment),
+            np.arange(0, start_angle - angle_increment, angle_increment),
         ]
     )
+
+#    travel_angles = np.hstack(
+#        [
+#            np.flig(np.arange(0, 90, angle_increment)),
+#            np.arange(90, 180, angle_increment),
+#            np.arange(270, 360, angle_increment),
+#            np.arange(180, 270, angle_increment),
+#        ]
+#    )
 
     solution_avg_speeds = dict()
     solution_periods = dict()
@@ -225,12 +228,6 @@ def sweep_calculation(
     next_initial_guess = None
     reduced_period = period_initial_guess
     reduced_avg_vel = avg_speed_initial_guess
-
-    # NOTE PLAN
-    # 1. Try turning up max_dt more
-    # 2. If work: try turning off increase of period
-    # 3. Try more collocation points with higher period (e.g. 8 or 9, maybe that captures all periods)
-    # 4. Go the other way in the circle
 
     # Run a sweep search
     for travel_angle in travel_angles:
@@ -255,29 +252,12 @@ def sweep_calculation(
                 initial_guess=next_initial_guess,
             )
 
-            # NOTE Disable all this crap
-#            if False:
-#                if changing_step_size:
-#                    # If we changed the step size and did not find a solution,
-#                    # use previous solution
-#                    if not found_solution:
-#                        log.warning(" Changed stepsize, but did not find a solution. Using previous one")
-#                        break
-#
-#                    # If we found a new solution, but the avg_vel has changed too much
-#                    # use the previous solution
-#                    avg_vel_change = np.abs(avg_speed - unchanged_avg_vel)
-#                    if avg_vel_change > 1:
-#                        log.warning(" Changed stepsize, but the new solution diverged too much. Using previous one")
-#                        break
-
             # Solution not found
             if not found_solution:
                 # If we did not find a solution, reduce period
                 log.warning(" No solution found, using straight line and reducing avg_vel")
                 next_initial_guess = None
                 reduced_avg_vel *= 0.95
-                # NOTE seems like a bad idea to reduce the period at all!
                 continue
 
             # Found a solution
@@ -286,26 +266,11 @@ def sweep_calculation(
 
             # Check if it was limited by step size
             if not limited_by_time_step == "false":
-                # First time changing step size
-                #if not changing_step_size:
-                    #changing_step_size = True
-                    #unchanged_avg_vel = avg_speed
-
                 # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     log.warning(" Time step at max")
-                    #log.warning(" Time step at max, increasing period")
-                    #reduced_period *= 1.025
                 elif limited_by_time_step == "lower":
                     log.warning(" Time step at min")
-                    #log.warning(" Time step at min, decreasing period")
-                    #reduced_period *= 0.975
-
-                # Do a rerun
-                #found_solution = False
-                continue
-
-
 
         # Found solution and it is not limited by step size
         # then save values
@@ -318,140 +283,6 @@ def sweep_calculation(
             f.close()
 
         with open("./results/plots/sweep_results_periods.txt", "w") as f:
-            f.write(json.dumps(solution_periods))
-            f.close()
-
-    return
-
-
-def sweep_calculation_naive(phys_params):
-    (m, c_Dp, A, b, rho, g, AR) = phys_params
-    zhukovskii_glider = RelativeZhukovskiiGlider(m, c_Dp, A, b, rho, g)
-    V_l = zhukovskii_glider.calc_opt_level_glide_speed(AR, c_Dp, m, A, b, rho, g)
-
-    n_angles = 9
-    angle_increment = 2 * np.pi / n_angles
-    psi_start = np.pi / 2
-
-    travel_angles = np.hstack(
-        [
-            np.arange(psi_start, 2 * np.pi, angle_increment),
-            np.arange(0, psi_start, angle_increment),
-        ]
-    )
-
-    solution_avg_speeds = dict()
-    solution_periods = dict()
-
-    # Obtain an initial guess
-    period_initial_guess = 8  # NOTE can be tuned
-    avg_speed_initial_guess = 2 * V_l  # NOTE can be tuned
-
-    (
-        found_solution,
-        solution_details,
-        solution_trajectory,
-        next_initial_guess,
-    ) = direct_collocation_relative(
-        zhukovskii_glider,
-        travel_angles[0],
-        period_guess=period_initial_guess,
-        avg_vel_guess=avg_speed_initial_guess,
-    )
-    if not found_solution:
-        solution_avg_speeds[travel_angles[0]] = -1
-        solution_periods[travel_angles[0]] = -1
-    else:
-        avg_speed, period = solution_details
-        solution_avg_speeds[travel_angles[0]] = avg_speed
-        solution_periods[travel_angles[0]] = period
-        initial_guess = next_initial_guess
-
-    # Run a sweep search
-    for travel_angle in travel_angles[1:]:
-        # Obtain solution with previous solution as initial guess
-        (
-            found_solution_from_prev,
-            solution_details_from_prev,
-            solution_trajectory_from_prev,
-            next_initial_guess_from_prev,
-        ) = direct_collocation_relative(
-            zhukovskii_glider,
-            travel_angle,
-            initial_guess=initial_guess,
-        )
-
-        # Obtain solution with straight line as initial guess
-        (
-            found_solution_from_line,
-            solution_details_from_line,
-            solution_trajectory_from_line,
-            next_initial_guess_from_line,
-        ) = direct_collocation_relative(
-            zhukovskii_glider,
-            travel_angle,
-            period_guess=period_initial_guess,
-            avg_vel_guess=avg_speed_initial_guess,
-        )
-
-        # Use the max solution
-        avg_speed_from_prev = solution_details_from_prev
-        avg_speed_from_line = solution_details_from_line
-        if avg_speed_from_prev > avg_speed_from_line:
-            found_solution = found_solution_from_prev
-            solution_details = solution_details_from_prev
-            solution_trajectory = solution_trajectory_from_prev
-            next_initial_guess = next_initial_guess_from_prev
-        else:
-            found_solution = found_solution_from_line
-            solution_details = solution_details_from_line
-            solution_trajectory = solution_trajectory_from_line
-            next_initial_guess = next_initial_guess_from_line
-
-        # Reduce the period and avg_speed every time until solution is found
-        if not found_solution:
-            reduced_period = period_initial_guess
-            reduced_avg_vel = avg_speed_initial_guess
-
-            while not found_solution:
-                # TODO cleanup
-                # Do a line search over period and avg velocity
-                if not found_solution:
-                    reduced_period *= 1
-                    reduced_avg_vel *= 0.8
-
-                (
-                    found_solution,
-                    solution_details,
-                    solution_trajectory,
-                    next_initial_guess,
-                ) = direct_collocation_relative(
-                    zhukovskii_glider,
-                    travel_angle,
-                    period_guess=reduced_period,
-                    avg_vel_guess=reduced_avg_vel,
-                )
-
-                # Stop searching and give up
-                tol = 0.5
-                if reduced_avg_vel <= tol:
-                    solution_avg_speeds[travel_angle] = -1
-                    solution_periods[travel_angle] = -1
-                    break
-
-        # Save trajectory and values as initial guess for next travel_angle
-
-        # initial_guess = next_initial_guess # NOTE currently not using previous trajectory as initial guess
-        # TODO, first check previous trajectory!
-        avg_speed, period = solution_details
-        solution_avg_speeds[travel_angle] = avg_speed
-        solution_periods[travel_angle] = period
-
-        with open("./results/sweep_results_speeds", "w+") as f:
-            f.write(json.dumps(solution_avg_speeds))
-            f.close()
-
-        with open("./results/sweep_results_periods", "w+") as f:
             f.write(json.dumps(solution_periods))
             f.close()
 
