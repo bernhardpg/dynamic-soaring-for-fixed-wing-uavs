@@ -203,10 +203,16 @@ def sweep_calculation(
 
     angle_increment = 360 / n_angles
 
+    #travel_angles = np.hstack(
+    #    [
+    #        np.arange(start_angle, 360, angle_increment),
+    #        np.arange(0, start_angle - angle_increment, angle_increment),
+    #    ]
+    #)
     travel_angles = np.hstack(
         [
-            np.arange(start_angle, 360, angle_increment),
-            np.arange(0, start_angle - angle_increment, angle_increment),
+            np.arange(0, 180, angle_increment),
+            np.flip(np.arange(180, 360, angle_increment)),
         ]
     )
 
@@ -222,8 +228,9 @@ def sweep_calculation(
 
     # NOTE PLAN
     # 1. Try turning up max_dt more
-    # 3. If work: try turning off increase of period
-    # 2. Try more collocation points with higher period (e.g. 8 or 9, maybe that captures all periods)
+    # 2. If work: try turning off increase of period
+    # 3. Try more collocation points with higher period (e.g. 8 or 9, maybe that captures all periods)
+    # 4. Go the other way in the circle
 
     # Run a sweep search
     for travel_angle in travel_angles:
@@ -267,8 +274,10 @@ def sweep_calculation(
             # Solution not found
             if not found_solution:
                 # If we did not find a solution, reduce period
-                log.warning(" No solution found, decreasing period")
-                reduced_period *= 0.99
+                log.warning(" No solution found, using straight line and reducing avg_vel")
+                next_initial_guess = None
+                reduced_avg_vel *= 0.95
+                # NOTE seems like a bad idea to reduce the period at all!
                 continue
 
             # Found a solution

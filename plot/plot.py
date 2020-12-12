@@ -11,7 +11,7 @@ import numpy as np
 from dynamics.wind_models import *
 
 PLOT_LOCATION = "./results/plots/"
-GRAPH_MARGIN = 200  # Defines free space above/below curve and figure
+GRAPH_MARGIN = 200  # TODO nearly unused, remove
 
 
 def plot_function_from_thesis():
@@ -29,8 +29,10 @@ def plot_function_from_thesis():
 def plot_sweep_polar(solution_avg_vel, solution_periods):
     fig, axes = plt.subplots(1, 2, subplot_kw={"projection": "polar"})
 
-    avg_vel_lists = sorted(solution_avg_vel.items())
-    avg_vel_x, avg_vel_y = zip(*avg_vel_lists)
+    avg_vel_list = list(solution_avg_vel.items())
+    avg_vel_list_sorted = sorted(avg_vel_list, key=lambda x: float(x[0]))
+
+    avg_vel_x, avg_vel_y = zip(*avg_vel_list_sorted)
     avg_vel_x = [float(i) * np.pi / 180 for i in avg_vel_x]
     avg_vel_y = [float(i) for i in avg_vel_y]
     max_vel = max(avg_vel_y)
@@ -42,13 +44,15 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
     # Wind direction
     axes[0].annotate(
         "",
-        xy=(0, max_vel / 2),
+        xy=(0, max_vel * 3 / 4),
         xytext=(0, max_vel),
         arrowprops=dict(color="tab:blue", width=1, headlength=5, headwidth=5),
     )
 
-    periods_lists = sorted(solution_periods.items())
-    periods_x, periods_y = zip(*periods_lists)
+    periods_list = list(solution_periods.items())
+    periods_list_sorted = sorted(periods_list, key=lambda x: float(x[0]))
+
+    periods_x, periods_y = zip(*periods_list_sorted)
     periods_x = [float(i) * np.pi / 180 for i in periods_x]
     periods_y = [float(i) for i in periods_y]
     max_period = max(periods_y)
@@ -60,12 +64,22 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
     # Wind direction
     axes[1].annotate(
         "",
-        xy=(0, max_period / 2),
+        xy=(0, max_period * 3 / 4),
         xytext=(0, max_period),
         arrowprops=dict(color="tab:blue", width=1, headlength=5, headwidth=5),
     )
 
     fig.savefig("./results/plots/polar_plot.pdf")
+
+    max_vel_index = avg_vel_y.index(max_vel)
+    max_vel_angle = avg_vel_x[max_vel_index]
+    max_vel_period = periods_y[max_vel_index]
+
+    print(
+        "max_vel: {0} m/s\n\tpsi: {1} deg, period: {2}".format(
+            max_vel, max_vel_angle * 180 / np.pi, max_vel_period
+        )
+    )
     return
 
 

@@ -1,9 +1,11 @@
 import numpy as np
 
-w_ref = 15 # m/s
+# TODO these wind values should be moved somewhere else
+w_ref = 15  # m/s
 w_freestream = w_ref
 h_ref = 10  # m
 h_0 = 0.03  # m
+alpha = 0.143
 
 
 ########
@@ -22,15 +24,13 @@ def linear_wind_model(z):
 
 
 def exp_wind_model(z):  # Taken from Deittert et al.
-    p = 0.143
-    w = w_ref * (z / h_ref) ** p  # wind strength
+    w = w_ref * (z / h_ref) ** alpha  # wind strength
 
     return w
 
 
 def ddt_exp_wind_model(z, z_dot):
-    p = 0.143
-    w_dot = ((p * w_ref) / z) * (z / h_ref) ** p * z_dot
+    w_dot = ((alpha * w_ref) / z) * (z / h_ref) ** alpha * z_dot
     return w_dot
 
 

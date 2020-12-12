@@ -15,7 +15,7 @@ DrakeSysWrapper_	dynamics/zhukovskii_glider.py	/^def DrakeSysWrapper_(T):$/;"	f
 Expression	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 FourierCollocationProblem	trajopt/fourier_collocation.py	/^class FourierCollocationProblem:$/;"	c
 FuncAnimation	plot/plot.py	/^from matplotlib.animation import FuncAnimation$/;"	i
-GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 200  # Defines free space above\/below curve and figure$/;"	v
+GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 200  # TODO nearly unused, remove$/;"	v
 Impl	dynamics/zhao_dynamics.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:ZhaoGlider_
 Impl	dynamics/zhukovskii_glider.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:DrakeSysWrapper_
 Lam	trajopt/trajectory_generator.py	/^    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)$/;"	v
@@ -72,6 +72,7 @@ _polygon_under_graph	plot/plot.py	/^def _polygon_under_graph(xlist, ylist):$/;"	
 _set_real_aspect_ratio	plot/plot.py	/^def _set_real_aspect_ratio(axis_limits, ax):$/;"	f
 abs_vel_knots	trajopt/trajectory_generator.py	/^    abs_vel_knots = np.sqrt(np.diag(vel_knots.dot(vel_knots.T)))$/;"	v
 airspeed_squared	trajopt/direct_collocation.py	/^    airspeed_squared = x[3:6].T.dot(x[3:6])$/;"	v
+alpha	dynamics/wind_models.py	/^alpha = 0.143$/;"	v
 animation	plot/plot.py	/^import matplotlib.animation as animation$/;"	i
 average_speed	trajopt/direct_collocation.py	/^    def average_speed(vars):$/;"	f
 avg_vel_guess	trajopt/direct_collocation.py	/^        avg_vel_guess = V_l * avg_vel_scale_guess$/;"	v
@@ -170,6 +171,7 @@ lift_coeff_squared	trajopt/direct_collocation.py	/^    lift_coeff_squared = u.T.
 linear_wind_model	dynamics/wind_models.py	/^def linear_wind_model(z):$/;"	f
 load_factor_squared	trajopt/direct_collocation.py	/^    load_factor_squared = x[3:6].T.dot(x[3:6]) * u.T.dot(u)$/;"	v
 log	main.py	/^import logging as log$/;"	i
+log	plot/plot.py	/^import logging as log$/;"	i
 log	trajopt/direct_collocation.py	/^import logging as log$/;"	i
 log	trajopt/trajectory_generator.py	/^import logging as log$/;"	i
 log_wind_model	dynamics/wind_models.py	/^def log_wind_model(z):$/;"	f
@@ -272,7 +274,7 @@ u_knots_dimless	trajopt/direct_collocation.py	/^        u_knots_dimless = np.hst
 u_traj_dimless	trajopt/direct_collocation.py	/^        u_traj_dimless = dircol.ReconstructInputTrajectory(result)$/;"	v
 update	plot/plot.py	/^    def update(frame):$/;"	f	function:save_trajectory_gif
 w_freestream	dynamics/wind_models.py	/^w_freestream = w_ref$/;"	v
-w_ref	dynamics/wind_models.py	/^w_ref = 15 # m\/s$/;"	v
+w_ref	dynamics/wind_models.py	/^w_ref = 15  # m\/s$/;"	v
 wind_model	analysis/traj_analyzer.py	/^from dynamics.wind_models import wind_model, ddt_wind_model, get_wind_vector$/;"	i
 wind_model	dynamics/wind_models.py	/^wind_model = log_wind_model$/;"	v
 wind_model	dynamics/zhao_dynamics.py	/^from dynamics.wind_models import wind_model, ddt_wind_model$/;"	i
