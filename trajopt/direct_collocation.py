@@ -74,8 +74,11 @@ def direct_collocation_relative(
     N = 31  # Collocation points
     min_dt = (period_guess / N) * 0.5
     max_dt = (period_guess / N) * 3
-    # min_dt = 0.1
-    # max_dt = 0.7
+
+    fast_solve_time = False # NOTE set to true to speed up the solver!
+    if fast_solve_time:
+        N = 21
+        max_dt = (period_guess / N) * 1.5
 
     plant = zhukovskii_glider.create_drake_plant()
     context = plant.CreateDefaultContext()

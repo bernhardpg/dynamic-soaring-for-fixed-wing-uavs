@@ -15,12 +15,13 @@ DrakeSysWrapper_	dynamics/zhukovskii_glider.py	/^def DrakeSysWrapper_(T):$/;"	f
 Expression	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 FourierCollocationProblem	trajopt/fourier_collocation.py	/^class FourierCollocationProblem:$/;"	c
 FuncAnimation	plot/plot.py	/^from matplotlib.animation import FuncAnimation$/;"	i
-GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 200  # TODO nearly unused, remove$/;"	v
+GRAPH_MARGIN	plot/plot.py	/^GRAPH_MARGIN = 300 # TODO bad solution, delete this$/;"	v
 Impl	dynamics/zhao_dynamics.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:ZhaoGlider_
 Impl	dynamics/zhukovskii_glider.py	/^    class Impl(LeafSystem_[T]):$/;"	c	function:DrakeSysWrapper_
 Lam	trajopt/trajectory_generator.py	/^    Lam = zhukovskii_glider.calc_opt_glide_ratio(AR, c_Dp)$/;"	v
 Line3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 MathematicalProgram	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
+N	trajopt/direct_collocation.py	/^        N = 21$/;"	v
 N	trajopt/direct_collocation.py	/^    N = 31  # Collocation points$/;"	v
 PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/trajectory_angles\/"$/;"	v
 Poly3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
@@ -127,6 +128,7 @@ evaluate_pos_traj	trajopt/fourier_collocation.py	/^    def evaluate_pos_traj(sel
 evaluate_vel_traj	trajopt/fourier_collocation.py	/^    def evaluate_vel_traj(self, coeffs, phase_delays, t_f, avg_vel, t):$/;"	m	class:FourierCollocationProblem
 exp_wind_model	dynamics/wind_models.py	/^def exp_wind_model(z):  # Taken from Deittert et al.$/;"	f
 expected_cost_reduction	ilqr/ilqr.py	/^def expected_cost_reduction(Q_u, Q_uu, k):$/;"	f
+fast_solve_time	trajopt/direct_collocation.py	/^    fast_solve_time = False # NOTE set to true to speed up the solver!$/;"	v
 fig	plot/plot.py	/^    fig = plt.figure()$/;"	v
 final	ilqr/ilqr.py	/^    def final(self, x):$/;"	m	class:derivatives
 finite_diff_matrix	trajopt/direct_collocation.py	/^    finite_diff_matrix = first_order_finite_diff_matrix$/;"	v
@@ -174,6 +176,7 @@ matplotlib	plot/plot.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	plot/plot.py	/^import matplotlib.ticker as ticker$/;"	i
 matplotlib	test/test_ilqr.py	/^import matplotlib.pyplot as plt$/;"	i
 matplotlib	trajopt/nonlin_trajopt.py	/^import matplotlib.pyplot as plt$/;"	i
+max_dt	trajopt/direct_collocation.py	/^        max_dt = (period_guess \/ N) * 1.5$/;"	v
 max_dt	trajopt/direct_collocation.py	/^    max_dt = (period_guess \/ N) * 3$/;"	v
 max_sin_bank_angle_squared	trajopt/direct_collocation.py	/^    max_sin_bank_angle_squared = np.sin(max_bank_angle) ** 2$/;"	v
 max_vel	trajopt/direct_collocation.py	/^    max_vel = 40  # m\/s$/;"	v

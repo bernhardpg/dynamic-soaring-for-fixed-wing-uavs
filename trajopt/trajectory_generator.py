@@ -70,7 +70,14 @@ def calc_and_plot_trajectory(
         avg_vel_scale_guess=avg_vel_scale_guess,
     )
 
-    avg_speed, period = solution_details
+    avg_speed, period, limited_by_time_step = solution_details
+
+    # Check if it was limited by step size
+    if limited_by_time_step == "upper":
+        log.warning(" Time step at max")
+    elif limited_by_time_step == "lower":
+        log.warning(" Time step at min")
+
     # Solution in ENU frame
     times, x_knots_ENU, u_knots_ENU = solution_trajectory
 
@@ -279,7 +286,6 @@ def sweep_calculation(
 
             # Check if it was limited by step size
             if not limited_by_time_step == "false":
-                # Increase or decrease period if limited by step size
                 if limited_by_time_step == "upper":
                     log.warning(" Time step at max")
                 elif limited_by_time_step == "lower":

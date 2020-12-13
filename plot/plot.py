@@ -11,7 +11,7 @@ import numpy as np
 from dynamics.wind_models import *
 
 PLOT_LOCATION = "./results/plots/trajectory_angles/"
-GRAPH_MARGIN = 200  # TODO nearly unused, remove
+GRAPH_MARGIN = 300 # TODO bad solution, delete this
 
 
 def plot_function_from_thesis():
@@ -41,6 +41,7 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
     axes[0].plot(avg_vel_x, avg_vel_y)
     axes[0].set_title("Average velocities")
     axes[0].set_theta_zero_location("N")
+    axes[0].set_theta_direction(-1)
     # Wind direction
     axes[0].annotate(
         "",
@@ -61,6 +62,7 @@ def plot_sweep_polar(solution_avg_vel, solution_periods):
     axes[1].plot(periods_x, periods_y)
     axes[1].set_title("Periods")
     axes[1].set_theta_zero_location("N")
+    axes[1].set_theta_direction(-1)
     # Wind direction
     axes[1].annotate(
         "",
@@ -119,13 +121,14 @@ def plot_power_terms(
 ):
     max_power = max(max(P_dissipated), max(S_dyn_active), max(S_dyn_passive))
     min_power = min(min(P_dissipated), min(S_dyn_active), min(S_dyn_passive))
+    power_limit = max(max_power, -min_power) * 1.25
     fig, axes = plt.subplots(3, 1)
     tick_spacing = 1
 
     axes[0].plot(times, P_dissipated)
     axes[0].fill_between(times, 0, E_dissipated, color="tab:purple", alpha=0.5)
     axes[0].set_title("Dissipated power")
-    axes[0].set_ylim((-3200, 3200))
+    axes[0].set_ylim(-power_limit, power_limit)
     axes[0].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[0].set_ylabel("$\mathcal{D} \, [W]$")
     plt.tight_layout()
@@ -133,7 +136,7 @@ def plot_power_terms(
     axes[1].plot(times, S_dyn_active)
     axes[1].fill_between(times, 0, E_dyn_active, color="tab:purple", alpha=0.5)
     axes[1].set_title("Active soaring power")
-    axes[1].set_ylim((-3200, 3200))
+    axes[1].set_ylim(-power_limit, power_limit)
     axes[1].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[1].set_ylabel("$\mathcal{S}_{dyn, active} \, [W]$")
     plt.tight_layout()
@@ -141,7 +144,7 @@ def plot_power_terms(
     axes[2].plot(times, S_dyn_passive)
     axes[2].fill_between(times, 0, E_dyn_passive, color="tab:purple", alpha=0.5)
     axes[2].set_title("Passive soaring power")
-    axes[2].set_ylim((-3200, 3200))
+    axes[2].set_ylim(-power_limit, power_limit)
     axes[2].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     axes[2].set_ylabel("$\mathcal{S}_{dyn, passive}$ \, [W]")
     axes[2].set_xlabel("time [s]")
@@ -234,7 +237,7 @@ def plot_glider_angles(
     # plt.xlabel("time [s]")
     plt.title("Bank angle")
     plt.ylabel("$\phi \, [^\circ]$")
-    plt.ylim((-100, 100))
+    plt.ylim((-110, 110))
     plt.hlines(
         (-max_bank_angle * 180 / np.pi, max_bank_angle * 180 / np.pi),
         t[0],
@@ -244,20 +247,23 @@ def plot_glider_angles(
         linewidth=1,
     )
     plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.yticks(np.arange(-90, 90, 45))
 
     plt.subplot(3, 1, 2)
     plt.plot(t, gamma_trj * 180 / np.pi)
     plt.title("Rel. flight path angle")
     plt.ylabel("$\gamma \, [^\circ]$")
     plt.xticks(np.arange(min(t), max(t), 1.0))
-    plt.ylim((-40, 40))
+    plt.ylim((-100, 100))
+    plt.yticks(np.arange(-90, 90, 45))
 
     plt.subplot(3, 1, 3)
     plt.plot(t, psi_trj * 180 / np.pi)
     plt.title("Heading angle")
     plt.ylabel("$\psi \, [^\circ]$")
     plt.xticks(np.arange(min(t), max(t), 1.0))
-    plt.ylim((-180, 180))
+    plt.ylim((-180, 181))
+    plt.yticks(np.arange(-180, 180, 90))
 
     plt.tight_layout()
 
@@ -268,12 +274,13 @@ def plot_glider_angles(
 
 def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_height):
     plt.subplots(figsize=(6, 3))
+    height_limit = max(height_knots)
 
     plt.subplot(2, 1, 1)
     plt.plot(t, height_knots)
     plt.title("Height")
     plt.ylabel("$h \, [m]$")
-    plt.ylim((0, max_height / 7.5))
+    plt.ylim((0, height_limit * 1.25))
     plt.hlines(
         (min_height, max_height),
         t[0],
@@ -283,15 +290,17 @@ def plot_glider_height_and_vel(t, speed_knots, height_knots, min_height, max_hei
         linewidth=1,
     )
     plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.yticks(np.arange(0, height_limit, 5))
     plt.tight_layout()
 
     plt.subplot(2, 1, 2)
     plt.plot(t, speed_knots)
     plt.title("Inertial speed")
     plt.ylabel("$V [m/s]$")
-    plt.ylim((0, 30))
+    plt.ylim((0, max(speed_knots) * 1.25))
     plt.xlabel("time [s]")
     plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.yticks(np.arange(0, max(speed_knots) * 1.25, 10))
     plt.tight_layout()
 
     return
@@ -328,6 +337,7 @@ def plot_glider_phys_quantities(
     plt.ylim((0, 2))
     plt.tight_layout()
     plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.yticks(np.arange(0, 2, 1.0))
 
     plt.subplot(2, 1, 2)
     plt.plot(t, n_trj)
@@ -345,6 +355,7 @@ def plot_glider_phys_quantities(
     )
     plt.tight_layout()
     plt.xticks(np.arange(min(t), max(t), 1.0))
+    plt.yticks(np.arange(0, max_load_factor* 1.25, 1.0))
 
     # plt.savefig(PLOT_LOCATION + "phys_quantities.pdf", bbox_inches="tight", pad_inches=0)
     return
@@ -369,6 +380,7 @@ def plot_glider_pos(
             [min(pos_trj[:, 2]), max(pos_trj[:, 2])],
         ]
     )
+    #axis_limits[0,0] = -10 NOTE useful when plotting some trajectories
     # Draw projections on walls
     if "x" in plot_axis:
         _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
@@ -388,18 +400,16 @@ def plot_glider_pos(
     _set_real_aspect_ratio(axis_limits, ax)
 
     # ax.view_init(30, 50) # TODO change this to rotate plot
-    fig.set_size_inches((13, 10))
+    fig.set_size_inches((13, 9))
 
     if save_traj:
         plt.savefig(
-            PLOT_LOCATION
-            + "trajectory_{:.1f}.pdf".format(travel_angle * 180 / np.pi),
+            PLOT_LOCATION + "trajectory_{:.1f}.pdf".format(travel_angle * 180 / np.pi),
             bbox_inches="tight",
             pad_inches=0,
         )
         plt.savefig(
-            PLOT_LOCATION
-            + "trajectory_{:.1f}.jpg".format(travel_angle * 180 / np.pi),
+            PLOT_LOCATION + "trajectory_{:.1f}.jpg".format(travel_angle * 180 / np.pi),
             bbox_inches="tight",
             pad_inches=0,
         )
