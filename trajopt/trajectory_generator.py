@@ -218,10 +218,10 @@ def sweep_calculation(
 
     travel_angles = np.hstack(
         [
-            np.flip(np.arange(0, 80, angle_increment)),
-            np.arange(80, 180, angle_increment),
-            np.arange(280, 360, angle_increment),
+            np.arange(280, 350, angle_increment),
             np.flip(np.arange(180, 280, angle_increment)),
+            np.flip(np.arange(10, 80, angle_increment)),
+            np.arange(80, 180, angle_increment),
         ]
     )
 
@@ -230,7 +230,7 @@ def sweep_calculation(
 
     # Initial guess
     period_initial_guess = period_guess
-    avg_speed_initial_guess = 2 * V_l
+    avg_speed_initial_guess = 1 * V_l
     avg_speed_start_guess = avg_vel_scale_guess * V_l
     next_initial_guess = None
     reduced_period = period_initial_guess

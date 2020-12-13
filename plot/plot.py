@@ -10,7 +10,7 @@ import numpy as np
 
 from dynamics.wind_models import *
 
-PLOT_LOCATION = "./results/plots/"
+PLOT_LOCATION = "./results/plots/trajectory_angles/"
 GRAPH_MARGIN = 200  # TODO nearly unused, remove
 
 
@@ -369,7 +369,6 @@ def plot_glider_pos(
             [min(pos_trj[:, 2]), max(pos_trj[:, 2])],
         ]
     )
-    axis_limits[0, 0] = -10
     # Draw projections on walls
     if "x" in plot_axis:
         _draw_trajectory_projection(pos_trj, axis_limits, ax, axis="x")
@@ -487,12 +486,13 @@ def _draw_pos_trajectory(pos_trj, travel_angle, axis_limits, ax):
 
     # plot start position
     x0 = pos_trj[0, :]
-    ax.scatter(x0[0], x0[1], 0, color="grey")
+    ax.scatter(x0[0], x0[1], 0, color="tab:red")
 
-    # plot end position
-    N = pos_trj.shape[0]
-    xf = pos_trj[N - 1, :]
-    ax.scatter(xf[0], xf[1], 0, color="grey")
+    if False:
+        # plot end position
+        N = pos_trj.shape[0]
+        xf = pos_trj[N - 1, :]
+        ax.scatter(xf[0], xf[1], 0, color="grey")
 
     # Set labels
     ax.set_xlabel(

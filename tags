@@ -22,7 +22,7 @@ Lam	trajopt/trajectory_generator.py	/^    Lam = zhukovskii_glider.calc_opt_glide
 Line3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 MathematicalProgram	ilqr/ilqr.py	/^from pydrake.all import eq, MathematicalProgram, Solve, Variable, Expression$/;"	i
 N	trajopt/direct_collocation.py	/^    N = 31  # Collocation points$/;"	v
-PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/"$/;"	v
+PLOT_LOCATION	plot/plot.py	/^PLOT_LOCATION = ".\/results\/plots\/trajectory_angles\/"$/;"	v
 Poly3DCollection	plot/plot.py	/^from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection$/;"	i
 PolyCollection	plot/plot.py	/^from matplotlib.collections import PolyCollection$/;"	i
 Q	trajopt/direct_collocation.py	/^    Q = 1$/;"	v
