@@ -1,6 +1,0 @@
-*.swp
-*.DS_Store
-*.pyc
-*.cpython-38.pyc
-*.swo
-results/*
