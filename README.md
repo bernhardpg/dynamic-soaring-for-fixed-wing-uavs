@@ -1,6 +1,6 @@
 # Dynamic Soaring for Fixed-Wing UAVs
 
-My specialization project during my second last semester at NTNU.
+Research project at NTNU.
 
 This code generates dynamic soaring trajectories for fixed-wing UAVs, in any directions towards the wind. The problem is formulated as an optimal control problems, and trajectories are generated using direct collocation. 
 
