@@ -1,6 +1,6 @@
 # Dynamic Soaring for Fixed-Wing UAVs
 
-Research project at NTNU. The research paper can be found (here)[https://github.com/bernhardpg/dynamic-soaring-for-fixed-wing-uavs/blob/master/dynamic_soaring.pdf]
+Research project at NTNU. The research paper can be found [here](https://github.com/bernhardpg/dynamic-soaring-for-fixed-wing-uavs/blob/master/dynamic_soaring.pdf).
 
 This code generates dynamic soaring trajectories for fixed-wing UAVs, in any directions towards the wind. The problem is formulated as an optimal control problems, and trajectories are generated using direct collocation. 
 
